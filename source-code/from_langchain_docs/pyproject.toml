@@ -1,0 +1,14 @@
+[project]
+name = "from-langchain-docs"
+version = "0.1.0"
+description = "LangChain 1.0 basics from the official docs"
+requires-python = ">=3.12"
+dependencies = [
+    "langchain-core>=1.0,<2",
+    "langchain-openai>=1.0,<2",
+    "langchain-ollama>=1.0,<2",
+    "langchain-community>=0.4,<1",
+]
+
+[tool.uv]
+package = false

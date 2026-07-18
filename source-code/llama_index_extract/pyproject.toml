@@ -1,0 +1,13 @@
+[project]
+name = "llama-index-extract"
+version = "0.1.0"
+description = "Chapter 21 — Structured extraction with LlamaIndex"
+requires-python = ">=3.12"
+dependencies = [
+    "llama-index-core>=0.14,<0.15",
+    "llama-index-llms-ollama>=0.10,<1",
+    "pydantic>=2.7,<3",
+]
+
+[tool.uv]
+package = false

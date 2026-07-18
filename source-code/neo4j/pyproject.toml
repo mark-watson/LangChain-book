@@ -1,0 +1,14 @@
+[project]
+name = "neo4j"
+version = "0.1.0"
+description = "Neo4j knowledge-graph queries with LlamaIndex 0.14"
+requires-python = ">=3.12"
+dependencies = [
+    "llama-index-core>=0.14,<0.15",
+    "llama-index-llms-ollama>=0.10,<1",
+    "llama-index-embeddings-huggingface>=0.7,<1",
+    "llama-index-graph-stores-neo4j>=0.4,<1",
+]
+
+[tool.uv]
+package = false

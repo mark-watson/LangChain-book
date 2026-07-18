@@ -1,0 +1,15 @@
+[project]
+name = "langgraph-supervisor"
+version = "0.1.0"
+description = "Chapter 10 — Multi-agent supervisor pattern in LangGraph"
+requires-python = ">=3.12"
+dependencies = [
+    "langgraph>=1.0,<2",
+    "langchain-core>=1.0,<2",
+    "langchain-ollama>=1.0,<2",
+    "ddgs>=1.0",
+    "pydantic>=2.7,<3",
+]
+
+[tool.uv]
+package = false

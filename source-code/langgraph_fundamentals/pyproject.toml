@@ -1,0 +1,13 @@
+[project]
+name = "langgraph-fundamentals"
+version = "0.1.0"
+description = "Chapter 6 — LangGraph 1.0 fundamentals"
+requires-python = ">=3.12"
+dependencies = [
+    "langgraph>=1.0,<2",
+    "langchain-core>=1.0,<2",
+    "langchain-ollama>=1.0,<2",
+]
+
+[tool.uv]
+package = false

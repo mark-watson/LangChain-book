@@ -1,0 +1,14 @@
+[project]
+name = "ollama-langchain"
+version = "0.1.0"
+description = "Local Ollama models with LangChain 1.0"
+requires-python = ">=3.12"
+dependencies = [
+    "langchain-ollama>=1.0,<2",
+    "langchain-chroma>=1.0,<2",
+    "langchain-text-splitters>=1.0,<2",
+    "langchain-community>=0.4,<1",
+]
+
+[tool.uv]
+package = false

@@ -1,0 +1,49 @@
+# Meta-requirements for the book's source code.
+#
+# Each chapter directory has its own pyproject.toml managed by uv.
+# To set up a chapter:
+#   cd <chapter_dir>
+#   uv sync
+#   uv run python <script>.py
+#
+# The packages below are the union of all chapter dependencies.
+
+# LangChain 1.0 ecosystem
+langchain>=1.0,<2
+langchain-core>=1.0,<2
+langchain-ollama>=1.0,<2
+langchain-openai>=1.0,<2
+langchain-community>=0.4,<1
+langchain-huggingface>=1.0,<2
+langchain-chroma>=1.0,<2
+langchain-text-splitters>=1.0,<2
+
+# LangGraph 1.0
+langgraph>=1.0,<2
+langgraph-checkpoint-sqlite>=3.0,<4
+
+# LlamaIndex 0.14
+llama-index-core>=0.14,<0.15
+llama-index-llms-ollama>=0.10,<1
+llama-index-llms-openai>=0.7,<1
+llama-index-embeddings-huggingface>=0.7,<1
+llama-index-retrievers-bm25>=0.7,<1
+llama-index-vector-stores-chroma>=0.3,<1
+llama-index-graph-stores-neo4j>=0.4,<1
+
+# Utilities
+duckduckgo-search>=8.0,<9
+sentence-transformers>=5.0,<6
+rank-bm25>=0.2.2,<0.3
+trafilatura>=2.0,<3
+sparqlwrapper>=2.0,<3
+pydantic>=2.7,<3
+sqlalchemy>=2.0,<3
+fastapi>=0.115,<1
+uvicorn>=0.30,<1
+httpx>=0.27,<1
+pydrive2>=0.18,<1
+chromadb>=0.5,<2
+transformers>=4.40,<6
+torch>=2.0,<3
+tavily-python>=0.5,<1

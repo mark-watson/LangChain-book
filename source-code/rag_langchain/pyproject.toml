@@ -1,0 +1,18 @@
+[project]
+name = "rag-langchain"
+version = "0.1.0"
+description = "Chapter 4 — RAG patterns with LangChain"
+requires-python = ">=3.12"
+dependencies = [
+    "langchain>=1.0,<2",
+    "langchain-core>=1.0,<2",
+    "langchain-community>=0.4,<1",
+    "langchain-ollama>=1.0,<2",
+    "langchain-huggingface>=1.0,<2",
+    "langchain-chroma>=1.0,<2",
+    "sentence-transformers>=5.0,<6",
+    "rank-bm25>=0.2.2,<0.3",
+]
+
+[tool.uv]
+package = false

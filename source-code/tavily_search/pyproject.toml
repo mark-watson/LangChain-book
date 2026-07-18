@@ -1,0 +1,16 @@
+[project]
+name = "tavily-search"
+version = "0.1.0"
+description = "Tavily search agent with LangGraph and LlamaIndex"
+requires-python = ">=3.12"
+dependencies = [
+    "langgraph>=1.0,<2",
+    "langchain-ollama>=1.0,<2",
+    "langchain-community>=0.4,<1",
+    "llama-index-core>=0.14,<0.15",
+    "llama-index-llms-ollama>=0.10,<1",
+    "tavily-python>=0.5,<1",
+]
+
+[tool.uv]
+package = false

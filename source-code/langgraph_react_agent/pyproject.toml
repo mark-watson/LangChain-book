@@ -1,0 +1,15 @@
+[project]
+name = "langgraph-react-agent"
+version = "0.1.0"
+description = "Chapter 7 — Building a ReAct agent with LangGraph"
+requires-python = ">=3.12"
+dependencies = [
+    "langgraph>=1.0,<2",
+    "langchain>=0.3",
+    "langchain-core>=1.0,<2",
+    "langchain-ollama>=1.0,<2",
+    "ddgs>=1.0",
+]
+
+[tool.uv]
+package = false

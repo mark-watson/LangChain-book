@@ -1,0 +1,15 @@
+[project]
+name = "llama-index-deploy"
+version = "0.1.0"
+description = "Chapter 22 — Serving a LlamaIndex Workflow with FastAPI"
+requires-python = ">=3.12"
+dependencies = [
+    "llama-index-core>=0.14,<0.15",
+    "llama-index-llms-ollama>=0.10,<1",
+    "fastapi>=0.115,<1",
+    "uvicorn>=0.30,<1",
+    "httpx>=0.27,<1",
+]
+
+[tool.uv]
+package = false

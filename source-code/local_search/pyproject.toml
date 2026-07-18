@@ -1,0 +1,15 @@
+[project]
+name = "local-search"
+version = "0.1.0"
+description = "Chapter 13 — Perplexity-style local search agent"
+requires-python = ">=3.12"
+dependencies = [
+    "langgraph>=1.0,<2",
+    "langchain-core>=1.0,<2",
+    "langchain-ollama>=1.0,<2",
+    "duckduckgo-search>=8.0,<9",
+    "trafilatura>=2.0,<3",
+]
+
+[tool.uv]
+package = false
