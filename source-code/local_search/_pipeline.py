@@ -19,7 +19,7 @@ update — exactly the same shape as the graphs in Chapters 6 through 10.
 from typing import TypedDict
 
 import trafilatura
-from duckduckgo_search import DDGS
+from ddgs import DDGS
 from langchain_ollama import ChatOllama
 from langgraph.graph import END, START, StateGraph
 

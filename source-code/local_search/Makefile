@@ -3,7 +3,7 @@
 # Fast syntax check - compiles all .py files without executing
 check:
 	python3 -m py_compile *.py
-	uv run python -c "import duckduckgo_search, langchain_ollama, langgraph, trafilatura"
+	uv run python -c "import ddgs, langchain_ollama, langgraph, trafilatura"
 
 # Run tests (pytest if tests/ exists, otherwise syntax-check passes as test)
 test:
