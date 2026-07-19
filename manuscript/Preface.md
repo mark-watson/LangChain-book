@@ -43,7 +43,11 @@ For hardware: an Apple Silicon Mac (16 GB RAM or more), a mid-range Linux box wi
 
 ## Where the code lives
 
-For this edition, the example code lives in the same repository as the manuscript, in the `source-code/` directory, one subdirectory per chapter. The old external examples repo (`github.com/mark-watson/langchain-book-examples`) is being deprecated. Every chapter in the book references its code by relative path.
+For this edition, the example code lives in the same repository as the manuscript, in the `source-code/` directory, one subdirectory per chapter. The old external examples repo (`github.com/mark-watson/langchain-book-examples`) is being deprecated but this GitHub repository contains a PDF of this entire book that was saved before the recent rewrite of this book.
+
+The source code and manuscript files for the July 2026 version of this book are both found in [https://github.com/mark-watson/LangChain-book](https://github.com/mark-watson/LangChain-book).
+
+Every chapter in the book references its code by relative path.
 
 Each chapter's code directory has its own `pyproject.toml` with pinned library versions, so an example that worked when the chapter was written will keep working even after the upstream libraries change underneath it.
 
