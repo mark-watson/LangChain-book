@@ -31,7 +31,6 @@ SUBDIRS = \
 	rag_langchain \
 	sql_agent \
 	summarization \
-	tavily_search \
 	text_db_llm \
 	tool_search_math_example \
 	tools_langchain
