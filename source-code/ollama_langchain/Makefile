@@ -3,7 +3,7 @@
 # Fast syntax check - compiles all .py files without executing
 check:
 	python3 -m py_compile *.py
-	uv run python -c "import langchain_chroma, langchain_community, langchain_core, langchain_ollama, langchain_text_splitters"
+	uv run python -c "import langchain_chroma, langchain_core, langchain_ollama, langchain_text_splitters"
 
 # Run tests (pytest if tests/ exists, otherwise syntax-check passes as test)
 test:

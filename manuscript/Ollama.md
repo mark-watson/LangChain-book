@@ -1,6 +1,7 @@
 # Running Local LLMs Using Ollama
 
-We saw an example at the end of the last chapter running [Llama.cpp](https://github.com/ggerganov/llama.cpp) project to run a local model with LangChain. As I update this chapter in April 2024 I now most often use the Ollama app (download, documentation, and list of supported models at [https://ollama.ai](https://ollama.ai)). Ollama has a good command line interface and also runs a REST service that the examples in this chapter use.
+
+Dear reader, I often use the Ollama app (download, documentation, and list of supported models at [https://ollama.ai](https://ollama.ai)). Ollama has a good command line interface and also runs a REST service that the examples in this chapter use.
 
  Ollama works very well with Apple Silicon, systems with an NVIDIA GPU, and high end CPU-only systems. My Mac has a M2 SOC with 32G of internal memory which is suitable for running fairly large LLMs efficiently but most of the examples here run fine with 16G memory.
 

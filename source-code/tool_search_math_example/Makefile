@@ -3,7 +3,7 @@
 # Fast syntax check - compiles all .py files without executing
 check:
 	python3 -m py_compile *.py
-	uv run python -c "import langchain_community, langchain_core, langchain_ollama, langgraph"
+	uv run python -c "import ddgs, langchain_core, langchain_ollama, langgraph"
 
 # Run tests (pytest if tests/ exists, otherwise syntax-check passes as test)
 test:

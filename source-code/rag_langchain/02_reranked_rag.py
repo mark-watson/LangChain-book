@@ -7,17 +7,42 @@ pattern is: pull 10 candidates cheaply from the vector store, then rerank to
 the top 3 with the cross-encoder before showing anything to the LLM.
 """
 
+from typing import Any
+
 from langchain.retrievers import ContextualCompressionRetriever
 from langchain.retrievers.document_compressors import CrossEncoderReranker
 from langchain_chroma import Chroma
-from langchain_community.cross_encoders import HuggingFaceCrossEncoder
+from langchain_core.cross_encoders import BaseCrossEncoder
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import RunnablePassthrough
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_ollama import ChatOllama
+from pydantic import BaseModel, ConfigDict, Field
+from sentence_transformers import CrossEncoder
 
 from _corpus import TEST_QUESTIONS, load_documents
+
+
+class HuggingFaceCrossEncoder(BaseModel, BaseCrossEncoder):
+    """sentence-transformers cross encoder (langchain_community.cross_encoders is retired)."""
+
+    model_name: str = "BAAI/bge-reranker-base"
+    model_kwargs: dict[str, Any] = Field(default_factory=dict)
+    client: Any = None
+
+    model_config = ConfigDict(extra="forbid", protected_namespaces=())
+
+    def __init__(self, **kwargs: Any) -> None:
+        super().__init__(**kwargs)
+        self.client = CrossEncoder(self.model_name, **self.model_kwargs)
+
+    def score(self, text_pairs: list[tuple[str, str]]) -> list[float]:
+        scores = self.client.predict(text_pairs)
+        if len(scores.shape) > 1:
+            scores = [s[1] for s in scores]
+        return scores
+
 
 embeddings = HuggingFaceEmbeddings(model_name="BAAI/bge-small-en-v1.5")
 vectorstore = Chroma.from_documents(

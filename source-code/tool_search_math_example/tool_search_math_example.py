@@ -13,9 +13,10 @@ from langgraph.prebuilt import create_react_agent
 @tool
 def duckduckgo_search(query: str) -> str:
     """Searches the web using DuckDuckGo and returns the top result."""
-    from langchain_community.tools import DuckDuckGoSearchRun
+    from ddgs import DDGS
 
-    return DuckDuckGoSearchRun().invoke(query) or "No results found"
+    results = DDGS().text(query, max_results=5)
+    return " ".join(r["body"] for r in results) if results else "No results found"
 
 
 @tool

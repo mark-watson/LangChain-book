@@ -7,7 +7,6 @@ dependencies = [
     "langchain-ollama>=1.0,<2",
     "langchain-chroma>=1.0,<2",
     "langchain-text-splitters>=1.0,<2",
-    "langchain-community>=0.4,<1",
 ]
 
 [tool.uv]

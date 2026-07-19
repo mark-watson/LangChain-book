@@ -7,8 +7,10 @@ retrieval chain. Requires 'ollama serve' to be running.
 The old RetrievalQA chain is replaced by a compose-and-pipe LCEL chain.
 """
 
+from pathlib import Path
+
 from langchain_chroma import Chroma
-from langchain_community.document_loaders import DirectoryLoader
+from langchain_core.documents import Document
 from langchain_ollama import ChatOllama, OllamaEmbeddings
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_core.output_parsers import StrOutputParser
@@ -19,8 +21,16 @@ model = "mistral:v0.3"
 
 # --- Build the index (can be reused) ---
 
-loader = DirectoryLoader("../data/", glob="**/*.txt")
-data = loader.load()
+
+def load_text_documents(path: str, glob: str = "**/*.txt") -> list[Document]:
+    """Load every matching text file under `path` into a Document."""
+    return [
+        Document(page_content=p.read_text(encoding="utf-8"), metadata={"source": str(p)})
+        for p in sorted(Path(path).glob(glob))
+    ]
+
+
+data = load_text_documents("../data/")
 
 text_splitter = RecursiveCharacterTextSplitter(
     chunk_size=200, chunk_overlap=100

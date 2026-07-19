@@ -16,7 +16,6 @@ SUBDIRS = \
 	langgraph_hitl \
 	langgraph_react_agent \
 	langgraph_supervisor \
-	"llama.cpp" \
 	llama_index_agent \
 	llama_index_deploy \
 	llama_index_extract \
@@ -27,7 +26,6 @@ SUBDIRS = \
 	llama_index_router \
 	llama_index_workflows \
 	local_search \
-	neo4j \
 	ollama_langchain \
 	rag \
 	rag_langchain \

@@ -7,16 +7,44 @@ rank fusion gives you the best of both, and often changes the answer on queries
 with proper nouns or technical terms.
 """
 
+from typing import Any
+
 from langchain.retrievers import EnsembleRetriever
 from langchain_chroma import Chroma
-from langchain_community.retrievers import BM25Retriever
+from langchain_core.callbacks import CallbackManagerForRetrieverRun
+from langchain_core.documents import Document
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.retrievers import BaseRetriever
 from langchain_core.runnables import RunnablePassthrough
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_ollama import ChatOllama
+from pydantic import ConfigDict, Field
+from rank_bm25 import BM25Okapi
 
 from _corpus import TEST_QUESTIONS, load_documents
+
+
+class BM25Retriever(BaseRetriever):
+    """Keyword retriever built on rank_bm25 (langchain_community.retrievers is retired)."""
+
+    vectorizer: Any
+    docs: list[Document] = Field(repr=False)
+    k: int = 4
+
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
+    @classmethod
+    def from_documents(cls, documents: list[Document], **kwargs: Any) -> "BM25Retriever":
+        docs = list(documents)
+        corpus = [doc.page_content.split() for doc in docs]
+        return cls(vectorizer=BM25Okapi(corpus), docs=docs, **kwargs)
+
+    def _get_relevant_documents(
+        self, query: str, *, run_manager: CallbackManagerForRetrieverRun
+    ) -> list[Document]:
+        return self.vectorizer.get_top_n(query.split(), self.docs, n=self.k)
+
 
 docs = load_documents()
 
