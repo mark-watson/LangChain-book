@@ -29,7 +29,7 @@ Across every chapter in this book, the total set of Python packages you will ins
 
 **Data-source and tool packages**
 
-- `duckduckgo-search` — the free web search backend used throughout.
+- `ddgs` — the free web search backend used throughout.
 - `SPARQLWrapper` and `rdflib` — for the DBpedia and Wikidata chapters.
 - `trafilatura` — for pulling clean text out of arbitrary web pages.
 - `pydantic` — for structured-output schemas.
@@ -82,7 +82,7 @@ If you prefer plain `pip`, each chapter's `pyproject.toml` is a normal PEP 621 f
 If you do these three things once, every chapter in the book will work:
 
 1. Install `uv` (`brew install uv` on macOS, or `curl -LsSf https://astral.sh/uv/install.sh | sh` on Linux).
-2. Install Ollama from [ollama.com](https://ollama.com) and pull one general-purpose model that supports tool calling. As of mid-2026 the models I use most often for the book examples are `qwen3:8b` for tool-calling work, `llama3.2:3b` when I want something small and fast, and `gemma3:12b-it-qat` when I want more headroom on a 16 GB machine. Appendix A discusses model selection in more depth.
+2. Install Ollama from [ollama.com](https://ollama.com) and pull one general-purpose model that supports tool calling. As of mid-2026 the models I use most often for the book examples are `qwen3.5:4b` for tool-calling work, `llama3.2:3b` when I want something small and fast, and `gemma3:12b-it-qat` when I want more headroom on a 16 GB machine. Appendix A discusses model selection in more depth.
 3. Optionally, put a `.env` file in your home directory with any hosted-model API keys you want to use:
 
 ```text

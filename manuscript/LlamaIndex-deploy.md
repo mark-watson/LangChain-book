@@ -9,7 +9,7 @@ Everything lives in `source-code/llama_index_deploy/`. Setup:
 ```console
 $ cd source-code/llama_index_deploy
 $ uv sync
-$ ollama pull qwen3:8b
+$ ollama pull qwen3.5:4b
 ```
 
 You also need Redis running locally:
@@ -42,7 +42,7 @@ from llama_index.llms.ollama import Ollama
 class QAWorkflow(Workflow):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.llm = Ollama(model="qwen3:8b", temperature=0, request_timeout=180.0)
+        self.llm = Ollama(model="qwen3.5:4b", temperature=0, request_timeout=180.0)
 
     @step
     async def answer(self, ev: StartEvent) -> StopEvent:

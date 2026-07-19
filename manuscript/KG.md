@@ -26,7 +26,7 @@ The agent's job is to first look up the entities its question mentions to get th
 ```console
 $ cd source-code/kg_agent
 $ uv sync
-$ ollama pull qwen3:8b
+$ ollama pull qwen3.5:4b
 ```
 
 Both endpoints are public and require an internet connection but no credentials.
@@ -111,7 +111,7 @@ SYSTEM_PROMPT = SystemMessage(
 
 
 def build_dbpedia_agent():
-    model = ChatOllama(model="qwen3:8b", temperature=0)
+    model = ChatOllama(model="qwen3.5:4b", temperature=0)
     return create_react_agent(model, [find_entity, run_sparql], prompt=SYSTEM_PROMPT)
 ```
 

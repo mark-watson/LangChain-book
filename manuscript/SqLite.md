@@ -20,7 +20,7 @@ Setup:
 ```console
 $ cd source-code/sql_agent
 $ uv sync
-$ ollama pull qwen3:8b
+$ ollama pull qwen3.5:4b
 ```
 
 The first agent invocation triggers `_make_db.py` automatically if `company.db` is missing.
@@ -78,7 +78,7 @@ def build_sql_agent():
         make_db()
 
     db = SQLDatabase.from_uri(f"sqlite:///{DB_PATH}")
-    model = ChatOllama(model="qwen3:8b", temperature=0)
+    model = ChatOllama(model="qwen3.5:4b", temperature=0, num_ctx=16336, reasoning=False)
     toolkit = SQLDatabaseToolkit(db=db, llm=model)
     tools = toolkit.get_tools()
 
@@ -92,6 +92,8 @@ Three configuration decisions worth spelling out.
 **The prohibition on DML.** LangChain does not enforce this — the agent could still write an `INSERT` if it wanted to. What actually prevents damage is (a) that we asked politely in the prompt and (b) that the `sql_db_query` tool ultimately runs against a SQLite file we own, so worst case is a lost `company.db` we regenerate. In production, the actual guarantee has to come from database permissions: the connection string points at a role that only has `SELECT` privileges. The prompt is a belt-and-suspenders layer, not the primary defense.
 
 **Passing the model to the toolkit.** `SQLDatabaseToolkit(db=db, llm=model)` uses the model for the `sql_db_query_checker` tool. Not the same as the outer model in `create_react_agent`, though we use the same one for simplicity. In some setups it makes sense to use a small fast model here and a stronger one for the outer agent.
+
+**`num_ctx=16336` and `reasoning=False`.** These two settings are not optional. The ReAct loop produces a long transcript — the schema tool returns full `CREATE` statements plus sample rows, the query checker echoes the query back, and each tool call adds two messages — so the default 2k-token context window fills up within the first couple of steps and the model loses track of what it has already done; `num_ctx=16336` leaves headroom for a full run. `qwen3.5:4b` is also a "thinking" model that by default wraps its output in `<think>...</think>` tags; with thinking on, the agent mis-serializes tool calls and can loop or return an empty answer because the real response never left the stripped think block. `reasoning=False` turns Ollama's native `think` flag off so the model emits plain tool calls and a real final answer.
 
 ## Running it
 

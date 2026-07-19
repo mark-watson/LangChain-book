@@ -16,7 +16,7 @@ Use small models for the parts of a pipeline where speed matters more than quali
 
 **Medium (roughly 7-14B parameters).** In 2026 the strongest representatives are `qwen3:8b`, `gemma3:12b-it-qat`, `mistral-small`, and `deepseek-r1:8b`. RAM footprint: 5-9 GB. Inference speed: usually 20-40 tokens per second on the same hardware.
 
-These are the workhorses. Every LangGraph and LlamaIndex agent in this book was tested against `qwen3:8b` because it hits a sweet spot: reliably supports tool calling, follows multi-step system prompts, handles a few thousand tokens of context without losing its place, produces reasonable structured output. Not as smart as the largest local models or hosted models, but the drop is usually the difference between "gets it right" and "gets it right and explains it well."
+These are the workhorses. Every LangGraph and LlamaIndex agent in this book was tested against `qwen3.5:4b` because it hits a sweet spot: reliably supports tool calling, follows multi-step system prompts, handles a few thousand tokens of context without losing its place, produces reasonable structured output. Not as smart as the largest local models or hosted models, but the drop is usually the difference between "gets it right" and "gets it right and explains it well."
 
 Use medium models for anything with tools, anything with structured output requirements, anything with a system prompt longer than a paragraph, anything where you would be embarrassed if the model got the answer wrong.
 
@@ -57,4 +57,4 @@ The word "model" hides several distinct roles in an application. Different sizes
 - **Size up when tools misbehave.** Silent tool-not-called failures are the most common reason to move from small to medium or medium to large.
 - **Keep embeddings and rerankers local.** Neither the quality nor the cost of hosted alternatives justifies the dependency.
 - **Match model to role, not to project.** A pipeline can use a small model for filtering, a medium model for tool calling, and a large model for final synthesis. That is often cheaper *and* higher-quality than using one big model everywhere.
-- **When in doubt, prototype with `qwen3:8b`.** It is not the best model at any specific thing but it is the least likely to embarrass you across the range of things the book covers.
+- **When in doubt, prototype with `qwen3.5:4b`.** It is not the best model at any specific thing but it is the least likely to embarrass you across the range of things the book covers.

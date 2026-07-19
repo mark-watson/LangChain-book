@@ -9,7 +9,7 @@ All three scripts live in `source-code/llama_index_indices/` and read from `sour
 ```console
 $ cd source-code/llama_index_indices
 $ uv sync
-$ ollama pull qwen3:8b
+$ ollama pull qwen3.5:4b
 ```
 
 ## `SummaryIndex` — every query touches every Node
@@ -25,7 +25,7 @@ from llama_index.core import Settings, SimpleDirectoryReader, SummaryIndex
 from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 from llama_index.llms.ollama import Ollama
 
-Settings.llm = Ollama(model="qwen3:8b", request_timeout=180.0)
+Settings.llm = Ollama(model="qwen3.5:4b", request_timeout=180.0)
 Settings.embed_model = HuggingFaceEmbedding(model_name="BAAI/bge-small-en-v1.5")
 
 documents = SimpleDirectoryReader("../data").load_data()

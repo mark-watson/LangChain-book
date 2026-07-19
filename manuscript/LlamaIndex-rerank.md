@@ -9,7 +9,7 @@ Everything lives in `source-code/llama_index_rerank/` and reads from `source-cod
 ```console
 $ cd source-code/llama_index_rerank
 $ uv sync
-$ ollama pull qwen3:8b
+$ ollama pull qwen3.5:4b
 ```
 
 The BGE reranker model (~275 MB) downloads on first run.
@@ -23,7 +23,7 @@ from llama_index.core import Settings, SimpleDirectoryReader, VectorStoreIndex
 from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 from llama_index.llms.ollama import Ollama
 
-Settings.llm = Ollama(model="qwen3:8b", request_timeout=180.0)
+Settings.llm = Ollama(model="qwen3.5:4b", request_timeout=180.0)
 Settings.embed_model = HuggingFaceEmbedding(model_name="BAAI/bge-small-en-v1.5")
 
 documents = SimpleDirectoryReader("../data").load_data()

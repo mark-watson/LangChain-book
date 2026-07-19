@@ -9,7 +9,7 @@ Everything lives in `source-code/llama_index_agent/`. Setup:
 ```console
 $ cd source-code/llama_index_agent
 $ uv sync
-$ ollama pull qwen3:8b
+$ ollama pull qwen3.5:4b
 ```
 
 ## The tools
@@ -24,7 +24,7 @@ def multiply(a: int, b: int) -> int:
 
 def web_search(query: str) -> str:
     """Search DuckDuckGo. Returns the top three text results."""
-    from duckduckgo_search import DDGS
+    from ddgs import DDGS
     try:
         results = list(DDGS().text(query, max_results=3))
     except Exception as exc:
@@ -56,7 +56,7 @@ tools = [
     FunctionTool.from_defaults(fn=web_search),
 ]
 
-llm = Ollama(model="qwen3:8b", temperature=0, request_timeout=180.0)
+llm = Ollama(model="qwen3.5:4b", temperature=0, request_timeout=180.0)
 
 agent = FunctionAgent(
     tools=tools,
@@ -111,7 +111,7 @@ class DoneEvent(Event):
 class ReActWorkflow(Workflow):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.llm = Ollama(model="qwen3:8b", temperature=0, request_timeout=180.0)
+        self.llm = Ollama(model="qwen3.5:4b", temperature=0, request_timeout=180.0)
 
     @step
     async def call_model(

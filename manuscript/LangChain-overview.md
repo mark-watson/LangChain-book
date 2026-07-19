@@ -38,7 +38,7 @@ The first example is the smallest program that exercises the LangChain 1.0 chat 
 from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_ollama import ChatOllama
 
-model = ChatOllama(model="qwen3:8b", temperature=0)
+model = ChatOllama(model="qwen3.5:4b", temperature=0)
 
 messages = [
     SystemMessage(content="You answer concisely, in one sentence."),
@@ -104,7 +104,7 @@ Two more `Runnable` methods you will use constantly. `source-code/langchain_gett
 ```python
 from langchain_ollama import ChatOllama
 
-model = ChatOllama(model="qwen3:8b", temperature=0)
+model = ChatOllama(model="qwen3.5:4b", temperature=0)
 
 print("=== .stream() ===")
 for chunk in model.stream("Write a two-sentence description of Sedona, Arizona."):
@@ -134,7 +134,7 @@ You could keep building message lists by hand for the rest of your career, but n
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_ollama import ChatOllama
 
-model = ChatOllama(model="qwen3:8b", temperature=0)
+model = ChatOllama(model="qwen3.5:4b", temperature=0)
 
 prompt = ChatPromptTemplate.from_messages(
     [
@@ -165,7 +165,7 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_ollama import ChatOllama
 from pydantic import BaseModel, Field
 
-model = ChatOllama(model="qwen3:8b", temperature=0)
+model = ChatOllama(model="qwen3.5:4b", temperature=0)
 
 print("=== StrOutputParser ===")
 prompt = ChatPromptTemplate.from_messages(
@@ -233,7 +233,7 @@ def multiply(a: int, b: int) -> int:
 
 tools_by_name = {t.name: t for t in [add, multiply]}
 
-model = ChatOllama(model="qwen3:8b", temperature=0)
+model = ChatOllama(model="qwen3.5:4b", temperature=0)
 model_with_tools = model.bind_tools([add, multiply])
 
 response = model_with_tools.invoke("What is 137 times 24, plus 3?")
@@ -254,7 +254,7 @@ Two important caveats before you go build an agent on this.
 
 First, this example does exactly one round trip. The model responds with a tool call, we execute the call, and we stop. A real agent feeds the tool's result back to the model as a `ToolMessage`, gets the next response, executes the next call, and so on until the model returns plain text as the final answer. That loop is what Chapter 6 builds on top of LangGraph. Rolling your own loop is fine for a one-off script; for anything durable you want the state machine LangGraph gives you.
 
-Second, tool calling requires a model that supports it. Not every Ollama model does. As of mid-2026 the ones I use for the book examples are `qwen3:8b`, `llama3.2:3b`, `gemma3:12b-it-qat`, and `mistral-small`. If you point `bind_tools` at a chat-only model the code will not crash — the model will just respond with prose describing what it *would* do instead of returning a `tool_call`. That is one of the least helpful failure modes in the whole framework, and it is worth committing the list of tool-capable models to memory (or, more realistically, to a `README` in your project).
+Second, tool calling requires a model that supports it. Not every Ollama model does. As of mid-2026 the ones I use for the book examples are `qwen3.5:4b`, `llama3.2:3b`, `gemma3:12b-it-qat`, and `mistral-small`. If you point `bind_tools` at a chat-only model the code will not crash — the model will just respond with prose describing what it *would* do instead of returning a `tool_call`. That is one of the least helpful failure modes in the whole framework, and it is worth committing the list of tool-capable models to memory (or, more realistically, to a `README` in your project).
 
 ## What we covered
 

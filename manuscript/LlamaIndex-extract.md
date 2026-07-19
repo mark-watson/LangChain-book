@@ -9,7 +9,7 @@ Everything lives in `source-code/llama_index_extract/`. Setup:
 ```console
 $ cd source-code/llama_index_extract
 $ uv sync
-$ ollama pull qwen3:8b
+$ ollama pull qwen3.5:4b
 ```
 
 ## One-shot extraction
@@ -30,7 +30,7 @@ class Person(BaseModel):
     email: str | None = Field(default=None, description="Email address if given.")
 
 
-llm = Ollama(model="qwen3:8b", temperature=0, request_timeout=120.0)
+llm = Ollama(model="qwen3.5:4b", temperature=0, request_timeout=120.0, thinking=False)
 
 prompt = PromptTemplate(
     "Extract structured information about the person mentioned in the following text. "
@@ -78,7 +78,7 @@ class Event(BaseModel):
     location: str | None = Field(default=None, description="Location if mentioned.")
 
 
-llm = Ollama(model="qwen3:8b", temperature=0, request_timeout=120.0)
+llm = Ollama(model="qwen3.5:4b", temperature=0, request_timeout=120.0, thinking=False)
 
 prompt = PromptTemplate(
     "Extract calendar event information from the text below. "

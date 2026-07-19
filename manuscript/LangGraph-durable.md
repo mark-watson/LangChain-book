@@ -40,7 +40,7 @@ class State(TypedDict):
     messages: Annotated[list[BaseMessage], add_messages]
 
 
-_model = ChatOllama(model="qwen3:8b", temperature=0)
+_model = ChatOllama(model="qwen3.5:4b", temperature=0)
 
 
 def call_model(state: State) -> dict:

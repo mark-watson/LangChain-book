@@ -30,7 +30,7 @@ $ uv sync
 Only the fourth script calls an LLM; if you want to run it, pull the same tool-capable model we have been using:
 
 ```console
-$ ollama pull qwen3:8b
+$ ollama pull qwen3.5:4b
 ```
 
 ## Example 1: hello graph
@@ -230,7 +230,7 @@ class State(TypedDict):
     messages: Annotated[list[BaseMessage], add_messages]
 
 
-model = ChatOllama(model="qwen3:8b", temperature=0)
+model = ChatOllama(model="qwen3.5:4b", temperature=0)
 
 
 def call_model(state: State) -> dict:

@@ -44,7 +44,7 @@ def multiply(a: int, b: int) -> int:
 @tool
 def web_search(query: str) -> str:
     """Search DuckDuckGo for a query and return the top three text results."""
-    from duckduckgo_search import DDGS
+    from ddgs import DDGS
 
     try:
         results = list(DDGS().text(query, max_results=3))
@@ -77,7 +77,7 @@ from langgraph.prebuilt import create_react_agent
 
 from _tools import TOOLS
 
-model = ChatOllama(model="qwen3:8b", temperature=0)
+model = ChatOllama(model="qwen3.5:4b", temperature=0)
 agent = create_react_agent(model, TOOLS)
 
 result = agent.invoke(
@@ -133,7 +133,7 @@ class State(TypedDict):
     messages: Annotated[list[BaseMessage], add_messages]
 
 
-model = ChatOllama(model="qwen3:8b", temperature=0).bind_tools(TOOLS)
+model = ChatOllama(model="qwen3.5:4b", temperature=0, thinking=False).bind_tools(TOOLS)
 tool_node = ToolNode(TOOLS)
 
 
@@ -236,7 +236,7 @@ I use `.stream()` for essentially every agent I write, and I usually convert it 
 
 ## Two failure modes worth knowing
 
-**The model does not call the tool at all.** If `bind_tools` is pointed at a model that does not support tool calling (most 1-3 B parameter models, and some larger models that were not fine-tuned for it), the model will respond in prose describing what it *would* do instead of returning `.tool_calls`. The router will then send the response straight to `END` and the agent will terminate with a plausible-sounding but wrong answer. If you see the model narrating its plan instead of executing it, you probably have the wrong model. As of mid-2026 the models I use for tool-calling work in this book are `qwen3:8b`, `llama3.2:3b`, `gemma3:12b-it-qat`, and `mistral-small`.
+**The model does not call the tool at all.** If `bind_tools` is pointed at a model that does not support tool calling (most 1-3 B parameter models, and some larger models that were not fine-tuned for it), the model will respond in prose describing what it *would* do instead of returning `.tool_calls`. The router will then send the response straight to `END` and the agent will terminate with a plausible-sounding but wrong answer. If you see the model narrating its plan instead of executing it, you probably have the wrong model. As of mid-2026 the models I use for tool-calling work in this book are `qwen3.5:4b`, `llama3.2:3b`, `gemma3:12b-it-qat`, and `mistral-small`.
 
 **The agent loops forever.** With a bad system prompt or a weak model, the ReAct loop can call the same tool over and over. LangGraph does not enforce a step limit by default. In production I always pass `recursion_limit` when invoking:
 

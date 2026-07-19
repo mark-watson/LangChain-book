@@ -22,7 +22,7 @@ That is the whole surface. Workflows are asynchronous by default, which is why e
 ```console
 $ cd source-code/llama_index_workflows
 $ uv sync
-$ ollama pull qwen3:8b
+$ ollama pull qwen3.5:4b
 ```
 
 ## Hello workflow
@@ -128,7 +128,7 @@ Putting it together with a real model. `04_llm_workflow.py` is a classify-then-a
 class TopicRoutingWorkflow(Workflow):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.llm = Ollama(model="qwen3:8b", temperature=0, request_timeout=120.0)
+        self.llm = Ollama(model="qwen3.5:4b", temperature=0, request_timeout=120.0)
 
     @step
     async def classify(self, ev: StartEvent) -> OnTopicEvent | OffTopicEvent:

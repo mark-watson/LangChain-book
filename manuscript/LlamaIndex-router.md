@@ -11,7 +11,7 @@ Setup:
 ```console
 $ cd source-code/llama_index_router
 $ uv sync
-$ ollama pull qwen3:8b
+$ ollama pull qwen3.5:4b
 ```
 
 ## `RouterQueryEngine`: pick one index

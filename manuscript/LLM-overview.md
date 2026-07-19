@@ -25,7 +25,7 @@ When I wrote the first edition of this book it was difficult to run LLMs locally
  $ ollama list
 NAME                       ID              SIZE      MODIFIED    
 phi4-reasoning:plus        f0ad3edce8e4    11 GB     4 days ago     
-qwen3:8b                   e4b5fd7f8af0    5.2 GB    6 days ago     
+qwen3.5:4b                 e4b5fd7f8af0    5.2 GB    6 days ago     
 qwen3:30b                  2ee832bc15b5    18 GB     6 days ago     
 gemma3:12b-it-qat          5d4fa005e7bb    8.9 GB    2 weeks ago    
 gemma3:4b-it-qat           d01ad0579247    4.0 GB    2 weeks ago    

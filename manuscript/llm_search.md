@@ -29,7 +29,7 @@ Setup:
 ```console
 $ cd source-code/local_search
 $ uv sync
-$ ollama pull qwen3:8b
+$ ollama pull qwen3.5:4b
 ```
 
 ## The graph
@@ -40,11 +40,11 @@ $ ollama pull qwen3:8b
 from typing import TypedDict
 
 import trafilatura
-from duckduckgo_search import DDGS
+from ddgs import DDGS
 from langchain_ollama import ChatOllama
 from langgraph.graph import END, START, StateGraph
 
-model = ChatOllama(model="qwen3:8b", temperature=0)
+model = ChatOllama(model="qwen3.5:4b", temperature=0)
 
 MAX_RESULTS = 5
 MAX_PAGE_CHARS = 6000
@@ -244,7 +244,7 @@ Everything from Chapters 8, 9, and 10 composes with this pipeline:
 - **Add an approval interrupt** before `fetch` if you want a human to prune the URL list before you spend the time on downloads.
 - **Swap `synthesize` for a supervisor graph** that routes to different downstream specialists based on the question ("if the summaries are about code, delegate to the code specialist; if factual, to the KG specialist").
 
-You can also swap the search backend. `duckduckgo-search` is the free default; if you want more consistent results, [Brave Search](https://api.search.brave.com/) offers a generous free tier and drops in with a two-line change to `search_node`.
+You can also swap the search backend. `ddgs` is the free default; if you want more consistent results, [Brave Search](https://api.search.brave.com/) offers a generous free tier and drops in with a two-line change to `search_node`.
 
 ## Wrapping up Part I
 

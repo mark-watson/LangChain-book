@@ -175,7 +175,7 @@ class State(TypedDict):
     refined: str
 
 
-model = ChatOllama(model="qwen3:8b", temperature=0)
+model = ChatOllama(model="qwen3.5:4b", temperature=0)
 
 
 def propose(state: State) -> dict:

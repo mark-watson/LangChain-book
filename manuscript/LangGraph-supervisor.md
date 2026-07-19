@@ -29,7 +29,7 @@ Setup:
 ```console
 $ cd source-code/langgraph_supervisor
 $ uv sync
-$ ollama pull qwen3:8b
+$ ollama pull qwen3.5:4b
 ```
 
 ## The specialists
@@ -57,7 +57,7 @@ def multiply(a: int, b: int) -> int:
 @tool
 def web_search(query: str) -> str:
     """Search DuckDuckGo. Returns the top three text results."""
-    from duckduckgo_search import DDGS
+    from ddgs import DDGS
     try:
         results = list(DDGS().text(query, max_results=3))
     except Exception as exc:
@@ -69,7 +69,7 @@ def web_search(query: str) -> str:
     )
 
 
-_model = ChatOllama(model="qwen3:8b", temperature=0)
+_model = ChatOllama(model="qwen3.5:4b", temperature=0, thinking=False)
 
 research_agent = create_react_agent(_model, [web_search])
 math_agent = create_react_agent(_model, [add, multiply])
@@ -122,7 +122,7 @@ SUPERVISOR_PROMPT = SystemMessage(
 )
 
 _supervisor_llm = (
-    ChatOllama(model="qwen3:8b", temperature=0).with_structured_output(RouterDecision)
+    ChatOllama(model="qwen3.5:4b", temperature=0, thinking=False).with_structured_output(RouterDecision)
 )
 
 

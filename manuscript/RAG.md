@@ -6,7 +6,7 @@ Retrieval-Augmented Generation is the workhorse pattern of applied LLM developme
 
 Everything I wrote in the previous edition about *why* RAG works still applies. What has changed is that in 2026, the parts that used to be interesting — chunking, embedding, storing — are commoditized and take about six lines each. The interesting choice now is which *retrieval pattern* to use, because a naive retriever is often not good enough, and the differences between the good patterns are meaningful and worth understanding.
 
-This chapter walks through four patterns over the same tiny four-file corpus. Everything runs locally on your laptop with `qwen3:8b` from Ollama as the LLM and BGE from Hugging Face as the embedding model.
+This chapter walks through four patterns over the same tiny four-file corpus. Everything runs locally on your laptop with `qwen3.5:4b` from Ollama as the LLM and BGE from Hugging Face as the embedding model.
 
 | Script | Pattern |
 |---|---|
@@ -20,7 +20,7 @@ The four scripts live in `source-code/rag_langchain/` and share the corpus in `s
 ```console
 $ cd source-code/rag_langchain
 $ uv sync
-$ ollama pull qwen3:8b
+$ ollama pull qwen3.5:4b
 ```
 
 The first script will also download two small models from Hugging Face — the BGE embedding model and, in the reranker example, a BGE cross-encoder. Roughly 350 MB total, cached under `~/.cache/huggingface/` after the first run.
@@ -88,7 +88,7 @@ def format_docs(docs):
     return "\n\n".join(f"[{d.metadata['source']}] {d.page_content}" for d in docs)
 
 
-model = ChatOllama(model="qwen3:8b", temperature=0)
+model = ChatOllama(model="qwen3.5:4b", temperature=0)
 
 chain = (
     {"context": retriever | format_docs, "question": RunnablePassthrough()}
@@ -167,7 +167,7 @@ Users phrase questions in one specific way. The passage that answers their quest
 ```python
 from langchain.retrievers.multi_query import MultiQueryRetriever
 
-rewriter = ChatOllama(model="qwen3:8b", temperature=0)
+rewriter = ChatOllama(model="qwen3.5:4b", temperature=0)
 
 retriever = MultiQueryRetriever.from_llm(
     retriever=vectorstore.as_retriever(search_kwargs={"k": 3}),

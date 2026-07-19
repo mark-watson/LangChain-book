@@ -32,7 +32,7 @@ All of Part II's examples share the same base install. For this chapter's direct
 ```console
 $ cd source-code/llama_index_intro
 $ uv sync
-$ ollama pull qwen3:8b
+$ ollama pull qwen3.5:4b
 ```
 
 The four scripts in this chapter share the four-file corpus in `source-code/data/` — the same one Chapter 4 used. Reusing the corpus lets you compare LlamaIndex's behavior directly against Chapter 4's LangChain RAG chapter.
@@ -46,7 +46,7 @@ from llama_index.core import Settings, SimpleDirectoryReader, VectorStoreIndex
 from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 from llama_index.llms.ollama import Ollama
 
-Settings.llm = Ollama(model="qwen3:8b", request_timeout=120.0)
+Settings.llm = Ollama(model="qwen3.5:4b", request_timeout=120.0)
 Settings.embed_model = HuggingFaceEmbedding(model_name="BAAI/bge-small-en-v1.5")
 
 documents = SimpleDirectoryReader("../data").load_data()
