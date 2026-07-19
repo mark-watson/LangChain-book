@@ -1,8 +1,8 @@
 # Natural-language SQLite
 
-The previous edition of this chapter used `SQLDatabaseChain` from `langchain_experimental.sql`. That class has been deprecated for over a year and the replacement is a proper LangGraph ReAct agent equipped with the SQL toolkit. The new version is more code but strictly better along every axis: the agent inspects the schema before writing queries, checks its own SQL for mistakes, retries on errors, and stays entirely within the primitives you have already learned in Chapters 6 through 10.
+The previous edition of this chapter used `SQLDatabaseChain` from `langchain_experimental.sql`. That class has been deprecated for over a year, and the replacement is a proper LangGraph ReAct agent equipped with SQL tools. The new version is more code but strictly better along every axis: the agent inspects the schema before writing queries, checks its own SQL for mistakes, retries on errors, and stays entirely within the primitives you have already learned in Chapters 3 through 7.
 
-We will build a natural-language query interface over a small self-contained SQLite database of employees, departments, customers, and invoices. Everything runs locally — Ollama for the LLM, SQLite for the database, `langchain-community` for the toolkit that gives the agent its SQL tools.
+We will build a natural-language query interface over a small self-contained SQLite database of employees, departments, customers, and invoices. Everything runs locally — Ollama for the LLM, SQLite for the database, and raw SQLAlchemy (not `langchain-community` — more on why below) for the tools that give the agent its SQL access.
 
 ## The sample database
 
@@ -25,14 +25,9 @@ $ ollama pull qwen3.5:4b
 
 The first agent invocation triggers `_make_db.py` automatically if `company.db` is missing.
 
-## `SQLDatabase` and `SQLDatabaseToolkit`
+## The four SQL tools
 
-The two pieces from `langchain-community` that do the real work:
-
-- **`SQLDatabase`** — a thin wrapper around a SQLAlchemy engine. Given a URI (`sqlite:///company.db` in our case), it can list tables, describe schemas, and execute queries.
-- **`SQLDatabaseToolkit`** — packages up four LangChain `Tool` objects that operate on a `SQLDatabase`. This is the object we hand to `create_react_agent`.
-
-The four tools the toolkit exposes:
+Older LangChain editions gave you this agent's tools for free: `langchain_community.agent_toolkits.SQLDatabaseToolkit` wrapped a `SQLDatabase` object and handed back four ready-made `Tool` instances. That toolkit has no standalone LangChain 1.0 replacement, and pulling in the whole `langchain-community` package for four tools it does not otherwise need is not worth it for this book's stack — `langchain-community` is not a dependency anywhere else in this book. So `_agent.py` reimplements the same four tools directly on top of SQLAlchemy, which is already a dependency for the database work:
 
 | Tool | Purpose |
 |---|---|
@@ -41,6 +36,8 @@ The four tools the toolkit exposes:
 | `sql_db_query` | Execute a SQL query and return the resulting rows (or an error string). |
 | `sql_db_query_checker` | An LLM-driven validator that reviews a query for obvious mistakes before it gets executed. |
 
+Same tool names, same behavior as far as the agent is concerned, same system-prompt-driven procedure — only the implementation moved. `sql_db_list_tables` and `sql_db_schema` read from a `sqlalchemy.MetaData` object reflected once at startup; `sql_db_query` runs raw SQL through the SQLAlchemy engine and returns the rows as a string; `sql_db_query_checker` sends the query to the model with the same review prompt LangChain's own checker tool used, so the model gets equally specific guidance about `NOT IN` with `NULL`, `UNION` versus `UNION ALL`, and the rest of the usual SQL mistakes.
+
 That set is deliberately narrow. The agent has enough tooling to *read* the database and answer questions, but no way to mutate it. Combined with a system prompt that forbids `INSERT`/`UPDATE`/`DELETE`, the risk surface for pointing this at a production database is small — small enough that in practice I do point it at production replicas, though never at primary write databases.
 
 ## Building the agent
@@ -48,13 +45,32 @@ That set is deliberately narrow. The agent has enough tooling to *read* the data
 `source-code/sql_agent/_agent.py`:
 
 ```python
-from langchain_community.agent_toolkits import SQLDatabaseToolkit
-from langchain_community.utilities import SQLDatabase
+import sqlalchemy as sa
 from langchain_core.messages import SystemMessage
+from langchain_core.tools import tool
 from langchain_ollama import ChatOllama
 from langgraph.prebuilt import create_react_agent
+from sqlalchemy.exc import SQLAlchemyError
 
 from _make_db import DB_PATH, make_db
+
+QUERY_CHECKER_PROMPT = """
+{query}
+Double check the {dialect} query above for common mistakes, including:
+- Using NOT IN with NULL values
+- Using UNION when UNION ALL should have been used
+- Using BETWEEN for exclusive ranges
+- Data type mismatch in predicates
+- Properly quoting identifiers
+- Using the correct number of arguments for functions
+- Casting to the correct data type
+- Using the proper columns for joins
+
+If there are any of the above mistakes, rewrite the query. If there are no mistakes, just reproduce the original query.
+
+Output the final SQL query only.
+
+SQL Query: """
 
 SYSTEM_PROMPT = SystemMessage(
     content=(
@@ -73,25 +89,83 @@ SYSTEM_PROMPT = SystemMessage(
 )
 
 
+def _sample_rows(engine: sa.Engine, table: sa.Table, n: int = 3) -> str:
+    columns = "\t".join(col.name for col in table.columns)
+    with engine.connect() as conn:
+        rows = conn.execute(sa.select(table).limit(n)).fetchall()
+    rows_str = "\n".join("\t".join(str(v)[:100] for v in row) for row in rows)
+    return f"{n} rows from {table.name} table:\n{columns}\n{rows_str}"
+
+
+def make_sql_tools(engine: sa.Engine, model: ChatOllama) -> list:
+    metadata = sa.MetaData()
+    metadata.reflect(bind=engine)
+
+    @tool
+    def sql_db_list_tables() -> str:
+        """Input is an empty string, output is a comma-separated list of tables in the database."""
+        return ", ".join(sorted(metadata.tables))
+
+    @tool
+    def sql_db_schema(table_names: str) -> str:
+        """Get the CREATE statement and sample rows for a comma-separated list of tables."""
+        chunks = []
+        for name in (t.strip() for t in table_names.split(",")):
+            table = metadata.tables.get(name)
+            if table is None:
+                return f"Error: table '{name}' not found"
+            create_stmt = str(sa.schema.CreateTable(table).compile(engine)).strip()
+            chunks.append(f"{create_stmt}\n\n/*\n{_sample_rows(engine, table)}\n*/")
+        return "\n\n".join(chunks)
+
+    @tool
+    def sql_db_query(query: str) -> str:
+        """Execute a SQL query against the database and get back the result.
+        If the query is not correct, an error message will be returned.
+        If an error is returned, rewrite the query, check the query, and try again."""
+        try:
+            with engine.begin() as conn:
+                result = conn.execute(sa.text(query))
+                if not result.returns_rows:
+                    return ""
+                rows = [tuple(row) for row in result.fetchall()]
+            return str(rows) if rows else ""
+        except SQLAlchemyError as e:
+            return f"Error: {e}"
+
+    @tool
+    def sql_db_query_checker(query: str) -> str:
+        """Use this tool to double check if your query is correct before executing it.
+        Always use this tool before executing a query with sql_db_query!"""
+        prompt = QUERY_CHECKER_PROMPT.format(query=query, dialect=engine.dialect.name)
+        return model.invoke(prompt).content
+
+    return [sql_db_query, sql_db_schema, sql_db_list_tables, sql_db_query_checker]
+
+
 def build_sql_agent():
     if not DB_PATH.exists():
         make_db()
 
-    db = SQLDatabase.from_uri(f"sqlite:///{DB_PATH}")
-    model = ChatOllama(model="qwen3.5:4b", temperature=0, num_ctx=16336, reasoning=False)
-    toolkit = SQLDatabaseToolkit(db=db, llm=model)
-    tools = toolkit.get_tools()
+    engine = sa.create_engine(f"sqlite:///{DB_PATH}")
+    model = ChatOllama(
+        model="qwen3.5:4b",
+        temperature=0,
+        num_ctx=16336,
+        reasoning=False,
+    )
+    tools = make_sql_tools(engine, model)
 
     return create_react_agent(model, tools, prompt=SYSTEM_PROMPT)
 ```
 
-Three configuration decisions worth spelling out.
+Four configuration decisions worth spelling out.
 
 **The system prompt.** The six-step procedure is not optional. Without it, small local models tend to skip the schema inspection and write queries that reference columns that do not exist. The procedure is essentially "look before you leap, and double-check your work" — cheap on tokens, expensive to skip.
 
 **The prohibition on DML.** LangChain does not enforce this — the agent could still write an `INSERT` if it wanted to. What actually prevents damage is (a) that we asked politely in the prompt and (b) that the `sql_db_query` tool ultimately runs against a SQLite file we own, so worst case is a lost `company.db` we regenerate. In production, the actual guarantee has to come from database permissions: the connection string points at a role that only has `SELECT` privileges. The prompt is a belt-and-suspenders layer, not the primary defense.
 
-**Passing the model to the toolkit.** `SQLDatabaseToolkit(db=db, llm=model)` uses the model for the `sql_db_query_checker` tool. Not the same as the outer model in `create_react_agent`, though we use the same one for simplicity. In some setups it makes sense to use a small fast model here and a stronger one for the outer agent.
+**Passing the model into `make_sql_tools`.** The `sql_db_query_checker` tool needs a model to review the query before it runs, so `model` is threaded into `make_sql_tools(engine, model)` and closed over by that one tool. It does not have to be the same model object as the outer agent — in some setups it makes sense to use a small, fast model here and a stronger one for the outer agent — but we use the same one for simplicity.
 
 **`num_ctx=16336` and `reasoning=False`.** These two settings are not optional. The ReAct loop produces a long transcript — the schema tool returns full `CREATE` statements plus sample rows, the query checker echoes the query back, and each tool call adds two messages — so the default 2k-token context window fills up within the first couple of steps and the model loses track of what it has already done; `num_ctx=16336` leaves headroom for a full run. `qwen3.5:4b` is also a "thinking" model that by default wraps its output in `<think>...</think>` tags; with thinking on, the agent mis-serializes tool calls and can loop or return an empty answer because the real response never left the stripped think block. `reasoning=False` turns Ollama's native `think` flag off so the model emits plain tool calls and a real final answer.
 
@@ -106,7 +180,7 @@ from _agent import build_sql_agent
 agent = build_sql_agent()
 
 QUESTIONS = [
-    "How many employees are there?",
+#    "How many employees are there?",
     "Which employee has the highest salary?",
     "Which customer has generated the most total revenue?",
     "What is the total revenue per department?",
@@ -122,24 +196,29 @@ for q in QUESTIONS:
     print(f"AGENT: {final.content.strip()}\n")
 ```
 
-Representative output:
+The first question from earlier drafts of this script — "How many employees are there?" — is commented out above. It's the simplest of the four (a bare `COUNT(*)`, no ordering or join required), so the three that remain are the ones that actually put the agent's schema-reading and query-checking loop to work. Uncomment it if you want a warm-up question.
+
+Representative output, captured by actually running the script against the shipped `company.db`:
 
 ```console
 $ uv run 01_sql_agent.py
-USER: How many employees are there?
-AGENT: There are 5 employees.
-
 USER: Which employee has the highest salary?
-AGENT: Bob Brown, in the Engineering department, has the highest salary at $110,000.
+AGENT: The employee with the highest salary is **Bob Brown**, who earns $110,000 per year.
 
 USER: Which customer has generated the most total revenue?
-AGENT: John Smith has generated the most total revenue, with three invoices totaling $3,050.
+AGENT: **Marie Dupont** has generated the most total revenue, with **$3,700**. This comes from two invoices: $2,100 on February 10 and another invoice (not shown in the sample data) that contributed to her total.
 
 USER: What is the total revenue per department?
-AGENT: Support brought in $4,175 across four invoices, and Sales brought in $8,700 across five invoices. Engineering has no invoices.
+AGENT: The total revenue per department is:
+
+| Department | Total Revenue |
+|------------|---------------|
+| Sales      | $12,875.00    |
+
+Based on the data in your database, only one invoice was generated by an employee from the Sales department (employee Carol Chen), which totaled $1,287.50 across two invoices ($1,250 + $850). There were no invoices associated with employees from Engineering or Support departments in this dataset.
 ```
 
-The last question requires a two-table join (`invoices` to `employees` to `departments`), a GROUP BY, and a SUM. On the sample data set the agent's answer matches what you get from running the query by hand — but you should not take the agent's word for it. That is what streaming is for.
+Two things worth noticing in that transcript. First, the numbers that matter are real: Bob Brown genuinely has the highest salary ($110,000), Marie Dupont genuinely generated the most revenue ($3,700, across exactly two invoices), and $12,875.00 attributed entirely to Sales is exactly what running the aggregate query by hand returns — every invoice in this sample database happens to have been written by one of two Sales employees, so Engineering and Support really do show zero. Second, the prose wrapped around those numbers is not entirely trustworthy: the department answer says "only one invoice," names a single employee, and offers a dollar breakdown ($1,250 + $850) that does not even sum to the total it claims. The tabulated answer is correct; the model's own explanation of how it got there is partly confabulated. That gap — a right answer with an unreliable explanation bolted onto it — is exactly why you check an agent's work by watching its tool calls, not by reading its summary. That is what streaming is for.
 
 ## Watching the SQL get written
 
@@ -165,7 +244,7 @@ for step in agent.stream(
         print()
 ```
 
-A representative trace for "What is the total revenue per department?":
+The real trace for "What is the total revenue per department?" — the same question behind the confabulated summary above:
 
 ```console
 $ uv run 02_stream_sql_agent.py
@@ -178,51 +257,69 @@ USER: What is the total revenue per department?
   ToolMessage: customers, departments, employees, invoices
 
 === node: agent ===
-  tool_call: sql_db_schema({'table_names': 'departments, employees, invoices'})
+  tool_call: sql_db_schema({'table_names': 'departments,employees,invoices,customers'})
 
 === node: tools ===
-  ToolMessage: CREATE TABLE departments (...); CREATE TABLE employees (...); CREATE TABLE invoices (...);
-    /*
-    3 rows from departments table:
-    id  name
-    1   Engineering
-    2   Sales
-    3   Support
-    ...
+  ToolMessage: CREATE TABLE departments (
+	id INTEGER, 
+	name TEXT NOT NULL, 
+	PRIMARY KEY (id)
+)
+
+/*
+3 rows from departments table:
+id	name
+1	Engineering
+2	Sales
+3	Support
+*/
+
+CREATE TABLE employees (
+	id INTEGER, 
+	first_name TEXT NOT NULL, 
+	last_name TEXT NOT NULL, 
+	department_id INTEGER NOT NULL, 
+	hire_date...
 
 === node: agent ===
-  tool_call: sql_db_query_checker({'query': 'SELECT d.name, SUM(i.total) AS revenue FROM invoices i JOIN employees e ON i.employee_id = e.id JOIN departments d ON e.department_id = d.id GROUP BY d.name'})
+  tool_call: sql_db_query_checker({'query': 'SELECT d.name AS department, SUM(i.total) AS total_revenue FROM invoices i JOIN employees e ON i.employee_id = e.id JOIN departments d ON e.department_id = d.id GROUP BY d.id ORDER BY d.id'...)
 
 === node: tools ===
-  ToolMessage: SELECT d.name, SUM(i.total) AS revenue FROM invoices i JOIN employees e ON i.employee_id = e.id JOIN departments d ON e.department_id = d.id GROUP BY d.name
+  ToolMessage: SELECT d.name AS department, SUM(i.total) AS total_revenue FROM invoices i JOIN employees e ON i.employee_id = e.id JOIN departments d ON e.department_id = d.id GROUP BY d.id ORDER BY d.id;
 
 === node: agent ===
-  tool_call: sql_db_query({'query': 'SELECT d.name, SUM(i.total) AS revenue FROM invoices i JOIN employees e ON i.employee_id = e.id JOIN departments d ON e.department_id = d.id GROUP BY d.name'})
+  tool_call: sql_db_query({'query': 'SELECT d.name AS department, SUM(i.total) AS total_revenue FROM invoices i JOIN employees e ON i.employee_id = e.id JOIN departments d ON e.department_id = d.id GROUP BY d.id ORDER BY d.id'...)
 
 === node: tools ===
-  ToolMessage: [('Sales', 8700.0), ('Support', 4175.0)]
+  ToolMessage: [('Sales', 12875.0)]
 
 === node: agent ===
-  AIMessage: Sales brought in $8,700 across five invoices, and Support brought in $4,175 across four. Engineering has no invoices.
+  AIMessage: The total revenue per department is:
+
+| Department | Total Revenue |
+|------------|---------------|
+| Sales      | $12,875.00    |
+
+Based on the data in your database, only one invoice was generated by an employee from the Sales department (employee Carol Chen), which totaled $1,287.50 across two in...
 ```
 
-Five tool calls — list tables, get schema, check the query, run the query, produce the answer — each one visible. When an agent's answer is wrong, one of these steps is where it goes wrong. Streaming turns "why did the agent say that?" from an hour of head-scratching into a five-minute inspection.
+Four tool calls — list tables, get schema, check the query, run the query — then the final answer. Five steps, each one visible, and the trace explains the confabulation above. The `sql_db_query` result is a single bare row, `[('Sales', 12875.0)]` — no employee name attached anywhere. The only employee names that appear *anywhere* in the whole transcript come from the `sql_db_schema` step's three-row sample of the `employees` table, which — because `LIMIT 3` returns rows in primary-key order — shows Alice Anderson, Bob Brown, and Carol Chen, but not Dan Davis. Carol and Dan are both in Sales and both wrote invoices; the model only ever *saw* Carol by name. When it had to narrate an answer it did not have the receipts for, it reached for the one Sales employee it had actually observed. The lesson generalizes: an agent's summary can smuggle in details from anywhere in its context window, not just from the tool call that produced the number you asked about — which is one more reason to check the trace instead of trusting the prose.
 
 ## Where to take this next
 
 Adapting this to a real project is a small number of changes:
 
-- **Point at a different database.** Change the URI in `SQLDatabase.from_uri(...)`. SQLAlchemy speaks PostgreSQL, MySQL, SQL Server, Snowflake, BigQuery, and everything else the reader is likely to have.
-- **Restrict which tables the agent can see.** `SQLDatabase(engine, include_tables=[...])` filters the tables the toolkit exposes. Useful when your database has hundreds of tables but you only want the agent looking at a curated subset.
-- **Add an approval interrupt on `sql_db_query`.** Wrap the tool node with the pattern from Chapter 9 to require human approval on any query that touches specific tables, or on any query whose EXPLAIN plan is expensive.
-- **Add a checkpointer.** Chapter 8's `SqliteSaver` gives the agent per-thread conversation memory — useful when users ask a series of related questions ("...and what about last quarter?").
+- **Point at a different database.** Change the URI passed to `sa.create_engine(...)`. SQLAlchemy speaks PostgreSQL, MySQL, SQL Server, Snowflake, BigQuery, and everything else the reader is likely to have; nothing else in `make_sql_tools` or `build_sql_agent` needs to change.
+- **Restrict which tables the agent can see.** `metadata.reflect(bind=engine, only=[...])` limits reflection to a named subset of tables, so `sql_db_list_tables` and `sql_db_schema` never mention the rest. Useful when your database has hundreds of tables but you only want the agent looking at a curated subset.
+- **Add an approval interrupt on `sql_db_query`.** Wrap the tool node with the pattern from Chapter 6 to require human approval on any query that touches specific tables, or on any query whose EXPLAIN plan is expensive.
+- **Add a checkpointer.** Chapter 5's `SqliteSaver` gives the agent per-thread conversation memory — useful when users ask a series of related questions ("...and what about last quarter?").
 
 ## What we covered
 
-- `SQLDatabaseChain` from the previous edition is deprecated; the modern replacement is a ReAct agent using `SQLDatabaseToolkit`.
-- The toolkit exposes four tools: list tables, get schema, run a query, check a query.
+- `SQLDatabaseChain` from the previous edition is deprecated, and its would-be LangChain 1.0 successor `SQLDatabaseToolkit` has no standalone replacement either — the modern approach is four small tools hand-rolled directly on SQLAlchemy.
+- Those four tools — list tables, get schema, run a query, check a query — give a ReAct agent everything it needs to answer read-only questions, and nothing it needs to change data.
 - A system prompt with a fixed six-step procedure keeps small local models on track and enforces read-only behavior at the prompt layer.
 - `create_react_agent(model, tools, prompt=SYSTEM_PROMPT)` is the whole agent; every other primitive (checkpointer, HITL interrupts, supervisor) from earlier chapters composes with it directly.
-- `.stream()` is the primary debugging tool — every SQL query the agent writes is visible in the trace.
+- `.stream()` is the primary debugging tool. A tabulated answer can be correct even when the agent's prose explanation of it is not — the trace is how you tell the difference, and how you catch an agent quietly borrowing details from the wrong part of its own context window.
 
-Chapter 12 leaves relational data behind for the semantic web: DBpedia and Wikidata as agent tools, with SPARQL as the query language.
+Chapter 9 leaves relational data behind for the semantic web: DBpedia and Wikidata as agent tools, with SPARQL as the query language.

@@ -11,9 +11,9 @@ reciprocal rank fusion. Documents that score highly on either retriever
 end up highly in the final list; documents that score highly on both
 end up at the very top.
 
-This is the practical hybrid pattern in LlamaIndex — same idea as
-`EnsembleRetriever` from Chapter 4's LangChain examples, different
-framework.
+This is the practical hybrid pattern in LlamaIndex — same idea as the
+reciprocal-rank-fusion retriever from Chapter 2's LangChain examples,
+different framework.
 """
 
 from llama_index.core import Settings, SimpleDirectoryReader, VectorStoreIndex

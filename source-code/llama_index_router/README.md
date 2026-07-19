@@ -1,4 +1,4 @@
-# Chapter 20 — Multi-index query pipelines
+# Chapter 17 — Multi-index query pipelines
 
 Two scripts that route a query across multiple corpora: `RouterQueryEngine` (pick one) and `SubQuestionQueryEngine` (decompose into per-corpus subquestions).
 

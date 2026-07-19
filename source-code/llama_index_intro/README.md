@@ -1,4 +1,4 @@
-# Chapter 14 — LlamaIndex 0.14 in one hour
+# Chapter 11 — LlamaIndex 0.14 in one hour
 
 Four scripts that together cover every LlamaIndex primitive we use in the rest of Part II: documents, indices, query engines, retrievers, persistence, and provider swapping.
 
@@ -13,7 +13,7 @@ The first script also downloads a small embedding model from Hugging Face (~130 
 
 ## Corpus
 
-All four scripts read from `../data/` — the same four short text files (chemistry, economics, health, sports) used by Chapter 4.
+All four scripts read from `../data/` — the same four short text files (chemistry, economics, health, sports) used by Chapter 2.
 
 ## Scripts
 

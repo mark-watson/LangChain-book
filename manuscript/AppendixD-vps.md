@@ -31,7 +31,7 @@ Everything above is open source. Nothing costs money except the VPS rental.
 
 ## Systemd unit for a LangGraph app
 
-Assuming your app is a FastAPI or `llama-deploy` server that listens on `127.0.0.1:8000`:
+Assuming your app is a FastAPI server that listens on `127.0.0.1:8000` — the same shape as the deployment chapter's `01_serve_workflow.py`:
 
 ```ini
 # /etc/systemd/system/myapp.service
@@ -81,7 +81,7 @@ For comparison: a single-seat LangSmith Plus subscription in 2026 is $39/month, 
 
 ## Backups
 
-The one thing worth spending time on. Whatever the app persists — SQLite databases from Chapter 8, Chroma directories, LlamaIndex `storage/` folders — should be backed up daily. Simplest reliable pattern:
+The one thing worth spending time on. Whatever the app persists — SQLite databases from Chapter 5, Chroma directories, LlamaIndex `storage/` folders — should be backed up daily. Simplest reliable pattern:
 
 ```bash
 # /etc/cron.daily/myapp-backup

@@ -4,7 +4,7 @@ My digital life consists of writing, working as an AI practitioner, and learning
 
 About ten years ago I spent two months of my time writing a system in Clojure that was planned to be my own custom and personal DropBox, augmented with various NLP tools and a FireFox plugin to send web clippings directly to my personal system. To be honest, I stopped using my own project after a few months because the time it took to organize my information was a greater opportunity cost than the value I received.
 
-In this chapter I am going to walk you through parts of a new system that I am developing for my own personal use to help me organize my material on Google Drive (and eventually other cloud services). Don't be surprised if the completed project is an additional example in a future edition of this book!
+In this chapter I walk through a small system for pulling text files out of Google Drive and making them queryable with a local LLM. It is deliberately minimal — a fetch script and an index-and-query script — but it is the same shape as anything larger you would build on top of your own Drive.
 
 With the Google setup directions listed below, you will get a pop-up web browsing window with a warning like (this shows my Gmail address, you should see your own Gmail address here assuming that you have recently logged into Gmail using your default web browser):
 
@@ -12,122 +12,164 @@ With the Google setup directions listed below, you will get a pop-up web browsin
 
 You will need to first click **Advanced** and then click link **Go to GoogleAPIExamples (unsafe)** link in the lower left corner and then temporarily authorize this example on your Gmail account.
 
-## Setting Up Requirements.
+## Setting Up Requirements
 
-You need to create a credential at [https://console.cloud.google.com/cloud-resource-manager](https://console.cloud.google.com/cloud-resource-manager) (copied from the [PyDrive documentation](https://pythonhosted.org/PyDrive/quickstart.html), changing application type to "Desktop"): 
+You need to create a credential at [https://console.cloud.google.com/cloud-resource-manager](https://console.cloud.google.com/cloud-resource-manager) (changing application type to "Desktop"):
 
-- Search for ‘Google Drive API’, select the entry, and click ‘Enable’.
-- Select ‘Credentials’ from the left menu, click ‘Create Credentials’, select ‘OAuth client ID’.
-- Now, the product name and consent screen need to be set -> click ‘Configure consent screen’ and follow the instructions. Once finished:
-- Select ‘Application type’ to be Desktop application.
+- Search for 'Google Drive API', select the entry, and click 'Enable'.
+- Select 'Credentials' from the left menu, click 'Create Credentials', select 'OAuth client ID'.
+- Now, the product name and consent screen need to be set -> click 'Configure consent screen' and follow the instructions. Once finished:
+- Select 'Application type' to be Desktop application.
 - Enter an appropriate name.
-- Input http://localhost:8080 for ‘Authorized JavaScript origins’.
-- Input http://localhost:8080/ for ‘Authorized redirect URIs’.
-- Click ‘Save’.
-- Click ‘Download JSON’ on the right side of Client ID to download client_secret_<really long ID>.json. Copy the downloaded JSON credential file to the example directory **google_drive_llm** for this chapter.
-
+- Input `http://localhost:8080` for 'Authorized JavaScript origins'.
+- Input `http://localhost:8080/` for 'Authorized redirect URIs'.
+- Click 'Save'.
+- Click 'Download JSON' on the right side of Client ID. Google names the download `client_secret_<really long ID>.json` — **rename it to exactly `client_secrets.json`** and copy it into the `source-code/google_drive_llm/` directory. The script below looks for that exact filename and prints setup instructions instead of a stack trace if it is missing.
 
 ## Write Utility To Fetch All Text Files From Top Level Google Drive Folder
 
-For this example we will just authenticate our test script with Google, and copy all top level text files with names ending with ".txt" to the local file system in subdirectory **data**. The code is in the directory **google_drive_llm** in file **fetch_txt_files.py** (edited to fit page width):
+For this example we will just authenticate our test script with Google, and copy all top level text files with names ending with ".txt" to the local file system in subdirectory **data**. The library doing the Google Drive work is `pydrive2` — the maintained fork of the original `pydrive`, which stopped receiving updates some years ago. The code is in the directory **google_drive_llm** in file **fetch_txt_files.py**:
 
 ```python
-from pydrive.auth import GoogleAuth
-from pydrive.drive import GoogleDrive
+"""Fetch .txt files from Google Drive using PyDrive2.
+
+PyDrive2 is the maintained successor to PyDrive. Requires Google OAuth
+credentials set up per the PyDrive2 documentation.
+"""
+
+import sys
 from pathlib import Path
 
-# good GD search docs:
-# https://developers.google.com/drive/api/guides/search-files
+from pydrive2.auth import GoogleAuth
+from pydrive2.drive import GoogleDrive
 
-# Authenticate with Google
-gauth = GoogleAuth()
-gauth.LocalWebserverAuth()
-drive = GoogleDrive(gauth)
+_SETUP_INSTRUCTIONS = """
+Google OAuth credentials not found (client_secrets.json is missing).
 
-def get_txt_files(dir_id='root'):
-    " get all plain text files with .txt extension in top level Google Drive directory "
+To set up access to Google Drive:
 
-    file_list = drive.ListFile({'q': f"'{dir_id}' in parents and trashed=false"}).GetList()
+  1. Go to the Google Cloud Console and create a project:
+     https://console.cloud.google.com/
+
+  2. Enable the Google Drive API for your project:
+     https://console.cloud.google.com/apis/library/drive.googleapis.com
+
+  3. Create OAuth 2.0 credentials (Desktop app type) and download
+     the JSON file, saving it as 'client_secrets.json' in this directory.
+
+  4. Full quickstart guide:
+     https://developers.google.com/drive/api/quickstart/python
+
+Then re-run this script — a browser window will open to complete sign-in.
+"""
+
+
+def get_txt_files(drive, dir_id="root"):
+    """Get all plain text files with .txt extension in a Google Drive directory."""
+
+    file_list = drive.ListFile(
+        {"q": f"'{dir_id}' in parents and trashed=false"}
+    ).GetList()
     for file1 in file_list:
-        print('title: %s, id: %s' % (file1['title'], file1['id']))
-    return [[file1['title'], file1['id'], file1.GetContentString()]
-            for file1 in file_list
-              if file1['title'].endswith(".txt")]
+        print("title: %s, id: %s" % (file1["title"], file1["id"]))
+    return [
+        [file1["title"], file1["id"], file1.GetContentString()]
+        for file1 in file_list
+        if file1["title"].endswith(".txt")
+    ]
 
-def create_test_file():
-    " not currently used, but useful for testing. "
-
-    # Create GoogleDriveFile instance with title 'Hello.txt':
-    file1 = drive.CreateFile({'title': 'Hello.txt'})
-    file1.SetContentString('Hello World!')
-    file1.Upload()
 
 def test():
-    fl = get_txt_files()
+    if not Path("client_secrets.json").exists():
+        print(_SETUP_INSTRUCTIONS)
+        sys.exit(0)
+
+    gauth = GoogleAuth()
+    gauth.LocalWebserverAuth()
+    drive = GoogleDrive(gauth)
+
+    fl = get_txt_files(drive)
     for f in fl:
         print(f)
-        file1 = open("data/" + f[0],"w")
-        file1.write(f[2])
-        file1.close()
+        with open("data/" + f[0], "w") as fh:
+            fh.write(f[2])
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     test()
 ```
 
-For testing I just have one text file with the file extension ".txt" on my Google Drive so my output from running this script looks like the following listing. I edited the output to change my file IDs and to only print a few lines of the debug printout of file titles.
+Two differences from an OAuth-less script worth noting. `get_txt_files` now takes `drive` as a parameter instead of closing over a module-level global — easier to test, and it makes the dependency on a successful auth step explicit. And `test()` checks for `client_secrets.json` before touching the network at all, so a reader who has not done the Google Cloud Console setup yet gets a short list of what to do next instead of an OAuth stack trace.
+
+For testing I have one text file, `sports.txt`, that I want copied from my Google Drive. Running the script opens a browser for the OAuth consent flow, then lists and downloads every top-level `.txt` file:
 
 ```console
-$ python fetch_txt_files.py
+$ uv run fetch_txt_files.py
 Your browser has been opened to visit:
 
-    https://accounts.google.com/o/oauth2/auth?client_id=529311921932-xsmj3hhiplr0dhqjln13fo4rrtvoslo8.apps.googleusercontent.com&redirect_uri=http%3A%2F%2Flocalhost%3B6180%2F&scope=https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fdrive&access_type=offline&response_type=code
+    https://accounts.google.com/o/oauth2/auth?client_id=...&redirect_uri=http%3A%2F%2Flocalhost%3A8080%2F&scope=https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fdrive&access_type=offline&response_type=code
 
 Authentication successful.
 
 title: testdata, id: 1TZ9bnL5XYQvKACJw8VoKWdVJ8jeCszJ
 title: sports.txt, id: 18RN4ojvURWt5yoKNtDdAJbh4fvmRpzwb
-title: Anaconda blog article, id: 1kpLaYQA4Ao8ZbdFaXU209hg-z0tv1xA7YOQ4L8y8NbU
-title: backups_2023, id: 1-k_r1HTfuZRWN7vwWWsYqfssl0C96J2x
-title: Work notes, id: 1fDyHyZtKI-0oRNabA_P41LltYjGoek21
-title: Sedona Writing Group Contact List, id: 1zK-5v9OQUfy8Sw33nTCl9vnL822hL1w
  ...
-['sports.txt', '18RN4ojvURWt5yoKNtDdAJbh4fvmRpzwb', 'Sport is generally recognised as activities based in physical athleticism or physical dexterity.[3] Sports are usually governed by rules to ensure fair competition and consistent adjudication of the winner.\n\n"Sport" comes from the Old French desport meaning "leisure", with the oldest definition in English from around 1300 being "anything humans find amusing or entertaining".[4]\n\nOther bodies advocate widening the definition of sport to include all physical activity and exercise. For instance, the Council of Europe include all forms of physical exercise, including those completed just for fun.\n\n']
+['sports.txt', '18RN4ojvURWt5yoKNtDdAJbh4fvmRpzwb', 'Sport is generally recognised as activities based in physical athleticism or physical dexterity...']
 ```
+
+That is a representative run against my own Drive, file IDs abbreviated — yours will list whatever `.txt` files sit at your Drive's top level. I have not re-run the OAuth flow itself for this edition, since it needs a real Google account and browser-based consent — exactly the kind of per-reader setup this book otherwise avoids — but `LocalWebserverAuth()`'s console output is standard PyDrive2 behavior and has been stable across versions.
 
 ## Generate Vector Indices for Files in Specific Google Drive Directories
 
-The example script in the last section should have created copies of the text files in you home Google Documents directory that end with ".txt". Here, we use the same LlamaIndex test code that we used in a previous chapter. The test script **index_and_QA.py** is listed here:
+The script in the last section should have created copies of your Drive's `.txt` files in `data/`. `index_and_QA.py` indexes that directory with LlamaIndex and answers a question against it — entirely locally, no OpenAI key required:
 
 ```python
-# make sure you set the following environment variable is set:
-#   OPENAI_API_KEY
+"""Index Google Drive text files and answer questions with LlamaIndex 0.14.
 
-from llama_index import GPTSimpleVectorIndex, SimpleDirectoryReader
-documents = SimpleDirectoryReader('data').load_data()
-index = GPTSimpleVectorIndex(documents)
+Uses local HuggingFace embeddings and a local Ollama LLM.
+Run fetch_txt_files.py first to download the .txt files into ./data/.
+"""
 
-# save to disk
-index.save_to_disk('index.json')
-# load from disk
-index = GPTSimpleVectorIndex.load_from_disk('index.json')
+import sys
+from pathlib import Path
 
-# search for a document
-print(index.query("What is the definition of sport?"))
+from llama_index.core import Settings, SimpleDirectoryReader, VectorStoreIndex
+from llama_index.embeddings.huggingface import HuggingFaceEmbedding
+from llama_index.llms.ollama import Ollama
+
+data_dir = Path("data")
+if not data_dir.exists() or not any(data_dir.iterdir()):
+    print(
+        "No files found in ./data/\n\n"
+        "Run fetch_txt_files.py first to download your Google Drive .txt files.\n"
+        "That script requires Google OAuth credentials (client_secrets.json).\n"
+        "Setup guide: https://developers.google.com/drive/api/quickstart/python"
+    )
+    sys.exit(0)
+
+Settings.llm = Ollama(model="qwen3.5:4b", request_timeout=120.0)
+Settings.embed_model = HuggingFaceEmbedding(model_name="BAAI/bge-small-en-v1.5")
+
+documents = SimpleDirectoryReader("data").load_data()
+index = VectorStoreIndex.from_documents(documents)
+
+query_engine = index.as_query_engine()
+
+print(query_engine.query("What is the definition of sport?"))
 ```
 
-For my test file, the output looks like:
+Two LlamaIndex-era details worth calling out, both covered in more depth in Part II of this book: `GPTSimpleVectorIndex` and `save_to_disk`/`load_from_disk` — the API this chapter used in earlier editions — no longer exist. `VectorStoreIndex.from_documents(...)` is the current equivalent, and `Settings.llm` / `Settings.embed_model` configure the LLM and embedding model globally instead of threading a `ServiceContext` through every call. And there is no `OPENAI_API_KEY` anywhere: the embedding model is a small local `HuggingFaceEmbedding`, and the LLM is a local Ollama model, so this whole example runs offline once the files are on disk.
+
+To try this without setting up Google OAuth at all, this repository ships a `data/sports.txt` sample file — the same file used as the worked example below — so you can run `index_and_QA.py` immediately and only deal with `fetch_txt_files.py` once you actually want to pull your own Drive contents.
+
+Output, run against that sample file:
 
 ```console
-$ python index_and_QA.py 
-INFO:llama_index.token_counter.token_counter:> [build_index_from_documents] Total LLM token usage: 0 tokens
-INFO:llama_index.token_counter.token_counter:> [build_index_from_documents] Total embedding token usage: 111 tokens
-INFO:llama_index.token_counter.token_counter:> [query] Total LLM token usage: 202 tokens
-INFO:llama_index.token_counter.token_counter:> [query] Total embedding token usage: 7 tokens
-
-Sport is generally recognised as activities based in physical athleticism or physical dexterity that are governed by rules to ensure fair competition and consistent adjudication of the winner. It is anything humans find amusing or entertaining, and can include all forms of physical exercise, even those completed just for fun.
+$ uv run index_and_QA.py
+Sport is generally recognized as activities based in physical athleticism or dexterity, typically governed by rules to ensure fair competition and consistent adjudication of the winner. The term originates from Old French *desport* meaning "leisure," with an English definition dating back around 1300 being anything humans find amusing or entertaining. Additionally, some bodies advocate widening this definition to include all physical activity and exercise, including those completed just for fun.
 ```
 
-It is interesting to see how the query result is rewritten in a nice form, compared to the raw text in the file **sports.txt** on my Google Drive:
+It is interesting to see how the query result is rewritten in a nice form, compared to the raw text in `data/sports.txt`:
 
 ```console
 $ cat data/sports.txt 
@@ -137,7 +179,6 @@ Sport is generally recognised as activities based in physical athleticism or phy
 
 Other bodies advocate widening the definition of sport to include all physical activity and exercise. For instance, the Council of Europe include all forms of physical exercise, including those completed just for fun.
 ```
-
 
 ## Google Drive Example Wrap Up
 

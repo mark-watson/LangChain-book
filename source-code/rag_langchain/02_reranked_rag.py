@@ -9,12 +9,13 @@ the top 3 with the cross-encoder before showing anything to the LLM.
 
 from typing import Any
 
-from langchain.retrievers import ContextualCompressionRetriever
-from langchain.retrievers.document_compressors import CrossEncoderReranker
 from langchain_chroma import Chroma
+from langchain_core.callbacks import CallbackManagerForRetrieverRun
 from langchain_core.cross_encoders import BaseCrossEncoder
+from langchain_core.documents import Document
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.retrievers import BaseRetriever
 from langchain_core.runnables import RunnablePassthrough
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_ollama import ChatOllama
@@ -44,6 +45,31 @@ class HuggingFaceCrossEncoder(BaseModel, BaseCrossEncoder):
         return scores
 
 
+class RerankRetriever(BaseRetriever):
+    """Retrieve wide from a base retriever, then rerank narrow with a cross-encoder.
+
+    langchain.retrievers.ContextualCompressionRetriever and CrossEncoderReranker
+    are no longer importable from the langchain package (both retired the same
+    way langchain_community.cross_encoders was) — this reimplements the same
+    two-step shape directly against the cross-encoder above.
+    """
+
+    base_retriever: BaseRetriever
+    cross_encoder: BaseCrossEncoder
+    top_n: int = 3
+
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
+    def _get_relevant_documents(
+        self, query: str, *, run_manager: CallbackManagerForRetrieverRun
+    ) -> list[Document]:
+        candidates = self.base_retriever.invoke(query)
+        pairs = [(query, doc.page_content) for doc in candidates]
+        scores = self.cross_encoder.score(pairs)
+        ranked = sorted(zip(candidates, scores), key=lambda pair: pair[1], reverse=True)
+        return [doc for doc, _ in ranked[: self.top_n]]
+
+
 embeddings = HuggingFaceEmbeddings(model_name="BAAI/bge-small-en-v1.5")
 vectorstore = Chroma.from_documents(
     documents=load_documents(),
@@ -54,11 +80,7 @@ vectorstore = Chroma.from_documents(
 base_retriever = vectorstore.as_retriever(search_kwargs={"k": 10})
 
 reranker_model = HuggingFaceCrossEncoder(model_name="BAAI/bge-reranker-base")
-compressor = CrossEncoderReranker(model=reranker_model, top_n=3)
-retriever = ContextualCompressionRetriever(
-    base_compressor=compressor,
-    base_retriever=base_retriever,
-)
+retriever = RerankRetriever(base_retriever=base_retriever, cross_encoder=reranker_model, top_n=3)
 
 prompt = ChatPromptTemplate.from_template(
     "Answer the question using only the context below.\n\n"

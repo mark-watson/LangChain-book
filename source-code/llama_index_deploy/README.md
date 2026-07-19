@@ -1,6 +1,8 @@
-# Chapter 22 — Serving a Workflow with llama-deploy
+# Chapter 19 — Serving a Workflow with FastAPI
 
-Three scripts that stand up a local workflow-as-a-service on your laptop, no cloud, no LlamaCloud.
+Two scripts that stand up a local workflow-as-a-service on your laptop, no cloud, no LlamaCloud.
+
+`llama-deploy` (0.9.x) is incompatible with `llama-index-core` 0.14 as of this writing, so the workflow is served directly with FastAPI instead — simpler, no external dependencies, no Redis.
 
 ## Setup
 
@@ -9,22 +11,15 @@ $ uv sync
 $ ollama pull qwen3.5:4b
 ```
 
-You also need a local **Redis** running. If you don't have one:
-
-```console
-$ brew install redis && brew services start redis
-# or
-$ docker run -d --name llama-deploy-redis -p 6379:6379 redis:7
-```
+That's it — no other services required.
 
 ## Scripts
 
-Open three separate terminals and run in order:
+Open two separate terminals:
 
 | Terminal | Command |
 |---|---|
-| 1 | `uv run 01_control_plane.py` — starts the control plane on port 8000. |
-| 2 | `uv run 02_workflow_service.py` — registers the workflow with the control plane. |
-| 3 | `uv run 03_client.py` — sends a request and prints the answer. |
+| 1 | `uv run 01_serve_workflow.py` — starts the FastAPI server on port 8000 (`POST /ask`, `GET /health`). |
+| 2 | `uv run 02_client.py` — sends a health check and a question, prints the answer. |
 
-To shut down, Ctrl-C the first two scripts.
+To shut down, Ctrl-C the first script.

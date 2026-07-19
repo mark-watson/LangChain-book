@@ -7,11 +7,12 @@ Requires 'ollama serve' to be running in another terminal.
 from langchain_ollama import ChatOllama
 
 llm = ChatOllama(
-    model="mistral-nemo:latest",
+    model="qwen3.5:4b",
     temperature=0,
+    thinking=False,
 )
 
-s = llm.invoke("how much is 1 + 2?")
+s = llm.invoke("How much is 1 + 2?")
 print(s.content)
 
 s = llm.invoke("If Sam is 27, Mary is 42, and Jerry is 33, what are their age differences?")

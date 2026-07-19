@@ -1,4 +1,4 @@
-# Chapter 6 — LangGraph 1.0 fundamentals
+# Chapter 3 — LangGraph 1.0 fundamentals
 
 Four small graphs that together cover the mechanics you need for the rest of Part I. No LLM in the first three — the goal is to make the graph engine legible before we point it at a model.
 

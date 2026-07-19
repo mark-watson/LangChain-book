@@ -1,4 +1,4 @@
-# Chapter 18 — The Workflows API
+# Chapter 15 — The Workflows API
 
 Four workflows, from a hello-world to a branching multi-step LLM pipeline.
 

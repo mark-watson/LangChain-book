@@ -1,7 +1,7 @@
 [project]
 name = "langgraph-supervisor"
 version = "0.1.0"
-description = "Chapter 10 — Multi-agent supervisor pattern in LangGraph"
+description = "Chapter 7 — Multi-agent supervisor pattern in LangGraph"
 requires-python = ">=3.12"
 dependencies = [
     "langgraph>=1.0,<2",

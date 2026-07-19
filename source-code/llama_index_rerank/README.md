@@ -1,4 +1,4 @@
-# Chapter 17 — RAG with reranking
+# Chapter 14 — RAG with reranking
 
 Two scripts showing the same retriever with and without a cross-encoder reranker post-processor.
 

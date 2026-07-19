@@ -1,144 +1,149 @@
 # Examples Using Hugging Face Open Source Models
 
-To start with you will need to create a free account on the [Hugging Face Hub](https://huggingface.co/docs/huggingface_hub/index) and get an API key and install:
+Both examples in this chapter run entirely on your laptop — no Hugging Face account, no API key, no `HUGGINGFACEHUB_API_TOKEN`. Earlier editions of this chapter used LangChain's `HuggingFaceHub` wrapper, which calls Hugging Face's *hosted* inference endpoints and does need an account and a token. That wrapper is gone from LangChain 1.0; the current integration, `langchain_huggingface.HuggingFacePipeline`, downloads a model once and runs it locally with `transformers`, the same as every other local-model chapter in this book.
 
-    pip install --upgrade huggingface_hub
+Setup:
 
-You need to set the following environment variable to your Hugging Face Hub access token:
-
-    HUGGINGFACEHUB_API_TOKEN
-
-So far in this book we have been using the OpenAI LLM wrapper:
-
-```python
-from langchain.llms import OpenAI
+```console
+$ cd source-code/hugging_face
+$ uv sync
 ```
 
-Here we will use the alternative Hugging Face wrapper class:
-
-```python
-from langchain import HuggingFaceHub
-```
-
-The LangChain library hides most of the details of using both APIs. This is a really good thing. I have had a few discussions on social tech media with people who object to the non open source nature of OpenAI. While I like the convenience of using OpenAI's APIs, I always like to have alternatives for proprietary technology I use.
-
-The Hugging Face Hub endpoint in LangChain connects to the Hugging Face Hub and runs the models via their free inference endpoints. We need a Hugging Face account and API key to use these endpoints3. There exists two Hugging Face LLM wrappers, one for a local pipeline and one for a model hosted on Hugging Face Hub. Note that these wrappers only work for models that support the text2text-generation and text-generation tasks. Text2text-generation refers to the task of generating a text sequence from another text sequence. For example, generating a summary of a long article. Text-generation refers to the task of generating a text sequence from scratch.
-
-
-## Using LangChain as a Wrapper for Hugging Face Prediction Model APIs
+## Using LangChain as a Wrapper for a Local Hugging Face Pipeline
 
 We will start with a simple example using the prompt text support in LangChain. The following example is in the script **simple_example.py**:
 
 ```python
-from langchain import HuggingFaceHub, LLMChain
-from langchain.prompts import PromptTemplate
+"""Use a HuggingFace model via LangChain 1.0 with a local pipeline.
 
-hub_llm = HuggingFaceHub(
-    repo_id='google/flan-t5-xl',
-    model_kwargs={'temperature':1e-6}
+Uses langchain_huggingface.HuggingFacePipeline (the 1.0 integration)
+instead of the deprecated langchain.HuggingFaceHub / LLMChain.
+"""
+
+from langchain_huggingface import HuggingFacePipeline
+from langchain_core.prompts import PromptTemplate
+from langchain_core.output_parsers import StrOutputParser
+
+hf_llm = HuggingFacePipeline.from_model_id(
+    model_id="google/flan-t5-base",
+    task="text2text-generation",
+    pipeline_kwargs={"temperature": 1e-6, "do_sample": True},
 )
 
-prompt = PromptTemplate(
-    input_variables=["name"],
-    template="What year did {name} get elected as president?",
-)
+prompt = PromptTemplate.from_template("What year did {name} get elected as president?")
 
-llm_chain = LLMChain(prompt=prompt, llm=hub_llm)
+chain = prompt | hf_llm | StrOutputParser()
 
-print(llm_chain.run("George Bush"))
+print(chain.invoke({"name": "George Bush"}))
 ```
 
-By changing just a few lines of code, you can run many of the examples in this book using the Hugging Face APIs in place of the OpenAI APIs.
+`google/flan-t5-base` is a small (~250M parameter) instruction-tuned model, downloaded once on first run and cached under `~/.cache/huggingface/hub`. Two details worth getting right: `HuggingFacePipeline.from_model_id` takes separate `model_kwargs` and `pipeline_kwargs` dictionaries, and generation settings like `temperature` belong in the latter — passing `temperature` inside `model_kwargs` sends it to the model's constructor instead of the generation call and raises a `TypeError`. And `temperature` has no effect unless `do_sample=True` is also set; without it, generation is greedy and the temperature is silently ignored. The rest of the example is the LCEL shape you have seen throughout Part I: `prompt | hf_llm | StrOutputParser()`.
 
-The LangChain documentation lists the source code for a wrapper to use local Hugging Face embeddings [here](https://langchain.readthedocs.io/en/latest/_modules/langchain/embeddings/self_hosted_hugging_face.html).
+The output:
+
+```console
+$ uv run simple_example.py
+1980
+```
+
+Wrong, for what it's worth — George W. Bush was elected in 2000 — which is a fair reminder that a 250M-parameter model is not going to be a reliable source of facts. It is a demonstration of the plumbing, not a research assistant. By changing just the `model_id`, you can run this same pattern against any other local Hugging Face model that supports `text2text-generation` or `text-generation`.
 
 ## Creating a Custom LlamaIndex Hugging Face LLM Wrapper Class That Runs on Your Laptop
 
-We will be downloading the Hugging Face model **facebook/opt-iml-1.3b** that is a 2.6 gigabyte file. This model is downloaded the first time it is requested and is then cached in **~/.cache/huggingface/hub** for later reuse.
+We will be downloading the Hugging Face model **facebook/opt-iml-1.3b**, a 2.6 gigabyte file. This model is downloaded the first time it is requested and is then cached in **~/.cache/huggingface/hub** for later reuse.
 
-This example is modified from an example for custom LLMs in the [LlamaIndex documentation](https://github.com/jerryjliu/llama_index/blob/main/docs/how_to/customization/custom_llms.md). Note that I have used a much smaller model in this example and reduced the prompt and output text size.
+This example wraps a raw `transformers` pipeline as a LlamaIndex `CustomLLM`, the extension point LlamaIndex provides for exactly this — plugging in a model that has no first-party integration package.
 
 ```python
-# Derived from example:
-#   https://gpt-index.readthedocs.io/en/latest/how_to/custom_llms.html
+"""Local HuggingFace transformer as a custom LLM with LlamaIndex 0.14.
+
+Uses a small text-generation model from HuggingFace, wrapped so
+LlamaIndex can use it. Demonstrates how to plug a custom LLM into
+the LlamaIndex Settings system.
+"""
 
 import time
+from typing import ClassVar
+
 import torch
-from langchain.llms.base import LLM
-from llama_index import SimpleDirectoryReader, LangchainEmbedding
-from llama_index import GPTListIndex, PromptHelper
-from llama_index import LLMPredictor
-from transformers import pipeline
+from transformers import Pipeline, pipeline
 
-max_input_size = 512
-num_output = 64
-max_chunk_overlap = 10
-prompt_helper = PromptHelper(max_input_size, num_output, max_chunk_overlap)
+from llama_index.core import Settings, SimpleDirectoryReader, VectorStoreIndex
+from llama_index.core.llms import CompletionResponse, CustomLLM, LLMMetadata
+from llama_index.core.llms.callbacks import llm_completion_callback
+from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 
-class CustomLLM(LLM):
-    model_name = "facebook/opt-iml-1.3b"
-    # I am not using a GPU, but you can add device="cuda:0"
-    # to the pipeline call if you have a local GPU or
-    # are running this on Google Colab:
-    pipeline = pipeline("text-generation", model=model_name,
-                        model_kwargs={"torch_dtype":torch.bfloat16})
+NUM_OUTPUT = 64
+MODEL_NAME = "facebook/opt-iml-1.3b"
 
-    def _call(self, prompt, stop = None):
+
+class CustomLLM(CustomLLM):
+    """Wrap a HuggingFace text-generation pipeline as a LlamaIndex LLM."""
+
+    # ClassVar, not a Pydantic field: CustomLLM is a pydantic.BaseModel
+    # under the hood, and pydantic 2 requires every plain class attribute
+    # to be either an annotated field or explicitly marked as non-field.
+    model_name: ClassVar[str] = MODEL_NAME
+    pipeline_obj: ClassVar[Pipeline] = pipeline(
+        "text-generation",
+        model=MODEL_NAME,
+        dtype=torch.bfloat16,
+    )
+
+    @property
+    def metadata(self) -> LLMMetadata:
+        return LLMMetadata(context_window=2048, num_output=NUM_OUTPUT, model_name=self.model_name)
+
+    @llm_completion_callback()
+    def complete(self, prompt: str, **kwargs) -> CompletionResponse:
         prompt_length = len(prompt)
-        response = self.pipeline(prompt, max_new_tokens=num_output)
-        first_response = response[0]["generated_text"]
-        # only return newly generated tokens
-        returned_text = first_response[prompt_length:]
-        return returned_text
+        # min_new_tokens matters: opt-iml-1.3b is small and weakly
+        # instruction-tuned, and on the longer RAG-style prompt LlamaIndex
+        # builds ("Context information is below... answer the query"), it
+        # will otherwise predict an immediate EOS and generate nothing.
+        response = self.pipeline_obj(prompt, max_new_tokens=NUM_OUTPUT, min_new_tokens=8)
+        text = response[0]["generated_text"][prompt_length:]
+        return CompletionResponse(text=text)
 
-    @property
-    def _identifying_params(self):
-        return {"name_of_model": self.model_name}
+    @llm_completion_callback()
+    def stream_complete(self, prompt: str, **kwargs):
+        # Simple non-streaming implementation
+        result = self.complete(prompt, **kwargs)
+        yield CompletionResponse(text=result.text, delta=result.text)
 
-    @property
-    def _llm_type(self):
-        return "custom"
 
 time1 = time.time()
 
-# define our LLM
-llm_predictor = LLMPredictor(llm=CustomLLM())
+# Configure Settings with our custom LLM and local embeddings
+Settings.llm = CustomLLM()
+Settings.embed_model = HuggingFaceEmbedding(model_name="sentence-transformers/all-mpnet-base-v2")
 
-# Load the your data
-documents = SimpleDirectoryReader('../data_small').load_data()
-index = GPTListIndex(documents, llm_predictor=llm_predictor,
-                     prompt_helper=prompt_helper)
-index = index.as_query_engine(llm_predictor=llm_predictor)
+# Load documents
+documents = SimpleDirectoryReader("../data_small").load_data()
+index = VectorStoreIndex.from_documents(documents)
 
 time2 = time.time()
-print(f"Time to load model from disk: {time2 - time1} seconds.")
+print(f"Time to load model and build index: {time2 - time1:.1f} seconds.")
+
+query_engine = index.as_query_engine()
 
 # Query and print response
-response = index.query("What is the definition of sport?")
+response = query_engine.query("What is the definition of sport?")
 print(response)
 
 time3 = time.time()
-print(f"Time for query/prediction: {time3 - time2} seconds.")
+print(f"Time for query/prediction: {time3 - time2:.1f} seconds.")
 ```
 
-When running on my M1 MacBook Pro using only the CPU (no GPU or Neural Engine configuration) we can read the model from disk quickly but it takes a while to process queries:
+A `CustomLLM` in current LlamaIndex is a Pydantic model, which is why `model_name` and `pipeline_obj` need the `ClassVar` annotation — without it, Pydantic tries to treat the live `transformers.Pipeline` object as a validated field and raises at class-definition time. `complete()` must return a `CompletionResponse`, not a bare string; and `min_new_tokens=8` turns out to matter more than it looks — without it, this particular small, weakly instruction-tuned model will sometimes predict an immediate end-of-sequence token on LlamaIndex's longer "Context information is below... answer the query" prompt template and generate nothing at all.
+
+When running on my Mac using Apple Silicon (the `mps` backend that PyTorch selects automatically), loading the model from cache and building the tiny index takes a couple of seconds, and the query itself well under a second:
 
 ```console
-$ python hf_transformer_local.py
-INFO:llama_index.token_counter.token_counter:> [build_index_from_documents] Total LLM token usage: 0 tokens
-INFO:llama_index.token_counter.token_counter:> [build_index_from_documents] Total embedding token usage: 0 tokens
-Time to load model from disk: 1.5303528308868408 seconds.
-INFO:llama_index.token_counter.token_counter:> [query] Total LLM token usage: 182 tokens
-INFO:llama_index.token_counter.token_counter:> [query] Total embedding token usage: 0 tokens
-
-"Sport" comes from the Old French desport meaning "leisure", with the oldest definition in English from around 1300 being "anything humans find amusing or entertaining".[4]
-Time for query/prediction: 228.8184850215912 seconds.
+$ uv run hf_transformer_local.py
+Time to load model and build index: 2.6 seconds.
+Anything humans find amusing or entertaining. Answer Sport
+Time for query/prediction: 0.8 seconds.
 ```
 
-Even though my M1 MacBook does fairly well when I configure TensorFlow and PyTorch to use the Apple Silicon GPUs and Neural Engines, I usually do my model development using Google Colab.
-
-Let's rerun the last example on Colab:
-
-![](local.png)
-
-Using a standard Colab GPU, the query/prediction time is much faster. Here is a [link to my Colab notebook](https://colab.research.google.com/drive/1Ecg-0iid3AD05zM4HgPXTVHcgkGxyi3q?usp=sharing) if you would prefer to run this example on Colab instead of on your laptop.
+Exact wording will vary between runs and between machines — 1.3B-parameter models are small enough to be noticeably less polished than the models used elsewhere in this book, and this one is quoting fragments of the source document (`../data_small/sports.txt`) more than composing a fluent new sentence. That is a fair trade for a model this size, and it is still clearly grounded in the retrieved text rather than invented. If you want fluency as well as speed, `qwen3.5:4b` via Ollama — the model used everywhere else in this book — is both faster and much better at following instructions; this chapter uses a raw Hugging Face `transformers` pipeline specifically to show how to wrap a model that has no dedicated integration package.

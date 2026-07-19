@@ -1,7 +1,7 @@
 [project]
 name = "kg-agent"
 version = "0.1.0"
-description = "Chapter 12 — DBpedia and Wikidata as LangGraph agent tools"
+description = "Chapter 9 — DBpedia and Wikidata as LangGraph agent tools"
 requires-python = ">=3.12"
 dependencies = [
     "langgraph>=1.0,<2",

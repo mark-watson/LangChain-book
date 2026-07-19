@@ -130,7 +130,7 @@ Costs to be aware of. With four tools and a compound query, you may end up with 
 - **`RouterQueryEngine` with `LLMMultiSelector`** — most queries belong to one or two corpora. Slightly more expensive; useful when your corpora overlap.
 - **`SubQuestionQueryEngine`** — compound "compare / relate / synthesize" queries that no single index can answer. Most expensive; reach for it when you have evidence users actually ask these questions.
 
-You can also build routing yourself with the Workflows API from Chapters 18-19: a classify step, a routing step, per-corpus engines behind separate steps. That is what you would do when your routing logic is deterministic (based on user role, request metadata, or a fixed classification) rather than LLM-driven.
+You can also build routing yourself with the Workflows API from Chapters 15-16: a classify step, a routing step, per-corpus engines behind separate steps. That is what you would do when your routing logic is deterministic (based on user role, request metadata, or a fixed classification) rather than LLM-driven.
 
 ## What we covered
 
@@ -138,4 +138,4 @@ You can also build routing yourself with the Workflows API from Chapters 18-19: 
 - `SubQuestionQueryEngine` decomposes compound queries into per-corpus subquestions and synthesizes the results.
 - Both patterns depend heavily on the English descriptions attached to each `QueryEngineTool`. Treat descriptions like production API contracts.
 
-Chapter 21 covers structured extraction — using `PydanticProgram` to force LLM output into a validated data schema.
+Chapter 18 covers structured extraction — using `PydanticProgram` to force LLM output into a validated data schema.

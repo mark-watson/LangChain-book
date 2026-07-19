@@ -1,8 +1,8 @@
 # Building an agent as a Workflow
 
-Chapter 18 introduced Workflows in the abstract. This chapter uses them to build the same thing Chapter 7 built in LangGraph: a ReAct agent that alternates between "call the model" and "run the tools the model asked for" until the model returns a final answer.
+Chapter 15 introduced Workflows in the abstract. This chapter uses them to build the same thing Chapter 4 built in LangGraph: a ReAct agent that alternates between "call the model" and "run the tools the model asked for" until the model returns a final answer.
 
-As with Chapter 7, we build it twice. The first version uses `FunctionAgent`, the LlamaIndex prebuilt equivalent of `create_react_agent`. The second version constructs the same behavior explicitly as a `Workflow`. Seeing the two side by side clarifies what the prebuilt is doing on your behalf.
+As with Chapter 4, we build it twice. The first version uses `FunctionAgent`, the LlamaIndex prebuilt equivalent of `create_react_agent`. The second version constructs the same behavior explicitly as a `Workflow`. Seeing the two side by side clarifies what the prebuilt is doing on your behalf.
 
 Everything lives in `source-code/llama_index_agent/`. Setup:
 
@@ -14,7 +14,7 @@ $ ollama pull qwen3.5:4b
 
 ## The tools
 
-Same two-tool shape as Chapter 7:
+Same two-tool shape as Chapter 4:
 
 ```python
 def multiply(a: int, b: int) -> int:
@@ -164,7 +164,7 @@ The workflow produces the same output as the `FunctionAgent` version. Which is e
 
 ## When to reach for which
 
-Same guidance as Chapter 7:
+Same guidance as Chapter 4:
 
 - **Use `FunctionAgent`** if you have a flat list of tools and want the standard ReAct behavior.
 - **Drop down to `Workflow`** if you need extra steps (a planner before the model, a validator after the tools), custom state fields beyond the transcript, or unusual routing.
@@ -172,7 +172,7 @@ Same guidance as Chapter 7:
 ## What we covered
 
 - LlamaIndex's ReAct agent primitive is `FunctionAgent`, analogous to LangGraph's `create_react_agent`. Both build the same "call model, run tools, loop" graph.
-- The manual `Workflow` version is not much more code and unlocks all of Chapter 18's flexibility.
+- The manual `Workflow` version is not much more code and unlocks all of Chapter 15's flexibility.
 - `Context` is Workflows' shared-state mechanism; use it whenever multiple steps need to see or update the same data.
 
-Chapter 20 covers multi-index query pipelines — the LlamaIndex equivalent of Chapter 10's supervisor pattern, but for retrieval instead of tool use.
+Chapter 17 covers multi-index query pipelines — the LlamaIndex equivalent of Chapter 7's supervisor pattern, but for retrieval instead of tool use.

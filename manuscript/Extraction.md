@@ -30,10 +30,10 @@ Traditional methods for extracting email addresses, names, addresses, etc. from 
 
 ## Example Prompts for Getting Information About a Person from Text and Generating JSON
 
-Before using LLMs directly in application code I like to experiment with prompts. Here we will use a two-shot approach of providing as context two examples of text and the extracted JSON data, followed by text we want to process. Consider the following that I ran on my old M1 8G MacBook:
+Before using LLMs directly in application code I like to experiment with prompts. Here we will use a two-shot approach of providing as context two examples of text and the extracted JSON data, followed by text we want to process:
 
 ```text
-Given the two examples below, extract the names, addresses, and email addresses of individuals mentioned later as Process Text. Format the extracted information in JSON, with keys for "name", "address", and "email". If any information is missing, use "null" for that field.
+Given the two examples below, extract the names, addresses, and email addresses of individuals mentioned later as Process Text. Format the extracted information in JSON, with keys for "name", "address", and "email". If any information is missing, use "null" for that field. Be concise in your output by providing only the output JSON.
 
 Example 1:
 Text: "John Doe lives at 1234 Maple Street, Springfield. His email is johndoe@example.com."
@@ -57,35 +57,11 @@ Process Text: "Mark Johnson enjoys living in Berkeley California at 102 Dunston 
 Output:
 ```
 
-This prompt is in the file **prompt_examples/two-shot-2.txt**.
-
-The output can be overly verbose:
- 
- ```console
- $ ollama run llama3:instruct < two-shot-2.txt
-Here is the extracted information in JSON format:
-
-{
-"name": "Mark Johnson",
-"address": "102 Dunston Street, Berkeley California",
-"email": "mjess@foobar.com"
-}
-
-Note that I used the address format from Example 1, which combines the street 
-address with the city and state. If you want to separate these fields into different
-keys (e.g., "street", "city", "state"), let me know!
- ```
- 
- While the comments the llama3-8b-instruct model makes are interesting, let’s modify the prompt to ask for concise output that only includes the generated JSON:
- 
- ```text
- Given the two examples below, extract the names, addresses, and email addresses of individuals mentioned later as Process Text. Format the extracted information in JSON, with keys for "name", "address", and "email". If any information is missing, use "null" for that field. Be concise in your output by providing only the output JSON.
-```
-
-The rest of the prompt is unchanged, now the output is:
+This prompt is in the file **prompt_examples/two-shot-2.txt**, and it already includes one instruction worth noticing: "Be concise in your output by providing only the output JSON." Run it against a local model:
 
 ```console
-$ ollama run llama3:instruct < two-shot-2.txt
+$ cd source-code/prompt_examples
+$ ollama run qwen3.5:4b --think=false < two-shot-2.txt
 {
   "name": "Mark Johnson",
   "address": "102 Dunston Street, Berkeley California",
@@ -93,60 +69,136 @@ $ ollama run llama3:instruct < two-shot-2.txt
 }
 ```
 
+Clean, bare JSON — nothing to strip before you can hand it to `json.loads()`. That is not the default behavior. Drop the "be concise" sentence — the file **two-shot-2-verbose.txt** is the same prompt without it — and run it again:
+
+```console
+$ ollama run qwen3.5:4b --think=false < two-shot-2-verbose.txt
+```json
+{
+  "name": "Mark Johnson",
+  "address": "Berkeley California, 102 Dunston Street",
+  "email": "mjess@foobar.com"
+}
+```
+```
+
+Same facts, but now wrapped in a Markdown code fence — harmless to a human reading a terminal, and a `JSONDecodeError` waiting to happen in code that expects bare JSON. One sentence in the prompt is the whole difference.
+
+`--think=false` disables `qwen3.5`'s reasoning trace at the CLI level. Without it, `ollama run` prints several paragraphs of visible "thinking" before either answer — try it once to see what it looks like, then leave the flag on for anything you actually want to read. `person_data.py` below sets the same behavior through the Python API with `thinking=False`.
 
 ## Example Code
 
-To use this example we would use the same prompt except we would  make the **Process Text** a variable that is replaced before processing by an LLM. We copy the file **two-shot-2.txt** to **two-shot-2-var.txt** and change the second to the last line in the file:
+To use this example we make the **Process Text** a variable that is replaced before processing by an LLM. Copy **two-shot-2.txt** to **two-shot-2-var.txt** and change the second-to-last line in the file:
 
 ```text
 Process Text: "{input_text}"
 ```
 
-Now let’s wrap these ideas up in a short Python example in the file **extraction/person_data.py**:
+Now let's wrap these ideas up in a short Python example. `source-code/extraction/person_data.py` uses LangChain 1.0's structured output instead of hand-parsing JSON out of a text completion — you give it a Pydantic model, and `.with_structured_output()` handles getting the model to fill it in correctly:
 
 ```python
-import openai
-from openai import OpenAI
-import os
+from pydantic import BaseModel, Field
+from langchain_ollama import ChatOllama
 
-openai.api_key = os.getenv("OPENAI_API_KEY")
-client = OpenAI()
 
-# Read the prompt from a text file
-with open('prompt.txt', 'r') as file:
-    prompt_template = file.read()
+class PersonData(BaseModel):
+    """Extracted person information."""
 
-# Substitute a string variable into the prompt
-input_text = "Mark Johnson enjoys living in Berkeley California at 102 Dunston Street and use mjess@foobar.com for contacting him."
+    name: str = Field(description="The person's full name")
+    address: str | None = Field(description="The person's street address", default=None)
+    email: str | None = Field(description="The person's email address", default=None)
+
+
+llm = ChatOllama(model="qwen3.5:4b", temperature=0, thinking=False)
+structured_llm = llm.with_structured_output(PersonData)
+
+# Read the prompt template
+with open("prompt.txt") as f:
+    prompt_template = f.read()
+
+input_text = (
+    "Mark Johnson enjoys living in Berkeley California at 102 Dunston Street "
+    "and use mjess@foobar.com for contacting him."
+)
 prompt = prompt_template.replace("input_text", input_text)
 
-# Use the OpenAI completion API to generate a response with GPT-4
-completion = client.chat.completions.create(
-    model="gpt-4",
-    messages=[
-        {
-            "role": "user",
-            "content": prompt,
-        },
-    ],
-)
-
-print(completion.choices[0].message.content)
+result = structured_llm.invoke(prompt)
+print(result)
 ```
+
+`prompt.txt` here is the same two-shot template as `two-shot-2-var.txt`, just kept alongside the script instead of in `prompt_examples/`. `.with_structured_output(PersonData)` wraps the model so that instead of returning an `AIMessage` you get back a validated `PersonData` instance directly — no JSON parsing, no code fence to strip, no missing-field bugs, because Pydantic raises immediately if the model's output does not fit the schema. This is strictly more reliable than the prompt-only approach above; the two-shot examples in the prompt still help, but the schema is now enforced in code rather than requested in English.
 
 The output looks like:
 
 ```console
-$ python person_data.py
-{
-  "name": "Mark Johnson",
-  "address": "102 Dunston Street, Berkeley California",
-  "email": "mjess@foobar.com"
-}
+$ uv run person_data.py
+name='Mark Johnson' address='102 Dunston Street, Berkeley California' email='mjess@foobar.com'
 ```
 
-For reference, the complete **completion** object looks like this:
+That is Pydantic's default `repr()` for the `PersonData` object — `result.name`, `result.address`, and `result.email` are ordinary typed attributes, ready to use without any parsing step.
 
-```text
-ChatCompletion(id='chatcmpl-9LBZao4hFMmw7VrYcRbQIR2EGzvCj', choices=[Choice(finish_reason='stop', index=0, logprobs=None, message=ChatCompletionMessage(content='{\n  "name": "Mark Johnson",\n  "address": "102 Dunston Street, Berkeley California",\n  "email": "mjess@foobar.com"\n}', role='assistant', function_call=None, tool_calls=None))], created=1714836402, model='gpt-4-0613', object='chat.completion', system_fingerprint=None, usage=CompletionUsage(completion_tokens=34, prompt_tokens=223, total_tokens=257))
+## From One Record to Many: CSV to JSON
+
+The same technique extends past single paragraphs of prose. `source-code/extraction/csv_to_json.py` takes a whole CSV file — several rows at once — and extracts a *list* of structured records in a single call, by wrapping the per-row model in a container model:
+
+```python
+from pydantic import BaseModel, Field
+from langchain_ollama import ChatOllama
+
+
+class PersonRecord(BaseModel):
+    """One row of the extracted CSV data."""
+
+    last_name: str = Field(description="The person's last name")
+    first_name: str = Field(description="The person's first name")
+    email: str | None = Field(description="The person's email address", default=None)
+
+
+class PersonRecords(BaseModel):
+    """All rows extracted from the CSV text."""
+
+    people: list[PersonRecord]
+
+
+llm = ChatOllama(model="qwen3.5:4b", temperature=0, thinking=False)
+structured_llm = llm.with_structured_output(PersonRecords)
+
+with open("test.csv") as f:
+    input_csv = f.read()
+
+prompt = (
+    "Convert the following CSV data to structured records. "
+    "The file is not consistent about quoting or spacing:\n\n"
+    f"{input_csv}"
+)
+
+result = structured_llm.invoke(prompt)
+for person in result.people:
+    print(person)
 ```
+
+`test.csv` is deliberately messy — inconsistent quoting, inconsistent spacing — the kind of file you actually get from someone's ad hoc export rather than a clean data pipeline:
+
+```csv
+last_name,first_name,email
+"Jackson",Michael,mj@musicgod.net
+Jordan,Michael,"mike@retired.com"
+Smith, John, john@acme41.com
+```
+
+A hand-written CSV parser would need explicit rules for the quoting inconsistencies and the stray leading space before `John`. The LLM does not care — it reads the file as text and fills in the schema:
+
+```console
+$ uv run csv_to_json.py
+last_name='Jackson' first_name='Michael' email='mj@musicgod.net'
+last_name='Jordan' first_name='Michael' email='mike@retired.com'
+last_name='Smith' first_name='John' email='john@acme41.com'
+```
+
+`PersonRecords.people` is a plain Python list of `PersonRecord` objects — no per-row LLM calls, no manual JSON assembly, and the same reliability guarantee as the single-record example: if the model's response does not fit the schema, Pydantic raises rather than handing you a malformed record. For a handful of rows like this, one call is plenty; for a much larger file you would chunk it and call `.with_structured_output()` once per chunk rather than trying to fit thousands of rows in a single prompt.
+
+## What we covered
+
+- A two-shot prompt is a fast way to prototype an extraction task before writing any code, and small instructions inside it (like "be concise") change the shape of the output, not just its tone.
+- `.with_structured_output(PydanticModel)` moves schema enforcement from the prompt into code: the model still does the extraction, but a malformed response raises instead of silently producing bad JSON.
+- The same pattern extracts one object from a paragraph or a list of objects from a whole file — wrap the per-item model in a container model and let the LLM read the input as unstructured text, regardless of how messy its formatting is.

@@ -1,4 +1,4 @@
-# Chapter 21 — Structured extraction
+# Chapter 18 — Structured extraction
 
 Two scripts showing structured-output extraction from unstructured text using a local Ollama model.
 

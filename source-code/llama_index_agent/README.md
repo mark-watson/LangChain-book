@@ -1,4 +1,4 @@
-# Chapter 19 — Building an agent as a Workflow
+# Chapter 16 — Building an agent as a Workflow
 
 Two paths to the same ReAct agent: the prebuilt `FunctionAgent` factory, and the same agent built explicitly with the Workflows API.
 

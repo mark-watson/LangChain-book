@@ -1,4 +1,4 @@
-# Chapter 9 — Human-in-the-loop patterns
+# Chapter 6 — Human-in-the-loop patterns
 
 Three scripts that show how to pause a LangGraph run, get information (or approval, or an edit) from an outside caller, and then resume from exactly where the graph stopped.
 

@@ -1,7 +1,12 @@
-# Using local models
+# Using local Hugging Face models
 
-pip install -U torch langchain transformers llama_index
+- `simple_example.py` — `langchain_huggingface.HuggingFacePipeline` (google/flan-t5-base) via LCEL.
+- `hf_transformer_local.py` — a raw `transformers` pipeline (facebook/opt-iml-1.3b) wrapped as a LlamaIndex `CustomLLM`.
 
-For CPU only, this speeds things up:
+```console
+$ uv sync
+$ uv run simple_example.py
+$ uv run hf_transformer_local.py
+```
 
-pip install xformers
+No API keys or Hugging Face account needed — both scripts download their models once (cached under `~/.cache/huggingface/hub`) and run entirely locally.

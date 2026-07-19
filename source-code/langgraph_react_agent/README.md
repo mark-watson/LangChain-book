@@ -1,4 +1,4 @@
-# Chapter 7 — Building a ReAct agent
+# Chapter 4 — Building a ReAct agent
 
 Three ways to build the same ReAct agent — prebuilt, from scratch, and streaming — so you can see exactly what the framework is doing on your behalf.
 

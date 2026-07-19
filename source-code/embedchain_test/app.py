@@ -9,7 +9,7 @@ from llama_index.core import Settings, SimpleDirectoryReader, VectorStoreIndex
 from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 from llama_index.llms.ollama import Ollama
 
-Settings.llm = Ollama(model="qwen3.5:4b", request_timeout=120.0)
+Settings.llm = Ollama(model="qwen3.5:4b", request_timeout=180.0)
 Settings.embed_model = HuggingFaceEmbedding(model_name="BAAI/bge-small-en-v1.5")
 
 # Build index from PDF data directory
@@ -25,7 +25,11 @@ else:
 
     index = VectorStoreIndex.from_documents([Document(text="No data directory found.")])
 
-query_engine = index.as_query_engine()
+# similarity_top_k=1: the default of 2 triggers a second, sequential
+# "refine" LLM call per query. With whole-book-length source files (this
+# directory's data/ is ~130K words) that second pass can take minutes on
+# a small local model; one well-matched chunk is enough for these questions.
+query_engine = index.as_query_engine(similarity_top_k=1)
 
 
 def test(q):

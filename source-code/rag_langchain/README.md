@@ -1,4 +1,4 @@
-# Chapter 4 — RAG patterns with LangChain
+# Chapter 2 — RAG patterns with LangChain
 
 Four progressively-better retrieval patterns over the same tiny corpus (`../data/`), all running on your laptop with local embeddings, a local vector store, and a local LLM.
 
@@ -21,7 +21,7 @@ The four scripts share `../data/` — four short text files on chemistry, econom
 |---|---|
 | `01_naive_rag.py` | Dense-embedding vector search into a prompt into a model. The baseline. |
 | `02_reranked_rag.py` | Retrieve top 10 with the vector store, then rerank to top 3 with a cross-encoder. |
-| `03_hybrid_rag.py` | BM25 keyword search + dense embeddings combined with `EnsembleRetriever`. |
+| `03_hybrid_rag.py` | BM25 keyword search + dense embeddings combined with reciprocal rank fusion. |
 | `04_multi_query_rag.py` | Let an LLM rewrite the query several ways and union the retrievals. |
 
 Run any one with:

@@ -1,7 +1,7 @@
 [project]
 name = "llama-index-indices"
 version = "0.1.0"
-description = "Chapter 16 — Choosing an index type"
+description = "Chapter 13 — Choosing an index type"
 requires-python = ">=3.12"
 dependencies = [
     "llama-index-core>=0.14,<0.15",

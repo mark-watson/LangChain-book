@@ -1,4 +1,4 @@
-# Chapter 8 — Durable, restart-safe agents
+# Chapter 5 — Durable, restart-safe agents
 
 Four scripts that show how a `checkpointer` turns a stateless LangGraph app into one that remembers conversations, survives process restarts, and lets you inspect its own history.
 

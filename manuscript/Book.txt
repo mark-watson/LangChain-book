@@ -6,7 +6,6 @@ RAG.md
 Ollama.md
 Extraction.md
 Sumarization.md
-StructuredData.md
 LangGraph-fundamentals.md
 Agents.md
 LangGraph-durable.md

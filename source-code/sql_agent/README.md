@@ -1,4 +1,4 @@
-# Chapter 11 — Natural-language SQLite
+# Chapter 8 — Natural-language SQLite
 
 A LangGraph ReAct agent equipped with `SQLDatabaseToolkit` that answers English-language questions about a small self-contained company database.
 

@@ -1,4 +1,4 @@
-# Chapter 16 — Choosing an index type
+# Chapter 13 — Choosing an index type
 
 Three scripts covering the LlamaIndex index types beyond `VectorStoreIndex`, plus a hybrid retriever that combines dense (embedding) and sparse (BM25) retrieval.
 

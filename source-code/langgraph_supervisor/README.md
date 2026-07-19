@@ -1,4 +1,4 @@
-# Chapter 10 — Multi-agent supervisor pattern
+# Chapter 7 — Multi-agent supervisor pattern
 
 Two specialist ReAct agents (research + math) coordinated by a supervisor graph. The whole thing is pure OSS LangGraph — no `create_supervisor` prebuilt, no `langgraph-swarm`, no hosted service.
 

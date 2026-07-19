@@ -1,7 +1,7 @@
 [project]
 name = "sql-agent"
 version = "0.1.0"
-description = "Chapter 11 — Natural-language SQLite queries with a LangGraph SQL agent"
+description = "Chapter 8 — Natural-language SQLite queries with a LangGraph SQL agent"
 requires-python = ">=3.12"
 dependencies = [
     "langgraph>=1.0,<2",

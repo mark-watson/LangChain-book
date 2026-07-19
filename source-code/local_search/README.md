@@ -1,4 +1,4 @@
-# Chapter 13 — Perplexity-style local search agent
+# Chapter 10 — Perplexity-style local search agent
 
 A LangGraph pipeline that answers open-ended questions by searching the web, filtering results for relevance, fetching page text, summarizing each page against the query, and synthesizing a final answer. Runs entirely on your laptop — Ollama for the LLM, DuckDuckGo for search, `trafilatura` for HTML-to-text extraction.
 

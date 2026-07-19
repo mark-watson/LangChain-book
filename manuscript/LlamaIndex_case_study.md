@@ -21,7 +21,7 @@ The mental model, though, is the same as it always was: **Documents** get chunke
 
 **Node.** A Document after chunking. The atomic unit the retriever returns. In vanilla setups, one Document becomes one Node; with a `SentenceSplitter` transformation in your ingestion pipeline, one Document becomes many Nodes.
 
-**Index.** A queryable data structure built over Nodes. `VectorStoreIndex` is the one you will use 90% of the time — it stores each Node's embedding and does cosine-similarity lookup at query time. Others include `SummaryIndex`, `KeywordTableIndex`, and `TreeIndex`; we will look at when to reach for each in Chapter 16.
+**Index.** A queryable data structure built over Nodes. `VectorStoreIndex` is the one you will use 90% of the time — it stores each Node's embedding and does cosine-similarity lookup at query time. Others include `SummaryIndex`, `KeywordTableIndex`, and `TreeIndex`; we will look at when to reach for each in Chapter 13.
 
 **QueryEngine / Retriever.** The two ways to *use* an Index. `.as_query_engine()` gives you `engine.query(text)` which returns a synthesized answer from an LLM after retrieval. `.as_retriever()` gives you `retriever.retrieve(text)` which returns the raw Nodes without the LLM step. Both are useful; you pick based on whether you want an answer or the ingredients for one.
 
@@ -35,7 +35,7 @@ $ uv sync
 $ ollama pull qwen3.5:4b
 ```
 
-The four scripts in this chapter share the four-file corpus in `source-code/data/` — the same one Chapter 4 used. Reusing the corpus lets you compare LlamaIndex's behavior directly against Chapter 4's LangChain RAG chapter.
+The four scripts in this chapter share the four-file corpus in `source-code/data/` — the same one Chapter 2 used. Reusing the corpus lets you compare LlamaIndex's behavior directly against Chapter 2's LangChain RAG chapter.
 
 ## Your first LlamaIndex program
 
@@ -164,7 +164,7 @@ $ uv run 04_retriever_only.py
     Sport is generally recognised as activities based in physical athleticism ...
 ```
 
-The score gap tells the story: only the first result is meaningfully relevant. A production retriever would filter on a minimum score, apply a reranker (Chapter 17 covers this), or expand the query — techniques that translate one-to-one from the Chapter 4 LangChain patterns.
+The score gap tells the story: only the first result is meaningfully relevant. A production retriever would filter on a minimum score, apply a reranker (Chapter 14 covers this), or expand the query — techniques that translate one-to-one from the Chapter 2 LangChain patterns.
 
 ## What we covered
 
@@ -175,4 +175,4 @@ Four primitives, four scripts:
 3. **`.persist()` / `load_index_from_storage`** for saving and reloading indices.
 4. **`.as_retriever()`** to get raw Nodes without an LLM synthesis step.
 
-Everything in the rest of Part II is combinations and elaborations of those four. Chapter 15 goes deeper on document loading and local embedding models. Chapter 16 covers the different index types and when to reach for each. Chapter 17 adds reranking. Chapters 18-19 introduce the Workflows API — LlamaIndex's answer to LangGraph — and use it to build a real agent. Chapters 20-22 cover multi-index query pipelines, structured extraction with `PydanticProgram`, and serving a workflow with `llama-deploy`.
+Everything in the rest of Part II is combinations and elaborations of those four. Chapter 12 goes deeper on document loading and local embedding models. Chapter 13 covers the different index types and when to reach for each. Chapter 14 adds reranking. Chapters 15-16 introduce the Workflows API — LlamaIndex's answer to LangGraph — and use it to build a real agent. Chapters 17-19 cover multi-index query pipelines, structured extraction with `PydanticProgram`, and serving a workflow with FastAPI.

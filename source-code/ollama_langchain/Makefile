@@ -9,9 +9,9 @@ check:
 test:
 	python3 -m py_compile *.py && echo "No pytest tests - syntax check passed"
 
-# Run the main example script: llama3-instruct-8b.py
+# Run the main example script: qwen3.5-4b.py
 run:
-	uv run llama3-instruct-8b.py
+	uv run qwen3.5-4b.py
 
 # Clean build artifacts
 clean:

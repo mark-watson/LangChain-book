@@ -1,7 +1,7 @@
 [project]
 name = "langgraph-durable"
 version = "0.1.0"
-description = "Chapter 8 — Durable, restart-safe LangGraph agents"
+description = "Chapter 5 — Durable, restart-safe LangGraph agents"
 requires-python = ">=3.12"
 dependencies = [
     "langgraph>=1.0,<2",

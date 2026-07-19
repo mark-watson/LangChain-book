@@ -118,7 +118,16 @@ New material to add, grouped by the two parts.
 
 ---
 
-## 6. Proposed new table of contents
+## 6. Table of contents (as actually shipped)
+
+This was originally proposed with slots 2, 3, and 5 reserved for standalone
+prompts/structured-output, embeddings/vector-store, and tool-calling
+deep-dive chapters. Those three were never written — the material was
+folded into Chapters 1 and 4 instead, per the decision recorded in
+`NOTES_from_Claude.md` — and the book was renumbered to close the gaps
+rather than ship with three dangling chapter numbers. Every internal
+"Chapter N" cross-reference in the manuscript and every `source-code/*/`
+`pyproject.toml`/`README.md` "Chapter N —" label uses this numbering.
 
 ```
 Preface
@@ -126,29 +135,27 @@ The stack we're building on
 
 PART I — LangChain
   1. LangChain 1.0 in one hour
-  2. Prompts, few-shot, structured output
-  3. Embeddings and local vector stores
-  4. RAG patterns with LangChain
-  5. Tool calling with local models
-  6. LangGraph 1.0 fundamentals
-  7. Building a ReAct agent
-  8. Durable, restart-safe agents
-  9. Human-in-the-loop
- 10. Multi-agent supervisor
- 11. Natural-language SQLite
- 12. DBpedia and Wikidata as agent tools
- 13. A Perplexity-style local search agent
+  2. RAG patterns with LangChain
+  3. LangGraph 1.0 fundamentals
+  4. Building a ReAct agent
+  5. Durable, restart-safe agents
+  6. Human-in-the-loop
+  7. Multi-agent supervisor
+  8. Natural-language SQLite
+  9. DBpedia and Wikidata as agent tools
+ 10. A Perplexity-style local search agent
 
 PART II — LlamaIndex
- 14. LlamaIndex 0.14 in one hour
- 15. Local documents and local embeddings
- 16. Choosing an index type
- 17. RAG with reranking
- 18. The Workflows API
- 19. Agents as Workflows
- 20. Multi-index query pipelines
- 21. Structured extraction with PydanticProgram
- 22. Serving Workflows with llama-deploy
+ 11. LlamaIndex 0.14 in one hour
+ 12. Local documents and local embeddings
+ 13. Choosing an index type
+ 14. RAG with reranking
+ 15. The Workflows API
+ 16. Agents as Workflows
+ 17. Multi-index query pipelines
+ 18. Structured extraction with PydanticProgram
+ 19. Serving Workflows with FastAPI (the `llama-deploy` plan below didn't
+     pan out — see `M.md` for why)
 
 Appendices
   A. Model sizes and what they're good for (a discussion)

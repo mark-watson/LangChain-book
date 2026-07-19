@@ -1,6 +1,6 @@
 # Multi-agent supervisor pattern
 
-The agents from Chapters 7 through 9 are all single agents with one flat list of tools. That is enough for a large class of applications. Once you have more than five or six tools, or tools that need clearly separate expertise (searching the web is nothing like writing SQL is nothing like reviewing legal documents), a single agent starts to feel unfocused. It hesitates, picks the wrong tool, or misinterprets the results of one tool by treating them like the results of another.
+The agents from Chapters 4 through 6 are all single agents with one flat list of tools. That is enough for a large class of applications. Once you have more than five or six tools, or tools that need clearly separate expertise (searching the web is nothing like writing SQL is nothing like reviewing legal documents), a single agent starts to feel unfocused. It hesitates, picks the wrong tool, or misinterprets the results of one tool by treating them like the results of another.
 
 The **supervisor pattern** is the standard response. Instead of one agent with all the tools, you build:
 
@@ -75,7 +75,7 @@ research_agent = create_react_agent(_model, [web_search])
 math_agent = create_react_agent(_model, [add, multiply])
 ```
 
-Nothing in this file is new. Each specialist is exactly the single-agent ReAct graph from Chapter 7, built with `create_react_agent(model, tools)`. Both use the same `ChatOllama` — you could just as easily give each specialist a different model, which is a common reason to reach for the pattern in the first place (a small, fast model for the research agent that mostly summarizes text; a stronger model for the math agent that has to reason about numbers).
+Nothing in this file is new. Each specialist is exactly the single-agent ReAct graph from Chapter 4, built with `create_react_agent(model, tools)`. Both use the same `ChatOllama` — you could just as easily give each specialist a different model, which is a common reason to reach for the pattern in the first place (a small, fast model for the research agent that mostly summarizes text; a stronger model for the math agent that has to reason about numbers).
 
 ## The supervisor and the graph
 
@@ -271,7 +271,7 @@ The multi-agent pattern trades increased routing overhead (one extra LLM call pe
 - **Skip it** if your users' queries always exercise one specialist. The supervisor's routing call is pure overhead in that case; just build the one specialist directly.
 - **Reach for it** as soon as a single ReAct agent starts consistently picking the wrong tool or misinterpreting one tool's output through the lens of another.
 
-You can also add the checkpointer and interrupt machinery from Chapters 8 and 9 to a supervisor graph — it is just a `StateGraph`, and the same `.compile(checkpointer=...)` and `interrupt()` mechanisms work identically. A supervisor with checkpointed state and an approval interrupt on every specialist call is a genuinely useful primitive for building semi-autonomous assistants that a human still oversees.
+You can also add the checkpointer and interrupt machinery from Chapters 5 and 6 to a supervisor graph — it is just a `StateGraph`, and the same `.compile(checkpointer=...)` and `interrupt()` mechanisms work identically. A supervisor with checkpointed state and an approval interrupt on every specialist call is a genuinely useful primitive for building semi-autonomous assistants that a human still oversees.
 
 ## What we covered
 
@@ -279,6 +279,6 @@ You can also add the checkpointer and interrupt machinery from Chapters 8 and 9 
 - Specialists are ordinary compiled `create_react_agent` graphs; nothing new required.
 - The supervisor is a single node that uses `.with_structured_output(RouterDecision)` to pick the next specialist or `FINISH`.
 - Specialists always loop back to the supervisor, which decides what happens next. That is the mechanism that lets a single user query chain multiple specialists.
-- Checkpointers and interrupts (Chapters 8 and 9) work exactly the same way on a supervisor graph as on a single agent.
+- Checkpointers and interrupts (Chapters 5 and 6) work exactly the same way on a supervisor graph as on a single agent.
 
-Chapter 11 leaves the pure-mechanics territory behind and applies everything so far to natural-language querying of a real SQLite database.
+Chapter 8 leaves the pure-mechanics territory behind and applies everything so far to natural-language querying of a real SQLite database.

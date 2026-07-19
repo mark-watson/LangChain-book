@@ -11,7 +11,7 @@ from langchain_core.output_parsers import StrOutputParser
 hf_llm = HuggingFacePipeline.from_model_id(
     model_id="google/flan-t5-base",
     task="text2text-generation",
-    model_kwargs={"temperature": 1e-6},
+    pipeline_kwargs={"temperature": 1e-6, "do_sample": True},
 )
 
 prompt = PromptTemplate.from_template("What year did {name} get elected as president?")

@@ -1,12 +1,15 @@
 # Setup
 
-Follow directions in the book to set up Google app authentication.
+Follow the directions in the book (GoogleDrive.md) to set up Google OAuth credentials
+as `client_secrets.json` in this directory.
 
-# run
-
+```console
+$ uv sync
+$ ollama pull qwen3.5:4b
+$ uv run fetch_txt_files.py
+$ uv run index_and_QA.py
 ```
-python fetch_txt_files.py
-python index_and_QA.py
-```
 
-Note: I added a directory langchain-book-examples/google_drive_llm/data that you can use if you don't want to set up Google auth, and ust want to try running index_and_QA.py
+Note: this directory ships a `data/sports.txt` sample file, so you can run
+`index_and_QA.py` immediately without setting up Google auth first. Only
+`fetch_txt_files.py` needs real Google Drive credentials.

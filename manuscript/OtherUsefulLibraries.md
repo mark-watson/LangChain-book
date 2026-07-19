@@ -1,43 +1,96 @@
 # More Useful Libraries for Working with Unstructured Text Data
 
-Here we look at examples using two libraries that I find useful for my work: EmbedChain and Kor.
+Here we look at replacements for two libraries that were useful in earlier editions of this book — EmbedChain and Kor — and are no longer a good recommendation. Both illustrate a pattern worth knowing about generally: a small wrapper library earns its keep only as long as it stays ahead of the framework it wraps. Both of these were eventually overtaken by their underlying frameworks growing the exact convenience they provided.
 
-## EmbedChain Wrapper for LangChain Simplifies Application Development
+## What Used to Be EmbedChain: "Query Your Own Data" with LlamaIndex
 
-Taranjeet Singh developed a very nice wrapper library EmbedChain [https://github.com/embedchain/embedchain](https://github.com/embedchain/embedchain) that simplifies writing "query your own data" applications by choosing good defaults for the LangChain library.
+Taranjeet Singh's EmbedChain library — [https://github.com/embedchain/embedchain](https://github.com/embedchain/embedchain) — used to be a nice wrapper that simplified writing "query your own data" applications by choosing good defaults on top of LangChain. It has since been folded into a commercial memory-layer product, and the pattern it made convenient — point a loader at a directory, build an index, query it — is now just as easy directly in LlamaIndex, with the added benefit of running entirely on local models instead of requiring an OpenAI key.
 
-I will show one simple example that I run on my laptop to search the contents of all of the books I have written as well as a large number of research papers. You can find my example in the GitHub repository for this book in the directory **langchain-book-examples/embedchain_test**. As usual, you will need an OpenAI API account and set the environment variable **OPENAI_API_KEY** to the value of your key.
+I will show the same example I ran in earlier editions: searching the contents of some of the books and technical writing I have on my laptop. The code is `source-code/embedchain_test/`. Setup:
 
-I have copied PDF files for all of this content to the directory **~/data** on my laptop. It takes a short while to build a local vector embedding data store so I use two Python scripts. The first script **process_pdfs.py** that is shown here:
-
-```python
-# reference: https://github.com/embedchain/embedchain
-
-from embedchain import App
-import os
-
-test_chat = App()
-
-my_books_dir = "/Users/mark/data/"
-
-for filename in os.listdir(my_books_dir):
-    if filename.endswith('.pdf'):
-        print("processing filename:", filename)
-        test_chat.add("pdf_file",
-                      os.path.join(my_books_dir,
-                      filename))
+```console
+$ cd source-code/embedchain_test
+$ uv sync
+$ ollama pull qwen3.5:4b
 ```
 
-Here is a demo Python script **app.py** that makes three queries:
+`process_pdfs.py` builds the index (the filename is kept for continuity with the earlier edition — the bundled sample data in `data/` is plain `.txt`, and `SimpleDirectoryReader` handles real PDFs the same way, no code change required):
 
 ```python
-from embedchain import App
+"""Process PDFs with LlamaIndex 0.14 (replaces embedchain).
 
-test_chat = App()
+Uses LlamaIndex's SimpleDirectoryReader to load PDF files and build
+a vector index. Local models only — no external API keys required.
+"""
+
+import os
+
+from llama_index.core import Settings, SimpleDirectoryReader, VectorStoreIndex
+from llama_index.embeddings.huggingface import HuggingFaceEmbedding
+from llama_index.llms.ollama import Ollama
+
+Settings.llm = Ollama(model="qwen3.5:4b", request_timeout=120.0)
+Settings.embed_model = HuggingFaceEmbedding(model_name="BAAI/bge-small-en-v1.5")
+
+my_books_dir = "./data/"
+
+if os.path.isdir(my_books_dir):
+    documents = SimpleDirectoryReader(my_books_dir).load_data()
+    print(f"Loaded {len(documents)} documents from {my_books_dir}")
+
+    index = VectorStoreIndex.from_documents(documents)
+    print("Index built successfully.")
+else:
+    print(f"Directory {my_books_dir} does not exist. Nothing to process.")
+```
+
+```console
+$ uv run process_pdfs.py
+Loaded 2 documents from ./data/
+Index built successfully.
+```
+
+`app.py` queries that index with three questions:
+
+```python
+"""Embedchain replacement: simple RAG with LlamaIndex 0.14.
+
+The embedchain library is unmaintained. This example replaces it with
+LlamaIndex's SimpleDirectoryReader + VectorStoreIndex, which provides
+the same add-and-query functionality using local models.
+"""
+
+from llama_index.core import Settings, SimpleDirectoryReader, VectorStoreIndex
+from llama_index.embeddings.huggingface import HuggingFaceEmbedding
+from llama_index.llms.ollama import Ollama
+
+Settings.llm = Ollama(model="qwen3.5:4b", request_timeout=180.0)
+Settings.embed_model = HuggingFaceEmbedding(model_name="BAAI/bge-small-en-v1.5")
+
+# Build index from PDF data directory
+import os
+
+data_dir = "./data/"
+if os.path.isdir(data_dir):
+    documents = SimpleDirectoryReader(data_dir).load_data()
+    index = VectorStoreIndex.from_documents(documents)
+else:
+    # Fallback: use a simple in-memory document
+    from llama_index.core import Document
+
+    index = VectorStoreIndex.from_documents([Document(text="No data directory found.")])
+
+# similarity_top_k=1: the default of 2 triggers a second, sequential
+# "refine" LLM call per query. With whole-book-length source files (this
+# directory's data/ is ~130K words) that second pass can take minutes on
+# a small local model; one well-matched chunk is enough for these questions.
+query_engine = index.as_query_engine(similarity_top_k=1)
+
 
 def test(q):
     print(q)
-    print(test_chat.query(q), "\n")
+    print(query_engine.query(q), "\n")
+
 
 test("How can I iterate over a list in Haskell?")
 test("How can I edit my Common Lisp files?")
@@ -47,70 +100,70 @@ test("How can I scrape a website using Common Lisp?")
 The output looks like:
 
 ```console
-$ python app.py
+$ uv run app.py
 How can I iterate over a list in Haskell?
-To iterate over a list in Haskell, you can use recursion or higher-order functions like `map` or `foldl`. 
+One way to iterate over a list in Haskell involves using list comprehensions where variables bind values directly from the lists provided within brackets. By utilizing syntax such as `x <- [0..3]`, you can process elements sequentially, allowing multiple variables to be iterated simultaneously for generating combinations or filtered results.
 
 How can I edit my Common Lisp files?
-To edit Common Lisp files, you can use Emacs with the Lisp editing mode. By setting the default auto-mode-alist in Emacs, whenever you open a file with the extensions ".lisp", ".lsp", or ".cl", Emacs will automatically use the Lisp editing mode. You can search for an "Emacs tutorial" online to learn how to use the basic Emacs editing commands. 
+You can use a text editor such as Emacs or Vi to edit Common Lisp files. For the Vi editor, you should enter vi followed by your filename (for example `vi nested.lisp`) and then type `:set sm` after running it; this configuration indicates matching opening parentheses whenever a closing parenthesis is typed.
+
+For users choosing Emacs, configure their `.emacs` file or `_emacs` file in Windows to automatically recognize specific extensions for Lisp mode.
 
 How can I scrape a website using Common Lisp?
-One way to scrape a website using Common Lisp is to use the Drakma library. Paul Nathan has written a library using Drakma called web-trotter.lisp, which is available under the AGPL license at articulate-lisp.com/src/web-trotter.lisp. This library can be a good starting point for your scraping project. Additionally, you can use the wget utility to make local copies of a website. The command "wget -m -w 2 http:/knowledgebooks.com/" can be used to mirror a site with a two-second delay between HTTP requests for resources. The option "-m" indicates to recursively follow all links on the website, and the option "-w 2" adds a two-second delay between requests. Another option, "wget -mk -w 2 http:/knowledgebooks.com/", converts URI references to local file references on your local mirror. Concatenating all web pages into one file can also be a useful trick. 
+Common Lisp libraries can be managed by cloning repositories into the `~/quicklisp/local-projects/` directory and running a Makefile target `make fetch`. Detailed methods for scraping websites specifically are not elaborated in this section regarding example distribution and installation procedures.
 ```
 
+Two things worth noticing. First, this took a while — roughly a minute and a half per question, because `data/` here is two entire books (about 130,000 words combined), a much bigger corpus than the few-paragraph examples used elsewhere in this book, and a small local model reading a full retrieved chunk takes real time. Second, the third answer is honest about its limits rather than confidently wrong: it does not invent a scraping library or a `wget` command, it says the retrieved section does not cover that topic. A weaker or more eagerly fine-tuned model might have filled that gap with something plausible-sounding and false; watching a small local model decline to do that is, in its own way, reassuring.
 
-## Kor Library
+## What Used to Be Kor: Structured Extraction with `.with_structured_output()`
 
-The Kor library was written by Eugene Yurtsev. Kor is useful for using LLMs to extract structured data from unstructured text. Kor works by generating appropriate prompt text to explain to GPT-3.5 what information to extract and adding in the text to be processed.
+The Kor library, written by Eugene Yurtsev, used to be a nice way to get an LLM to extract structured data from unstructured text — it generated the prompt boilerplate for you from a schema you defined. Kor itself is essentially unmaintained today, for a good reason: LangChain 1.0's `.with_structured_output()`, covered in the Extraction chapter, now does natively and more reliably what Kor used to paper over with prompt engineering. There is no need for a separate library or a separate schema language — a Pydantic model is the schema.
 
-The [GitHub repository for Kor](https://github.com/eyurtsev/kor) is under active development so please check the project for updates. Here is the [documentation](https://eyurtsev.github.io/kor/).
-
-For the following example, I modified an example in the Kor documentation for extracting dates in text.
+Here is the same date-extraction task Kor used to handle, in `source-code/kor/dates.py`:
 
 ```python
-" From documentation: https://eyurtsev.github.io/kor/"
+"""Extract dates from text using LangChain 1.0 structured output.
 
-from kor.extraction import create_extraction_chain
-from kor.nodes import Object, Text, Number
-from langchain.chat_models import ChatOpenAI
+The old kor library is deprecated. LangChain 1.0's .with_structured_output()
+replaces it with native Pydantic-based extraction.
+"""
+
 from pprint import pprint
-import warnings ; warnings.filterwarnings('ignore')
 
-llm = ChatOpenAI(
-    model_name="gpt-3.5-turbo",
-    temperature=0,
-    max_tokens=2000,
-    frequency_penalty=0,
-    presence_penalty=0,
-    top_p=1.0,
-)
-
-schema = Object(
-    id="date",
-    description=(
-        "Any dates found in the text. Should be output in the format:"
-        " January 12, 2023"
-    ),
-    attributes = [
-        Text(id = "month",
-             description = "The month of the date",
-             examples=[("Someone met me on December 21, 1995",
-                        "Let's meet up on January 12, 2023 and discuss our yearly budget")])
-    ],
-)
-
-chain = create_extraction_chain(llm, schema, encoder_or_encoder_class='json')
+from langchain_ollama import ChatOllama
+from langchain_core.prompts import ChatPromptTemplate
+from pydantic import BaseModel, Field
 
 
-pred = chain.predict_and_parse(text="I will go to California May 1, 2024")['data']
-print("* month mentioned in text=", pred)
+class DateExtraction(BaseModel):
+    """Dates found in the text, formatted as 'January 12, 2023'."""
+
+    month: str = Field(description="The month of the date found in the text")
+    full_date: str | None = Field(
+        description="The full date in 'Month Day, Year' format if available",
+        default=None,
+    )
+
+
+llm = ChatOllama(model="qwen3.5:4b", temperature=0, thinking=False)
+structured_llm = llm.with_structured_output(DateExtraction)
+
+prompt = ChatPromptTemplate.from_messages([
+    ("system", "Extract dates from the text. Format dates as 'Month Day, Year'."),
+    ("human", "Extract any dates from this text:\n\n{text}"),
+])
+
+chain = prompt | structured_llm
+
+result = chain.invoke({"text": "I will go to California May 1, 2024"})
+pprint(result)
 ```
 
 Sample output:
 
 ```console
-$ python dates.py
-* month mentioned in text= {'date': {'month': 'May'}}
+$ uv run dates.py
+DateExtraction(month='May', full_date='May 1, 2024')
 ```
 
-Kor is a library focused on extracting data from text. You can get the same effects by writing for own prompts manually for GPT style LLMs but using Tor can save development time.
+A validated Pydantic object, not a dict you have to trust and unpack by hand — `result.month` and `result.full_date` are typed attributes, and if the model's response does not fit the schema, this raises instead of silently handing you something malformed. That reliability, built into the framework itself, is exactly what a wrapper library like Kor used to add on top.

@@ -9,7 +9,6 @@ with proper nouns or technical terms.
 
 from typing import Any
 
-from langchain.retrievers import EnsembleRetriever
 from langchain_chroma import Chroma
 from langchain_core.callbacks import CallbackManagerForRetrieverRun
 from langchain_core.documents import Document
@@ -46,6 +45,37 @@ class BM25Retriever(BaseRetriever):
         return self.vectorizer.get_top_n(query.split(), self.docs, n=self.k)
 
 
+class RRFEnsembleRetriever(BaseRetriever):
+    """Fuse several retrievers with reciprocal rank fusion.
+
+    langchain.retrievers.EnsembleRetriever is no longer importable from the
+    langchain package (the whole langchain.retrievers namespace was retired,
+    same story as BM25Retriever above) — this reimplements standard RRF:
+    each retriever contributes weight / (k + rank) to a document's combined
+    score, documents are deduplicated by source, and the fused ranking is
+    the sum of those scores, highest first.
+    """
+
+    retrievers: list[BaseRetriever]
+    weights: list[float]
+    k: int = 60
+
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
+    def _get_relevant_documents(
+        self, query: str, *, run_manager: CallbackManagerForRetrieverRun
+    ) -> list[Document]:
+        scores: dict[str, float] = {}
+        docs_by_key: dict[str, Document] = {}
+        for retriever, weight in zip(self.retrievers, self.weights):
+            for rank, doc in enumerate(retriever.invoke(query), start=1):
+                key = doc.metadata.get("source", doc.page_content)
+                scores[key] = scores.get(key, 0.0) + weight / (self.k + rank)
+                docs_by_key.setdefault(key, doc)
+        ranked_keys = sorted(scores, key=scores.get, reverse=True)
+        return [docs_by_key[key] for key in ranked_keys]
+
+
 docs = load_documents()
 
 embeddings = HuggingFaceEmbeddings(model_name="BAAI/bge-small-en-v1.5")
@@ -59,7 +89,7 @@ bm25 = BM25Retriever.from_documents(docs)
 bm25.k = 3
 dense = vectorstore.as_retriever(search_kwargs={"k": 3})
 
-retriever = EnsembleRetriever(retrievers=[bm25, dense], weights=[0.5, 0.5])
+retriever = RRFEnsembleRetriever(retrievers=[bm25, dense], weights=[0.5, 0.5])
 
 prompt = ChatPromptTemplate.from_template(
     "Answer the question using only the context below.\n\n"

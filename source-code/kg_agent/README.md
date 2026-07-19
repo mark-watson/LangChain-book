@@ -1,4 +1,4 @@
-# Chapter 12 — DBpedia and Wikidata as agent tools
+# Chapter 9 — DBpedia and Wikidata as agent tools
 
 Two ReAct agents, one per knowledge graph, that answer factual questions by querying public SPARQL endpoints.
 
@@ -27,4 +27,4 @@ $ uv run 01_dbpedia_agent.py
 $ uv run 02_wikidata_agent.py
 ```
 
-Add `.stream()` (as in Chapter 7's streaming example) if you want to watch each tool call as the agent works through the query.
+Add `.stream()` (as in Chapter 4's streaming example) if you want to watch each tool call as the agent works through the query.

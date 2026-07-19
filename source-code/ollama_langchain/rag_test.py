@@ -5,6 +5,11 @@ embeddings, langchain_chroma for the vector store, and LCEL for the
 retrieval chain. Requires 'ollama serve' to be running.
 
 The old RetrievalQA chain is replaced by a compose-and-pipe LCEL chain.
+
+Chat models are not embedding models: qwen3.5:4b's declared Ollama
+capabilities are completion/vision/tools/thinking, not embedding, so
+asking it for a vector raises "This server does not support embeddings".
+Embeddings come from a small dedicated model, nomic-embed-text, instead.
 """
 
 from pathlib import Path
@@ -17,7 +22,8 @@ from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import RunnablePassthrough
 
-model = "mistral:v0.3"
+model = "qwen3.5:4b"
+embedding_model = "nomic-embed-text"
 
 # --- Build the index (can be reused) ---
 
@@ -39,7 +45,7 @@ all_splits = text_splitter.split_documents(data)
 
 vectorstore = Chroma.from_documents(
     documents=all_splits,
-    embedding=OllamaEmbeddings(model=model),
+    embedding=OllamaEmbeddings(model=embedding_model),
     collection_name="ollama_rag",
 )
 
@@ -51,6 +57,7 @@ llm = ChatOllama(
     base_url="http://localhost:11434",
     model=model,
     temperature=0,
+    thinking=False,
 )
 
 prompt = ChatPromptTemplate.from_template(

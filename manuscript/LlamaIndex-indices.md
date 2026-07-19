@@ -144,7 +144,7 @@ The BM25 retriever wants a list of Nodes, not a full index — hence the slightl
 Two `QueryFusionRetriever` parameters worth knowing about:
 
 - **`mode="reciprocal_rerank"`** — reciprocal rank fusion. Documents ranked highly by either retriever get a good final score; documents ranked highly by both get an excellent final score. This is the default and almost always what you want.
-- **`num_queries=1`** — the user's query is used as-is. If you set this to a higher number, the fusion retriever asks the LLM to generate that many query rewrites and runs *each* retriever on *each* rewrite. Similar to Chapter 4's `MultiQueryRetriever` from LangChain but built into the fusion retriever itself. Costs LLM calls, buys recall.
+- **`num_queries=1`** — the user's query is used as-is. If you set this to a higher number, the fusion retriever asks the LLM to generate that many query rewrites and runs *each* retriever on *each* rewrite. Similar to Chapter 2's `MultiQueryRetriever` from LangChain but built into the fusion retriever itself. Costs LLM calls, buys recall.
 
 On the two-query test in the script, the fusion retriever handles both cleanly: the "body chemistry / exercise" query gets a strong dense-retrieval boost, and the "Austrian School" query (a proper noun that appears verbatim in `economics.txt`) gets a strong BM25 boost. Neither retriever on its own would rank both queries as well as the fusion does.
 
@@ -153,11 +153,11 @@ On the two-query test in the script, the fusion retriever handles both cleanly: 
 A concrete decision procedure I use in my own projects:
 
 1. **Start with `VectorStoreIndex`** and see how retrieval quality holds up on real user queries. This is the right answer most of the time.
-2. **If overview-style queries do badly**, add a `SummaryIndex` over the same corpus and route those queries to it via a router (Chapter 20).
+2. **If overview-style queries do badly**, add a `SummaryIndex` over the same corpus and route those queries to it via a router (Chapter 17).
 3. **If exact-term queries do badly** (product names, function names, proper nouns), swap the `VectorStoreIndex` retriever for a `QueryFusionRetriever` over both dense and BM25. This is close to free — no extra models, no meaningful latency increase — and it fixes a wide class of retrieval failures.
 4. **If ingestion-time budget is nonexistent** and you cannot install ML dependencies at all, use `SimpleKeywordTableIndex`. Ship it, measure, revisit.
 
-Reach for `TreeIndex` (not covered here) if you have thousands of Nodes and need a hierarchical retrieval that traverses top-down. Reach for `KnowledgeGraphIndex` if you want the framework to extract entities and relationships for you and query them as a graph — but at that point you may find Chapter 12's DBpedia/Wikidata SPARQL agents a cleaner fit.
+Reach for `TreeIndex` (not covered here) if you have thousands of Nodes and need a hierarchical retrieval that traverses top-down. Reach for `KnowledgeGraphIndex` if you want the framework to extract entities and relationships for you and query them as a graph — but at that point you may find Chapter 9's DBpedia/Wikidata SPARQL agents a cleaner fit.
 
 ## What we covered
 
@@ -166,4 +166,4 @@ Reach for `TreeIndex` (not covered here) if you have thousands of Nodes and need
 - `SimpleKeywordTableIndex` gives you keyword-based retrieval with zero ML dependencies — a fallback and a first-pass filter.
 - `QueryFusionRetriever` fuses BM25 and dense retrieval with reciprocal rank fusion. This is the hybrid pattern most projects should use once a vanilla vector retriever starts missing obvious matches.
 
-Chapter 17 covers reranking — the last piece of the retrieval-quality puzzle before we move on to LlamaIndex's Workflows API in Chapter 18.
+Chapter 14 covers reranking — the last piece of the retrieval-quality puzzle before we move on to LlamaIndex's Workflows API in Chapter 15.

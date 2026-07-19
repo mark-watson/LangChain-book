@@ -162,7 +162,7 @@ SELECT DISTINCT ?country ?label WHERE {
 }
 ```
 
-then executed it and summarized the results. Add `.stream()` from Chapter 7's streaming example if you want to watch the intermediate tool calls.
+then executed it and summarized the results. Add `.stream()` from Chapter 4's streaming example if you want to watch the intermediate tool calls.
 
 ## The Wikidata agent
 
@@ -238,11 +238,11 @@ In practice I use DBpedia when I am writing a query interactively — its readab
 
 ## Where to take this next
 
-Everything you learned in Chapters 7 through 10 composes with these KG agents:
+Everything you learned in Chapters 4 through 7 composes with these KG agents:
 
-- **Add a checkpointer** (Chapter 8) for follow-up questions across turns. "Which of those countries has the largest population?" makes sense as a second turn only if the agent remembers the first answer.
-- **Add an approval interrupt** (Chapter 9) if the KG could ever return sensitive information you want a human to see before it goes to the user.
-- **Add these tools to a supervisor graph** (Chapter 10) as a "facts specialist" alongside your other specialists. This is the pattern I use most often — the KG agent is one of several specialists a supervisor can call on for grounded factual data.
+- **Add a checkpointer** (Chapter 5) for follow-up questions across turns. "Which of those countries has the largest population?" makes sense as a second turn only if the agent remembers the first answer.
+- **Add an approval interrupt** (Chapter 6) if the KG could ever return sensitive information you want a human to see before it goes to the user.
+- **Add these tools to a supervisor graph** (Chapter 7) as a "facts specialist" alongside your other specialists. This is the pattern I use most often — the KG agent is one of several specialists a supervisor can call on for grounded factual data.
 
 ## What we covered
 
@@ -251,4 +251,4 @@ Everything you learned in Chapters 7 through 10 composes with these KG agents:
 - DBpedia is friendlier to prototype against; Wikidata has better coverage and cleaner data.
 - The pattern is identical for both KGs and composes with checkpointers, HITL, and supervisor graphs from earlier chapters.
 
-Chapter 13 wraps up Part I with a Perplexity-style local search agent that ties together web search, RAG, and multi-step reasoning.
+Chapter 10 wraps up Part I with a Perplexity-style local search agent that ties together web search, RAG, and multi-step reasoning.

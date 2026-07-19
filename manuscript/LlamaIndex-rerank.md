@@ -1,6 +1,6 @@
 # RAG with reranking
 
-Chapter 4's LangChain reranker chapter had the same argument I am about to make here, and it applies verbatim in LlamaIndex: cosine similarity over sentence embeddings is fast but coarse; a cross-encoder is slow but much more accurate; the trick is to retrieve wide with the cheap tool and rerank narrow with the expensive one.
+Chapter 2's LangChain reranker chapter had the same argument I am about to make here, and it applies verbatim in LlamaIndex: cosine similarity over sentence embeddings is fast but coarse; a cross-encoder is slow but much more accurate; the trick is to retrieve wide with the cheap tool and rerank narrow with the expensive one.
 
 In LlamaIndex the mechanism is a **node postprocessor**. You pass one to `.as_query_engine(node_postprocessors=[...])` and it runs between the retriever's `.retrieve()` call and the LLM synthesis step. The framework ships several — `SimilarityPostprocessor` for score thresholding, `MetadataReplacementPostProcessor` for retrieved-content rewriting, `LongContextReorder` for reordering — but the one that matters most for retrieval quality is `SentenceTransformerRerank`.
 
@@ -83,4 +83,4 @@ Rules of thumb from my own projects:
 - Pull a wider candidate set for the reranker to consider (5× your final desired count).
 - Reranking is nearly always the highest-value quality upgrade for a RAG pipeline.
 
-Chapter 18 changes gears from retrieval to orchestration, introducing the Workflows API — LlamaIndex's answer to LangGraph for multi-step LLM applications.
+Chapter 15 changes gears from retrieval to orchestration, introducing the Workflows API — LlamaIndex's answer to LangGraph for multi-step LLM applications.

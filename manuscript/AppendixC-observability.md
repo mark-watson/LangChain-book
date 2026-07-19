@@ -22,7 +22,7 @@ This is the "print statement" of observability. It is not pretty and not searcha
 
 ## Layer 2: `.stream()` for structured tracing
 
-Both frameworks make traces first-class via streaming. Every LangGraph agent's `.stream()` yields one item per node execution, showing exactly which state field each node updated. LlamaIndex Workflows have a similar mechanism via the `Context.write_event_to_stream()` API. Chapters 7, 10, and 11 all showed streaming in action.
+Both frameworks make traces first-class via streaming. Every LangGraph agent's `.stream()` yields one item per node execution, showing exactly which state field each node updated. LlamaIndex Workflows have a similar mechanism via the `Context.write_event_to_stream()` API. Chapters 4, 7, and 8 all showed streaming in action.
 
 For interactive development, `.stream()` output is more informative than dashboards. You see the shape of what happened, in order, in a form you can grep, save, and diff against yesterday's run. When I hit a bug in an agent I have written, my first move is almost always to re-run it with `.stream()` and read the trace.
 

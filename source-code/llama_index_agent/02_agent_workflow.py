@@ -1,6 +1,6 @@
 """The same ReAct agent built explicitly with the Workflows API.
 
-The graph shape is identical to Chapter 7's LangGraph version:
+The graph shape is identical to Chapter 4's LangGraph version:
 
   START -> call_model -> [tool_calls? tools : done]
                        tools -> call_model  (loop)

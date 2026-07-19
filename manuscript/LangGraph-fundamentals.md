@@ -6,7 +6,7 @@ LangGraph is an MIT-licensed Python library that lets you build stateful LLM app
 
 ## Why a graph at all
 
-By Chapter 5 you have seen that a `Runnable` chain — `prompt | model | parser` — is enough for a huge class of LLM apps. What it is not enough for is anything with a loop, a decision point, or state that persists across steps. A ReAct agent needs to alternate between "call the model" and "run a tool" as many times as the model asks. A human-in-the-loop workflow needs to pause partway through and wait for approval. A long-running assistant needs to remember the conversation across process restarts. LCEL chains cannot express any of that cleanly.
+By now you have seen that a `Runnable` chain — `prompt | model | parser` — is enough for a huge class of LLM apps. What it is not enough for is anything with a loop, a decision point, or state that persists across steps. A ReAct agent needs to alternate between "call the model" and "run a tool" as many times as the model asks. A human-in-the-loop workflow needs to pause partway through and wait for approval. A long-running assistant needs to remember the conversation across process restarts. LCEL chains cannot express any of that cleanly.
 
 LangGraph reintroduces the state machine as the primary abstraction. You describe your application as:
 
@@ -209,7 +209,7 @@ You gave me zero.
 7 is positive.
 ```
 
-Three invocations, three different paths through the graph. The Chapter 7 ReAct agent is built on exactly this pattern: after the "call model" node runs, a router looks at the model's reply, and either routes to the "run tool" node (if there is a tool call) or to `END` (if the model returned a final answer).
+Three invocations, three different paths through the graph. The Chapter 4 ReAct agent is built on exactly this pattern: after the "call model" node runs, a router looks at the model's reply, and either routes to the "run tool" node (if there is a tool call) or to `END` (if the model returned a final answer).
 
 Conditional edges can also loop. The destination can be a node earlier in the graph, and the engine will happily re-execute it. That is how you build the "call model, run tool, call model, run tool, ..., call model, done" cycle of a ReAct loop without writing any explicit loop code.
 
@@ -267,7 +267,7 @@ HumanMessage: What is the capital of Arizona?
 AIMessage: The capital of Arizona is Phoenix.
 ```
 
-The final state contains the full transcript in order: the two messages we passed in plus the model's reply. If we ran the graph again with the returned state as the new initial state, we would have a two-turn conversation. If we added a second node that called the model on the transcript again, we would have a self-dialoguing loop. That is essentially the shape of a ReAct agent, minus the tool-calling step in the middle — which is what Chapter 7 assembles.
+The final state contains the full transcript in order: the two messages we passed in plus the model's reply. If we ran the graph again with the returned state as the new initial state, we would have a two-turn conversation. If we added a second node that called the model on the transcript again, we would have a self-dialoguing loop. That is essentially the shape of a ReAct agent, minus the tool-calling step in the middle — which is what Chapter 4 assembles.
 
 ## What we covered
 
@@ -278,4 +278,4 @@ Four primitives are the entire vocabulary of LangGraph:
 3. **Reducers** — `Annotated[type, reducer_fn]` to control how new values merge with old ones.
 4. **Edges** — plain sequential ones with `add_edge`, or state-dependent ones with `add_conditional_edges`.
 
-Everything else in Part I is a combination of those four. Chapter 7 builds a ReAct agent by combining a "call model" node, a "run tool" node, and a conditional edge that routes between them. Chapter 8 adds a `SqliteSaver` checkpoint so the same graph can pause and resume across process restarts. Chapter 9 uses interrupts and checkpoint editing to hand control to a human mid-run. Chapter 10 composes multiple graphs into a supervisor pattern. All of it is the same four primitives, in slightly different arrangements.
+Everything else in Part I is a combination of those four. Chapter 4 builds a ReAct agent by combining a "call model" node, a "run tool" node, and a conditional edge that routes between them. Chapter 5 adds a `SqliteSaver` checkpoint so the same graph can pause and resume across process restarts. Chapter 6 uses interrupts and checkpoint editing to hand control to a human mid-run. Chapter 7 composes multiple graphs into a supervisor pattern. All of it is the same four primitives, in slightly different arrangements.

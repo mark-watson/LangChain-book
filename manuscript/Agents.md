@@ -1,10 +1,12 @@
 # Building a ReAct agent with LangGraph + Ollama
 
-Chapter 6 built graphs that did not do much. This chapter uses the same graph primitives to build the standard workhorse of applied LLM development: a **ReAct agent** — a program that alternates between "let the model think" and "run a tool the model asked for" until the model decides it has a final answer.
+Chapter 3 built graphs that did not do much. This chapter uses the same graph primitives to build the standard workhorse of applied LLM development: a **ReAct agent** — a program that alternates between "let the model think" and "run a tool the model asked for" until the model decides it has a final answer.
 
 The name comes from the [2022 ReAct paper](https://react-lm.github.io/) — *Reason and Act* — but at this point the pattern is more folklore than research. Ninety percent of the "AI agents" you read about are some variant of ReAct with two or three custom tools bolted on.
 
-We are going to build the same agent twice. The first version uses `langgraph.prebuilt.create_react_agent`, which is what I reach for in most real projects. The second version constructs the same graph explicitly using the primitives from Chapter 6. Seeing the two side by side is the fastest way I know to understand what the prebuilt factory is doing on your behalf and when it is worth dropping down to the manual version.
+We are going to build the same agent twice. The first version uses `langchain.agents.create_agent`, which is what I reach for in most real projects. The second version constructs the same graph explicitly using the primitives from Chapter 3. Seeing the two side by side is the fastest way I know to understand what the prebuilt factory is doing on your behalf and when it is worth dropping down to the manual version.
+
+A naming note, since you will see both in the wild: `create_agent` is the current home for this factory, in the `langchain` package rather than `langgraph.prebuilt`. Older code and tutorials call the same kind of factory `create_react_agent` — that name still exists in `langgraph.prebuilt` for backward compatibility, but `langchain.agents.create_agent` is the one actively developed and the one this book uses.
 
 ## The shape of a ReAct loop
 
@@ -16,7 +18,7 @@ Before any code, the pattern in five bullets:
 4. The updated transcript goes back to the model. Go to step 2.
 5. Eventually the model returns plain text with no tool calls. That is the final answer.
 
-Chapter 6's conditional edges are exactly the mechanism for "step 2 asks a question, step 3 or 5 depending on the answer." A ReAct agent is a two-node graph:
+Chapter 3's conditional edges are exactly the mechanism for "step 2 asks a question, step 3 or 5 depending on the answer." A ReAct agent is a two-node graph:
 
 ```text
 START -> model
@@ -66,19 +68,27 @@ Two tools, chosen for contrast. `multiply` is deterministic and instant. `web_se
 
 Both are plain Python functions decorated with `@tool`. The decorator uses the docstring as the tool description the model sees and the type annotations as the argument schema. Docstring quality directly affects tool-selection accuracy — worth taking seriously.
 
-## Version 1: `create_react_agent`
+## Version 1: `create_agent`
 
 `source-code/langgraph_react_agent/01_prebuilt_agent.py`:
 
 ```python
+"""A ReAct agent using the prebuilt factory.
+
+`create_agent(model, tools)` builds and compiles the exact graph we
+construct by hand in `02_react_from_scratch.py`. Use this when the standard
+ReAct shape is all you need; drop down to the from-scratch version when you
+need to customize routing, add nodes, or change the state schema.
+"""
+
 from langchain_core.messages import HumanMessage
 from langchain_ollama import ChatOllama
-from langgraph.prebuilt import create_react_agent
+from langchain.agents import create_agent
 
 from _tools import TOOLS
 
 model = ChatOllama(model="qwen3.5:4b", temperature=0)
-agent = create_react_agent(model, TOOLS)
+agent = create_agent(model, TOOLS)
 
 result = agent.invoke(
     {"messages": [HumanMessage(content="What is 137 times 24?")]}
@@ -93,7 +103,7 @@ for m in result["messages"]:
         print(m.content)
 ```
 
-`create_react_agent(model, tools)` returns a compiled `StateGraph` — the same kind of object you get from `graph.compile()` in Chapter 6. It handles `bind_tools` on the model, wraps the tools in a `ToolNode`, and wires the two-node graph shown above.
+`create_agent(model, tools)` returns a compiled `StateGraph` — the same kind of object you get from `graph.compile()` in Chapter 3. It handles `bind_tools` on the model, wraps the tools in a `ToolNode`, and wires the two-node graph shown above. It also accepts, as optional keyword arguments, several things later chapters build by hand on top of the manual graph — `checkpointer`, `interrupt_before`/`interrupt_after`, `response_format` — which is worth knowing about even though this chapter does not use any of them yet.
 
 A representative run:
 
@@ -106,16 +116,16 @@ What is 137 times 24?
 --- ToolMessage ---
 3288
 --- AIMessage ---
-137 times 24 is 3288.
+137 times 24 equals **3,288**.
 ```
 
 Four messages: the user's question, the model's tool call, the tool's result, the model's final answer. That is one full turn through the ReAct loop.
 
-If the standard ReAct shape is all you need — one model, a list of tools, a normal chat transcript — `create_react_agent` is what to reach for. You do not need to see the graph plumbing.
+If the standard ReAct shape is all you need — one model, a list of tools, a normal chat transcript — `create_agent` is what to reach for. You do not need to see the graph plumbing.
 
 ## Version 2: the same agent, built explicitly
 
-Now here is what `create_react_agent` actually did. `source-code/langgraph_react_agent/02_react_from_scratch.py`:
+Now here is what `create_agent` actually did. `source-code/langgraph_react_agent/02_react_from_scratch.py`:
 
 ```python
 from typing import Annotated, TypedDict
@@ -160,11 +170,25 @@ graph.add_conditional_edges(
 graph.add_edge("tools", "model")
 
 agent = graph.compile()
+
+
+if __name__ == "__main__":
+    result = agent.invoke(
+        {"messages": [HumanMessage(content="What is 137 times 24?")]}
+    )
+
+    for m in result["messages"]:
+        print(f"--- {type(m).__name__} ---")
+        if getattr(m, "tool_calls", None):
+            for call in m.tool_calls:
+                print(f"  tool_call: {call['name']}({call['args']})")
+        if m.content:
+            print(m.content)
 ```
 
 Walking through it top to bottom.
 
-**The state.** A single `messages` field reduced by `add_messages`, exactly like the last example of Chapter 6. Every message the graph produces — the model's replies, the tool results — gets appended here.
+**The state.** A single `messages` field reduced by `add_messages`, exactly like the last example of Chapter 3. Every message the graph produces — the model's replies, the tool results — gets appended here.
 
 **The model.** `ChatOllama(...).bind_tools(TOOLS)` gives the model the list of callable tools. When invoked, the model may respond with `.tool_calls` populated instead of `.content`.
 
@@ -178,10 +202,10 @@ Running it gives the same output as version 1. That is the point: the prebuilt f
 
 ## When to reach for which version
 
-- **Use `create_react_agent`** if you have a model and a flat list of tools and you want the standard behavior. It is one line of graph construction and it stays in sync with best practices as the LangGraph team refines the pattern.
-- **Drop down to the manual `StateGraph`** if you need any of the following: extra state fields beyond `messages` (retrieval context, user profile, running scratchpad), extra nodes (a planner before the model, a validator after the tools, a memory writer at the end), custom routing (route based on which tool was called, not just whether one was called), or extra edges (parallel tool execution, human-in-the-loop interrupts).
+- **Use `create_agent`** if you have a model and a flat list of tools and you want the standard behavior. It is one line of graph construction and it stays in sync with best practices as the LangChain team refines the pattern.
+- **Drop down to the manual `StateGraph`** if you need any of the following: extra state fields beyond `messages` (retrieval context, user profile, running scratchpad), extra nodes (a planner before the model, a validator after the tools, a memory writer at the end), custom routing (route based on which tool was called, not just whether one was called), or extra edges (parallel tool execution, human-in-the-loop interrupts) — or if `create_agent`'s built-in `middleware`, `interrupt_before`/`interrupt_after`, and `checkpointer` arguments do not cover what you need to customize.
 
-In my own projects I probably start with `create_react_agent` about half the time and drop to the manual graph the other half. The nice thing about LangGraph 1.0 is that the migration is mechanical when you need it — the primitives are the same.
+In my own projects I probably start with `create_agent` about half the time and drop to the manual graph the other half. The nice thing about LangGraph 1.0 is that the migration is mechanical when you need it — the primitives are the same.
 
 ## Watching each step with `.stream()`
 
@@ -218,16 +242,21 @@ USER: Search for the current population of Canada, then multiply it by 2.
 
 === node: tools ===
   ToolMessage: - Population of Canada - Wikipedia
-    The population of Canada is 40,528,396 as of ...
+  Canada population density map (2014) Top left: The Quebec City–Windsor Corridor is the most densely inhabited and heavily industrialized region... Canada ranks 37th by population among countries of the world, comprising about 0.5% of the world's total, with about 41.5 million Canadians as of Q1 2026....
 
 === node: model ===
-  tool_call: multiply({'a': 40528396, 'b': 2})
+  tool_call: multiply({'a': 41500000, 'b': 2})
 
 === node: tools ===
-  ToolMessage: 81056792
+  ToolMessage: 83000000
 
 === node: model ===
-  AIMessage: Doubling Canada's current population of about 40,528,396 gives approximately 81,056,792.
+  AIMessage: Based on my search results, Canada's current population is approximately **41.5 million** (as of Q1 2026).
+
+When multiplied by 2:
+**41,500,000 × 2 = 83,000,000**
+
+So the result is **83 million**.
 ```
 
 Five node executions. Two `model` invocations that produced tool calls, one that produced the final answer. Two `tools` invocations that fed data back into the transcript. `.stream()` makes this legible in a way that `.invoke()` — which only returns the final state — cannot.
@@ -248,9 +277,9 @@ Twenty-five is my usual number — enough for a real multi-step task, low enough
 
 ## What we covered
 
-- The ReAct loop is a two-node graph with one conditional edge — precisely the pattern you would write with the primitives from Chapter 6.
-- `create_react_agent` is a factory that builds and compiles that graph for you. Use it unless you need custom state, extra nodes, or unusual routing.
-- Building the graph explicitly is not much more code and unlocks all of Chapter 6's flexibility.
+- The ReAct loop is a two-node graph with one conditional edge — precisely the pattern you would write with the primitives from Chapter 3.
+- `create_agent` is a factory that builds and compiles that graph for you. Use it unless you need custom state, extra nodes, or unusual routing.
+- Building the graph explicitly is not much more code and unlocks all of Chapter 3's flexibility.
 - `.stream()` on the compiled agent is essential for debugging and iteration.
 
-Chapter 8 keeps the same agent but adds a checkpointer, which is what turns it from a script that runs once into a service that can pause, resume, and survive a process restart without losing conversation state.
+Chapter 5 keeps the same agent but adds a checkpointer, which is what turns it from a script that runs once into a service that can pause, resume, and survive a process restart without losing conversation state.

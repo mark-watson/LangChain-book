@@ -1,7 +1,7 @@
 [project]
 name = "llama-index-deploy"
 version = "0.1.0"
-description = "Chapter 22 — Serving a LlamaIndex Workflow with FastAPI"
+description = "Chapter 19 — Serving a LlamaIndex Workflow with FastAPI"
 requires-python = ">=3.12"
 dependencies = [
     "llama-index-core>=0.14,<0.15",

@@ -1,7 +1,7 @@
 [project]
 name = "langgraph-react-agent"
 version = "0.1.0"
-description = "Chapter 7 — Building a ReAct agent with LangGraph"
+description = "Chapter 4 — Building a ReAct agent with LangGraph"
 requires-python = ">=3.12"
 dependencies = [
     "langgraph>=1.0,<2",

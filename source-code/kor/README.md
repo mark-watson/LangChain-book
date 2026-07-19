@@ -1,6 +1,12 @@
-# Kor Library: a Useful Library for using LLMs to extract data from text
+# Structured extraction (formerly using the Kor library)
 
-The Kor library was written by Eugene Yurtsev. Kor is useful for using LLMs to extract structured data from unstructured text. Kor works by generating appropriate prompt text to explain to GPT-3.5 what information to extract and adding in the text to be processed.
+Earlier editions of this example used [Kor](https://github.com/eyurtsev/kor), a library
+for generating LLM extraction prompts from a schema. Kor is essentially unmaintained
+now, and LangChain 1.0's `.with_structured_output()` does the same job natively against
+a Pydantic model, so `dates.py` uses that instead.
 
-The [GitHub repository for Kor](https://github.com/eyurtsev/kor) is under active development so please check the project for updates. Here is the [documentation](https://eyurtsev.github.io/kor/).
-
+```console
+$ uv sync
+$ ollama pull qwen3.5:4b
+$ uv run dates.py
+```

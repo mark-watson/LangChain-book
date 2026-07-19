@@ -1,6 +1,6 @@
 # Human-in-the-loop patterns
 
-The agents from Chapters 7 and 8 run to completion without ever pausing to check in with a human. That is exactly what you want for most background tasks and most read-only assistants. It is exactly what you *do not* want any time an agent is about to take a consequential action — send an email, make a purchase, publish a post, execute a shell command — or produce output that a human needs to see and possibly correct before anything downstream consumes it.
+The agents from Chapters 4 and 5 run to completion without ever pausing to check in with a human. That is exactly what you want for most background tasks and most read-only assistants. It is exactly what you *do not* want any time an agent is about to take a consequential action — send an email, make a purchase, publish a post, execute a shell command — or produce output that a human needs to see and possibly correct before anything downstream consumes it.
 
 This chapter covers three LangGraph mechanisms for putting a human in the loop:
 
@@ -130,7 +130,7 @@ def approving_tools(state: State) -> dict:
     return {"messages": tool_messages}
 ```
 
-Compared to the vanilla `ToolNode` from Chapter 7, this custom node adds one branch: if the tool is dangerous, call `interrupt()`, and act on the returned decision. If the decision is `"approve"` the tool runs. Otherwise the node records a `ToolMessage` with content `"[user rejected send_email]"` so the model sees on the next turn that its request was refused and can respond accordingly.
+Compared to the vanilla `ToolNode` from Chapter 4, this custom node adds one branch: if the tool is dangerous, call `interrupt()`, and act on the returned decision. If the decision is `"approve"` the tool runs. Otherwise the node records a `ToolMessage` with content `"[user rejected send_email]"` so the model sees on the next turn that its request was refused and can respond accordingly.
 
 The driver code runs three cases through the same agent — safe tool, dangerous tool approved, dangerous tool rejected — feeding a scripted list of "approve" / "reject" responses to whatever interrupts fire. Representative output:
 
@@ -267,11 +267,11 @@ You can also combine both in the same graph — an `interrupt()` for an approval
 
 ## What we covered
 
-- HITL requires a checkpointer (already covered in Chapter 8) — the pause has to save the state somewhere.
+- HITL requires a checkpointer (already covered in Chapter 5) — the pause has to save the state somewhere.
 - `interrupt(payload)` inside a node halts the graph. Caller sees the payload in the returned state's `__interrupt__` key.
 - `Command(resume=value)` on the next `.invoke()` resumes the paused node with `value` as the return of `interrupt()`.
 - `interrupt_before=[node]` and `interrupt_after=[node]` at `.compile()` time create pause points without any special code in the nodes.
 - `agent.update_state(config, values)` edits the recorded state of a paused graph before resuming.
 - `.invoke(None, config=config)` resumes from a compile-time pause without injecting new input.
 
-Chapter 10 combines everything so far into a multi-agent supervisor pattern: multiple specialized agents, a coordinating supervisor graph, and (optionally) human approvals on the transitions between them.
+Chapter 7 combines everything so far into a multi-agent supervisor pattern: multiple specialized agents, a coordinating supervisor graph, and (optionally) human approvals on the transitions between them.
