@@ -2,7 +2,7 @@
 
 I have been working in the field of artificial intelligence since 1982, and Large Language Models (LLMs) remain the most exciting practical AI technology I have used in my career. What has changed since the last edition of this book is *how* I use them. In the summer of 2026, most of my personal LLM work runs on my own laptop, on hardware I already own, using open source libraries that I can read and modify. When I do reach for a hosted model, I pay per token, not per seat, and I own my data at both ends of the call.
 
-This edition of the book is rewritten around that stance. It is for **solo developers and small teams (two to five people)** who want to use [LangChain](https://github.com/langchain-ai/langchain) and [LlamaIndex](https://github.com/run-llama/llama_index) as they were originally intended: as MIT-licensed open source libraries for stitching LLMs into real applications, without adopting any of the commercial platforms that have grown up alongside them.
+This edition of the book is rewritten around that stance. It is for **solo developers and small teams (two to five people)** who want to use [LangChain](https://github.com/langchain-ai/langchain) and [LlamaIndex](https://github.com/run-llama/llama_index) as they were originally developed: as MIT-licensed open source libraries for stitching LLMs into real applications, without adopting any of the commercial platforms that have grown up alongside them. All library versions have been updated to the latest versions as-of July 2026.
 
 ## Who this book is for
 
