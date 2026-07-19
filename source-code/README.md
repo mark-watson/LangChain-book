@@ -1,4 +1,4 @@
-# Example code for my book "LangChain Project Lab Book: Hooking Large Language Models Up to the Real World"
+# Example code for my book "LangChain and LlamaIndex: Open Source Recipes for Solo Developers"
 
 You can purchase this book on LeanPub and get free updates as new versions are released.
 
@@ -17,9 +17,9 @@ OLLAMA_CONTEXT_LENGTH=16384 ollama serve
 ```
 
 
-## Older, non-supported, book chapters and code for these chapters now in directory CHAPTERS_and_CODE_no_longer_in-book
+## Older, non-supported, book chapters and code
 
-### Starting in October 2024 I am removing older material from my book and archiving it. See the following index for older material:
+Older material that has been removed from the current edition is archived rather than deleted. See the following index:
 
-[CHAPTERS_and_CODE_no_longer_in-book/README.md](CHAPTERS_and_CODE_no_longer_in-book/README.md)
+[DEPRECATED/README.md](DEPRECATED/README.md)
 

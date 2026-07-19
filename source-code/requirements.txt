@@ -6,7 +6,11 @@
 #   uv sync
 #   uv run python <script>.py
 #
-# The packages below are the union of all chapter dependencies.
+# The packages below are the union of all chapter dependencies, plus a
+# handful of standalone example directories (cooking_recipes/,
+# from_langchain_docs/, tool_search_math_example/, tools_langchain/,
+# text_db_llm/) that predate this edition's chapter structure and are not
+# part of the book itself -- see TheStack.md and M.md for the chapter list.
 
 # LangChain 1.0 ecosystem
 langchain>=1.0,<2
@@ -29,7 +33,6 @@ llama-index-llms-openai>=0.7,<1
 llama-index-embeddings-huggingface>=0.7,<1
 llama-index-retrievers-bm25>=0.7,<1
 llama-index-vector-stores-chroma>=0.3,<1
-llama-index-graph-stores-neo4j>=0.4,<1
 
 # Utilities
 ddgs>=1.0
@@ -46,4 +49,3 @@ pydrive2>=0.18,<1
 chromadb>=0.5,<2
 transformers>=4.40,<6
 torch>=2.0,<3
-tavily-python>=0.5,<1
