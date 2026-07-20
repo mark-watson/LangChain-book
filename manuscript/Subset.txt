@@ -1,6 +1,7 @@
 Preface.md
 TheStack.md
 LLM-overview.md
+Part_1.md
 LangChain-overview.md
 RAG.md
 Ollama.md
@@ -14,6 +15,7 @@ LangGraph-supervisor.md
 SqLite.md
 KG.md
 llm_search.md
+Part_2.md
 LlamaIndex_case_study.md
 LlamaIndex-ingest.md
 LlamaIndex-indices.md
