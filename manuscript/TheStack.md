@@ -45,7 +45,7 @@ Notice `langchain-community` is not on this list. Earlier editions leaned on it 
 
 That list is exhaustive for the numbered chapters — every package above is a real dependency of at least one `source-code/<chapter>/pyproject.toml`, and every package in every chapter's `pyproject.toml` is above. (A handful of older, standalone example directories predate this edition's chapter structure and are not part of the book; they are not represented here.)
 
-Every chapter's `source-code/<chapter>/pyproject.toml` pins a *version range*, not an exact version — `langchain>=1.0,<2`, `pydantic>=2.7,<3`, and so on, so a `uv sync` next year still gets compatible bugfixes. The part that actually pins exact versions is the `uv.lock` file next to it, generated the day the chapter was written and checked into the repo; `uv sync` reads the lock file by default, so what you install matches what was tested unless you deliberately `uv lock --upgrade`.
+Every chapter's `source-code/<chapter>/pyproject.toml` pins a *version range*, not an exact version such as `langchain>=1.0,<2`, `pydantic>=2.7,<3`, and so on, so a `uv sync` next year still gets compatible bugfixes. The part that actually pins exact versions is the `uv.lock` file next to it, generated the day the chapter was written and checked into the repo; `uv sync` reads the lock file by default, so what you install matches what was tested unless you deliberately `uv lock --upgrade`.
 
 ## What we are deliberately not installing
 
@@ -88,7 +88,7 @@ If you prefer plain `pip`, each chapter's `pyproject.toml` is a normal PEP 621 f
 If you do these three things once, every chapter in the book will work:
 
 1. Install `uv` (`brew install uv` on macOS, or `curl -LsSf https://astral.sh/uv/install.sh | sh` on Linux).
-2. Install Ollama from [ollama.com](https://ollama.com) and pull one general-purpose model that supports tool calling. As of mid-2026 the models I use most often for the book examples are `qwen3.5:4b` for tool-calling work, `llama3.2:3b` when I want something small and fast, and `gemma3:12b-it-qat` when I want more headroom on a 16 GB machine. Appendix A discusses model selection in more depth.
+2. Install Ollama from [ollama.com](https://ollama.com) and pull one general-purpose model that supports tool calling. As of mid-2026 the models I use most often for the book examples are `qwen3.5:4b` for tool-calling work, `llama3.2:3b` when I want something small and fast, and `gemma4:12b-it-qat` when I have sufficient headroom on a 16 GB or 32G  machine. Appendix A discusses model selection in more depth.
 3. Optionally, put a `.env` file in your home directory with any hosted-model API keys you want to use:
 
 ```text

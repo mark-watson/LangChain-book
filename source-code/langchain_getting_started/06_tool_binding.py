@@ -9,7 +9,7 @@ This example does one round only. Chapters 6 and 7 build a full ReAct loop
 on top of LangGraph — this is the primitive that loop is built on.
 
 Note: not every local model supports tool calling. As of mid-2026, qwen3.5:4b,
-llama3.2:3b, gemma3:12b-it-qat, and mistral-small work. Chat-only models
+llama3.2:3b, gemma4:12b-it-qat, and mistral-small work. Chat-only models
 will silently return prose instead of a tool_call — the classic gotcha.
 """
 

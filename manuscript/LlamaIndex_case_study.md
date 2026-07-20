@@ -1,6 +1,6 @@
-# LlamaIndex 0.14 in one hour
+# LlamaIndex
 
-Welcome to Part II. Everything so far has been about LangChain and LangGraph. The rest of the book covers LlamaIndex, which occupies overlapping-but-distinct territory. LlamaIndex has always been strongest at retrieval, indexing, and document-centric applications. LangChain has always been strongest at orchestration, chains, and general-purpose agent plumbing. In 2026 both frameworks have widened their scope enough to cover most of the same problems, but the shapes of their APIs — and the shapes of the applications that fall out most naturally from those APIs — remain different.
+Dear reader, welcome to Part II of this book. Everything so far has been about LangChain and LangGraph. The rest of the book covers LlamaIndex, which occupies overlapping-but-distinct territory. LlamaIndex has always been strongest at retrieval, indexing, and document-centric applications. LangChain has always been strongest at orchestration, chains, and general-purpose agent plumbing. In 2026 both frameworks have widened their scope enough to cover most of the same problems, but the shapes of their APIs — and the shapes of the applications that fall out most naturally from those APIs — remain different.
 
 There is nothing to unlearn from Part I. Prompts are still prompts, embeddings are still embeddings, RAG is still RAG. What changes is the vocabulary and the choreography.
 
