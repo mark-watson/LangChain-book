@@ -1,12 +1,14 @@
 # RAG patterns with LangChain
 
-Retrieval-Augmented Generation is the workhorse pattern of applied LLM development. The idea is one paragraph long: before you send a user's question to the model, look up the passages in your corpus that are most likely to contain the answer, and paste them into the prompt as context. The model gets to condition its answer on your data, not just on what it saw during training. Hallucinations drop, answers stay grounded, and you can add or remove documents from the corpus without retraining anything.
+Retrieval-Augmented Generation was the workhorse pattern of early applied LLM development, and still has large practical use. The idea is one paragraph long: before you send a user's question to the model, look up the passages (we will call these samples of text "chunks")in your corpus that are most likely to contain the answer, and paste these matching chunks of text into the prompt as context. The model gets to condition its answer on your data, not just on what it saw during training. Hallucinations drop, answers stay grounded, and you can add or remove documents from the corpus without retraining anything.
+
+Please note, dear reader, that commercial chat apps like ChatGPT and Gemini became much more useful when they started using web search to gather chunks of text to add to context. We will also see several examples of integrating data from web search in later examples in this book.
 
 ![RAG System Overview](RAG_diagram.png)
 
 Everything I wrote in the previous edition about *why* RAG works still applies. What has changed is that in 2026, the parts that used to be interesting — chunking, embedding, storing — are commoditized and take about six lines each. The interesting choice now is which *retrieval pattern* to use, because a naive retriever is often not good enough, and the differences between the good patterns are meaningful and worth understanding.
 
-This chapter walks through four patterns over the same tiny four-file corpus. Everything runs locally on your laptop with `qwen3.5:4b` from Ollama as the LLM and BGE from Hugging Face as the embedding model.
+This chapter walks through four patterns over the same tiny four-file corpus. Everything runs locally on your laptop with `qwen3.5:4b` served by Ollama as the LLM and use BGE from Hugging Face as the embedding model.
 
 | Script | Pattern |
 |---|---|
@@ -52,7 +54,7 @@ TEST_QUESTIONS = [
 ]
 ```
 
-Two things to notice. First, `Document` is the core type LangChain retrievers pass around; `page_content` is the text and `metadata` is an arbitrary dict you can filter and sort on. Second, the four .txt files are short enough that each one comfortably fits into a single `Document` — I am deliberately skipping the chunking step for this chapter so the retrieval strategy is the only variable that changes between the four scripts. For a larger corpus you would run the loaded documents through a `RecursiveCharacterTextSplitter` before indexing.
+Two things to notice. First, `Document` is the core type LangChain retrievers pass around; `page_content` is the text and `metadata` is an arbitrary dict you can filter and sort on. Second, the four .txt files are short enough that each one comfortably fits into a single `Document`. I am deliberately skipping the chunking step for this chapter so the retrieval strategy is the only variable that changes between the four scripts. For a larger corpus you would run the loaded documents through a `RecursiveCharacterTextSplitter` before indexing.
 
 ## Pattern 1: naive RAG
 
@@ -198,7 +200,7 @@ On this four-file corpus the reranker's effect is subtle because the corpus is s
 
 ## Pattern 3: hybrid dense + sparse retrieval
 
-Dense embeddings are good at "what does this mean" and can miss documents that share the exact rare word or proper noun with the query. BM25 is the opposite: it is the classical bag-of-words scoring function from information retrieval, brilliant with exact term matches, blind to paraphrases. Neither one dominates the other across all queries.
+Dense embeddings are good at "what does this mean" but is not likely to miss documents that share the exact rare word or proper noun with the query. BM25 is the opposite: it is the classical bag-of-words scoring function from information retrieval, brilliant with exact term matches, blind to paraphrases. Neither one dominates the other across all queries.
 
 `03_hybrid_rag.py` runs both and ensembles them. Same story as the reranker: `langchain_community.retrievers.BM25Retriever` and `langchain.retrievers.EnsembleRetriever` are both retired, so this script hand-rolls a BM25 retriever on top of `rank_bm25` and its own reciprocal-rank-fusion ensembler:
 
@@ -379,7 +381,7 @@ Q: How does body chemistry affect exercise?
 A: 
 ```
 
-That third answer is not a typo — it is genuinely empty, reproducibly, on this corpus. With four short files and `k = 3`, unioning four query variants' retrievals pulls in nearly the entire corpus (all three non-sports files, in this run), and the resulting context pushes `qwen3.5:4b` into a degenerate generation for this particular question: `done_reason` comes back `"length"` after thousands of tokens, with nothing usable in `.content` even at `thinking=False` and with an explicit `num_predict` cap. The naive, reranked, and hybrid patterns above never hit this because they hand the model a much smaller, more targeted context. It is a genuine limitation of multi-query on a tiny corpus with a small local model, not a bug in the retriever logic above — and a good reminder that "retrieve more, union it all" is not free: past some point, more context can make a small model's job harder, not easier. Watching for exactly this kind of silent failure is why every RAG chain in this book prints the answer instead of assuming one arrived.
+That third answer is not a typo: it is genuinely empty, reproducibly, on this corpus. With four short files and `k = 3`, unioning four query variants' retrievals pulls in nearly the entire corpus (all three non-sports files, in this run), and the resulting context pushes `qwen3.5:4b` into a degenerate generation for this particular question: `done_reason` comes back `"length"` after thousands of tokens, with nothing usable in `.content` even at `thinking=False` and with an explicit `num_predict` cap. The naive, reranked, and hybrid patterns above never hit this because they hand the model a much smaller, more targeted context. It is a genuine limitation of multi-query on a tiny corpus with a small local model, not a bug in the retriever logic above — and a good reminder that "retrieve more, union it all" is not free: past some point, more context can make a small model's job harder, not easier. Watching for exactly this kind of silent failure is why every RAG chain in this book prints the answer instead of assuming one arrived.
 
 ## Which pattern for which situation
 
@@ -396,4 +398,4 @@ You can also stack them. A reasonable production retriever is "hybrid BM25 + den
 
 RAG has boiled down to two concrete choices in 2026: which retrieval pattern (this chapter) and which retriever+reranker+chunker stack (LangChain gives you the pieces, LlamaIndex will give you an even richer set in Part II). The chain composition, the prompt template, and the model call are essentially fixed shapes at this point. Learn the four patterns above and you can compose a strong retriever for almost any application without leaving the boundaries of `langchain-core`, `langchain-ollama`, and `langchain-huggingface` — `langchain-community` is not a dependency anywhere in this chapter; every retriever this book needed but the framework no longer ships is about forty lines of `langchain_core.retrievers.BaseRetriever` away.
 
-Tool binding — the primitive from Chapter 1 § "Tool binding" — is as far as this book goes on tool calling by itself. Chapter 3 introduces LangGraph, which is where we start building agents that use RAG as one of several tools rather than as the whole app.
+Tool binding — the primitive from Chapter 1 (section )"Tool binding", example file 06_tool_binding.py) is as far as this book goes for low-level tool calling by itself. Chapter 3 introduces LangGraph, which is where we start building agents that use RAG as one of several tools rather than as the whole app.
