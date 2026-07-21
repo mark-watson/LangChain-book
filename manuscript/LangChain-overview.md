@@ -51,15 +51,13 @@ print(type(response).__name__)
 print(response.content)
 ```
 
-There are three things worth pointing out in twelve lines of code.
+There are three things worth pointing out in fourteen lines of code.
 
-First, the import paths. In the 1.0 line, LangChain is broken up into a handful of small packages. `langchain_core` holds the primitives (messages, prompt templates, runnables, output parsers). Each LLM provider has its own package: `langchain_ollama`, `langchain_openai`, `langchain_google_genai`, and so on. The umbrella `langchain` package pulls in higher-level pieces built on top of the core. In practice you almost always import messages and prompts from `langchain_core` and models from the provider package that matches the LLM you are using.
+-The import paths. In LangChain version 1.0, LangChain is broken up into a handful of small packages. `langchain_core` holds the primitives (messages, prompt templates, runnables, output parsers). Each LLM provider has its own package: `langchain_ollama`, `langchain_openai`, `langchain_google_genai`, and so on. The umbrella `langchain` package pulls in higher-level pieces built on top of the core. In practice you almost always import messages and prompts from `langchain_core` and models from the provider package that matches the LLM you are using.
+- Second, the message objects. `SystemMessage` sets up the assistant's persona and instructions; `HumanMessage` is the user's turn. There is also `AIMessage`, which is what `.invoke()` returns and what you would include in a `messages` list to represent prior assistant turns in a multi-turn conversation.
+- Third, `.invoke()`. Every LangChain component that can be called — models, prompt templates, chains, agents, output parsers — is a `Runnable`, and every `Runnable` has the same `.invoke()`, `.stream()`, and `.batch()` methods. That uniformity is the point of the 1.0 API refactor.
 
-Second, the message objects. `SystemMessage` sets up the assistant's persona and instructions; `HumanMessage` is the user's turn. There is also `AIMessage`, which is what `.invoke()` returns and what you would include in a `messages` list to represent prior assistant turns in a multi-turn conversation.
-
-Third, `.invoke()`. Every LangChain component that can be called — models, prompt templates, chains, agents, output parsers — is a `Runnable`, and every `Runnable` has the same `.invoke()`, `.stream()`, and `.batch()` methods. That uniformity is the point of the 1.0 API refactor.
-
-Run it:
+Run this example:
 
 ```console
 $ uv run 01_hello_model.py
@@ -97,9 +95,9 @@ The message list, the `.invoke()` call, and the response type are all identical.
 
 I mostly develop against a local `ChatOllama` because iteration is instant and I do not pay for tokens I waste. When I want to compare against a stronger model I flip the constructor, and that is usually the entire diff.
 
-## `.stream()` and `.batch()`
+## Two more Runnable methods `.stream()` and `.batch()`
 
-Two more `Runnable` methods you will use constantly. `source-code/langchain_getting_started/03_stream_and_batch.py`:
+Here we look at two  more `Runnable` methods you will use constantly. `source-code/langchain_getting_started/03_stream_and_batch.py`:
 
 ```python
 from langchain_ollama import ChatOllama
@@ -157,7 +155,7 @@ Read `prompt | model` as "call the prompt with whatever I pass in, then feed its
 
 ## Output parsers and structured output
 
-An `AIMessage.content` is a string. Most of the time the code downstream from your model call wants either plain text (not the `AIMessage` wrapper) or, better, a validated data structure. Both are one more pipe step. `source-code/langchain_getting_started/05_output_parser.py`:
+The field `AIMessage.content` is a string. Most of the time the code downstream from your model call wants either plain text (not the `AIMessage` wrapper) or, better, a validated data structure. Both are one more pipe step. `source-code/langchain_getting_started/05_output_parser.py`:
 
 ```python
 from langchain_core.output_parsers import StrOutputParser
@@ -191,7 +189,7 @@ for country in ["Canada", "Germany", "Japan"]:
     print(result)
 ```
 
-`StrOutputParser` is the everyday one. It unwraps the `AIMessage` and hands you the raw string. Nine times out of ten this is what you want when a chain's output is going to be printed, logged, or concatenated with other strings.
+`StrOutputParser` is the everyday class to use. It unwraps the `AIMessage` and hands you the raw string. Nine times out of ten this is what you want when a chain's output is going to be printed, logged, or concatenated with other strings.
 
 `.with_structured_output(SomeModel)` is the one that changes how you build things. Give it a Pydantic model and you get back a chain that returns a validated instance of that model. The description strings on the fields become part of the prompt behind the scenes, and the framework handles the JSON schema plumbing. In previous editions of this book we did this by hand with prompts that said "output JSON in this format." That whole class of prompt engineering is now a one-line method call.
 
@@ -212,7 +210,7 @@ The exact numbers depend on the model, but the shape is guaranteed.
 
 ## Tool binding
 
-The last of the six examples is the primitive that agents are built on. `.bind_tools([...])` gives the chat model a list of Python functions and their descriptions; when the model decides one of them is the right thing to call, its response comes back with a populated `tool_calls` list instead of prose in `.content`. `source-code/langchain_getting_started/06_tool_binding.py`:
+The last of the six examples we will look at use the primitive that agents are built on `.bind_tools([...])` that gives the chat model a list of Python functions and their descriptions; when the model decides one of them is the right thing to call, its response comes back with a populated `tool_calls` list instead of prose in `.content`. `source-code/langchain_getting_started/06_tool_binding.py`:
 
 ```python
 from langchain_core.tools import tool
