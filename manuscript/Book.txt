@@ -3,6 +3,7 @@ TheStack.md
 LLM-overview.md
 Part_1.md
 LangChain-overview.md
+Swap_LLM_Models.md
 RAG.md
 Ollama.md
 Extraction.md
