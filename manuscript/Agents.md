@@ -1,12 +1,12 @@
 # Building a ReAct agent with LangGraph + Ollama
 
-Chapter 3 built graphs that did not do much. This chapter uses the same graph primitives to build the standard workhorse of applied LLM development: a **ReAct agent** — a program that alternates between "let the model think" and "run a tool the model asked for" until the model decides it has a final answer.
+Chapter 3 built graphs that did not do much. This chapter uses the same graph primitives to build the standard workhorse of applied LLM development: a **ReAct agent**, a program that alternates between "let the model think" and "run a tool the model asked for" until the model decides it has a final answer.
 
-The name comes from the [2022 ReAct paper](https://react-lm.github.io/) — *Reason and Act* — but at this point the pattern is more folklore than research. Ninety percent of the "AI agents" you read about are some variant of ReAct with two or three custom tools bolted on.
+The name comes from the [2022 ReAct paper](https://react-lm.github.io/), short for *Reason and Act*, but at this point the pattern is more folklore than research. Ninety percent of the "AI agents" you read about are some variant of ReAct with two or three custom tools bolted on.
 
 We are going to build the same agent twice. The first version uses `langchain.agents.create_agent`, which is what I reach for in most real projects. The second version constructs the same graph explicitly using the primitives from Chapter 3. Seeing the two side by side is the fastest way I know to understand what the prebuilt factory is doing on your behalf and when it is worth dropping down to the manual version.
 
-A naming note, since you will see both in the wild: `create_agent` is the current home for this factory, in the `langchain` package rather than `langgraph.prebuilt`. Older code and tutorials call the same kind of factory `create_react_agent` — that name still exists in `langgraph.prebuilt` for backward compatibility, but `langchain.agents.create_agent` is the one actively developed and the one this book uses.
+A naming note, since you will see both in the wild: `create_agent` is the current home for this factory, in the `langchain` package rather than `langgraph.prebuilt`. Older code and tutorials call the same kind of factory `create_react_agent`. That name still exists in `langgraph.prebuilt` for backward compatibility, but `langchain.agents.create_agent` is the one actively developed and the one this book uses.
 
 ## The shape of a ReAct loop
 
@@ -66,7 +66,7 @@ TOOLS = [multiply, web_search]
 
 Two tools, chosen for contrast. `multiply` is deterministic and instant. `web_search` is nondeterministic and network-bound. Together they let us pose questions of the form "look something up, then compute something with it" that require the loop to run for real.
 
-Both are plain Python functions decorated with `@tool`. The decorator uses the docstring as the tool description the model sees and the type annotations as the argument schema. Docstring quality directly affects tool-selection accuracy — worth taking seriously.
+Both are plain Python functions decorated with `@tool`. The decorator uses the docstring as the tool description the model sees and the type annotations as the argument schema. Docstring quality directly affects tool-selection accuracy, so it is worth taking seriously.
 
 ## Version 1: `create_agent`
 
@@ -103,7 +103,7 @@ for m in result["messages"]:
         print(m.content)
 ```
 
-`create_agent(model, tools)` returns a compiled `StateGraph` — the same kind of object you get from `graph.compile()` in Chapter 3. It handles `bind_tools` on the model, wraps the tools in a `ToolNode`, and wires the two-node graph shown above. It also accepts, as optional keyword arguments, several things later chapters build by hand on top of the manual graph — `checkpointer`, `interrupt_before`/`interrupt_after`, `response_format` — which is worth knowing about even though this chapter does not use any of them yet.
+`create_agent(model, tools)` returns a compiled `StateGraph`, the same kind of object you get from `graph.compile()` in Chapter 3. It handles `bind_tools` on the model, wraps the tools in a `ToolNode`, and wires the two-node graph shown above. It also accepts, as optional keyword arguments, several things later chapters build by hand on top of the manual graph (`checkpointer`, `interrupt_before`/`interrupt_after`, `response_format`), all worth knowing about even though this chapter does not use any of them yet.
 
 A representative run:
 
@@ -121,7 +121,7 @@ What is 137 times 24?
 
 Four messages: the user's question, the model's tool call, the tool's result, the model's final answer. That is one full turn through the ReAct loop.
 
-If the standard ReAct shape is all you need — one model, a list of tools, a normal chat transcript — `create_agent` is what to reach for. You do not need to see the graph plumbing.
+If the standard ReAct shape is all you need (one model, a list of tools, a normal chat transcript), `create_agent` is what to reach for. You do not need to see the graph plumbing.
 
 ## Version 2: the same agent, built explicitly
 
@@ -188,13 +188,13 @@ if __name__ == "__main__":
 
 Walking through it top to bottom.
 
-**The state.** A single `messages` field reduced by `add_messages`, exactly like the last example of Chapter 3. Every message the graph produces — the model's replies, the tool results — gets appended here.
+**The state.** A single `messages` field reduced by `add_messages`, exactly like the last example of Chapter 3. Every message the graph produces, the model's replies and the tool results, gets appended here.
 
 **The model.** `ChatOllama(...).bind_tools(TOOLS)` gives the model the list of callable tools. When invoked, the model may respond with `.tool_calls` populated instead of `.content`.
 
-**`ToolNode`.** From `langgraph.prebuilt`. Given a list of tools, `ToolNode` reads the last message on the transcript, executes each tool call in that message against the matching tool, and returns a list of `ToolMessage` objects containing the results. You could write this yourself in about a dozen lines — reading `state["messages"][-1].tool_calls`, dispatching each one, wrapping results in `ToolMessage(content=..., tool_call_id=...)` — but there is no reason to.
+**`ToolNode`.** From `langgraph.prebuilt`. Given a list of tools, `ToolNode` reads the last message on the transcript, executes each tool call in that message against the matching tool, and returns a list of `ToolMessage` objects containing the results. You could write this yourself in about a dozen lines (reading `state["messages"][-1].tool_calls`, dispatching each one, wrapping results in `ToolMessage(content=..., tool_call_id=...)`), but there is no reason to.
 
-**The two node functions.** `call_model` invokes the model on the transcript and returns its reply. `route_after_model` is not a node, it is a router — a plain function from state to a string. If the model's last reply has tool calls, we route to `"tools"`; otherwise we route to `END`.
+**The two node functions.** `call_model` invokes the model on the transcript and returns its reply. `route_after_model` is not a node, it is a router: a plain function from state to a string. If the model's last reply has tool calls, we route to `"tools"`; otherwise we route to `END`.
 
 **The wiring.** Three edges. Start goes to the model. The model is followed by a conditional edge that either goes to the tool node or ends. After tools run, we always loop back to the model.
 
@@ -203,9 +203,9 @@ Running it gives the same output as version 1. That is the point: the prebuilt f
 ## When to reach for which version
 
 - **Use `create_agent`** if you have a model and a flat list of tools and you want the standard behavior. It is one line of graph construction and it stays in sync with best practices as the LangChain team refines the pattern.
-- **Drop down to the manual `StateGraph`** if you need any of the following: extra state fields beyond `messages` (retrieval context, user profile, running scratchpad), extra nodes (a planner before the model, a validator after the tools, a memory writer at the end), custom routing (route based on which tool was called, not just whether one was called), or extra edges (parallel tool execution, human-in-the-loop interrupts) — or if `create_agent`'s built-in `middleware`, `interrupt_before`/`interrupt_after`, and `checkpointer` arguments do not cover what you need to customize.
+- **Drop down to the manual `StateGraph`** if you need any of the following: extra state fields beyond `messages` (retrieval context, user profile, running scratchpad), extra nodes (a planner before the model, a validator after the tools, a memory writer at the end), custom routing (route based on which tool was called, not just whether one was called), or extra edges (parallel tool execution, human-in-the-loop interrupts), or if `create_agent`'s built-in `middleware`, `interrupt_before`/`interrupt_after`, and `checkpointer` arguments do not cover what you need to customize.
 
-In my own projects I probably start with `create_agent` about half the time and drop to the manual graph the other half. The nice thing about LangGraph 1.0 is that the migration is mechanical when you need it — the primitives are the same.
+In my own projects I probably start with `create_agent` about half the time and drop to the manual graph the other half. The nice thing about LangGraph 1.0 is that the migration is mechanical when you need it: the primitives are the same.
 
 ## Watching each step with `.stream()`
 
@@ -259,7 +259,7 @@ When multiplied by 2:
 So the result is **83 million**.
 ```
 
-Five node executions. Two `model` invocations that produced tool calls, one that produced the final answer. Two `tools` invocations that fed data back into the transcript. `.stream()` makes this legible in a way that `.invoke()` — which only returns the final state — cannot.
+Five node executions. Two `model` invocations that produced tool calls, one that produced the final answer. Two `tools` invocations that fed data back into the transcript. `.stream()` makes this legible in a way that `.invoke()`, which only returns the final state, cannot.
 
 I use `.stream()` for essentially every agent I write, and I usually convert it to `.invoke()` only after I am satisfied with the behavior. In practice, an agent that streams sensibly almost always invokes sensibly, and streaming while iterating catches bugs early.
 
@@ -273,11 +273,11 @@ I use `.stream()` for essentially every agent I write, and I usually convert it 
 agent.invoke({"messages": [...]}, config={"recursion_limit": 25})
 ```
 
-Twenty-five is my usual number — enough for a real multi-step task, low enough to bail out before the LLM bill or the wall clock runs away.
+Twenty-five is my usual number: enough for a real multi-step task, low enough to bail out before the LLM bill or the wall clock runs away.
 
 ## What we covered
 
-- The ReAct loop is a two-node graph with one conditional edge — precisely the pattern you would write with the primitives from Chapter 3.
+- The ReAct loop is a two-node graph with one conditional edge, precisely the pattern you would write with the primitives from Chapter 3.
 - `create_agent` is a factory that builds and compiles that graph for you. Use it unless you need custom state, extra nodes, or unusual routing.
 - Building the graph explicitly is not much more code and unlocks all of Chapter 3's flexibility.
 - `.stream()` on the compiled agent is essential for debugging and iteration.

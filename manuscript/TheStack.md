@@ -8,42 +8,42 @@ Across every chapter in this book, the total set of Python packages you will ins
 
 **Core frameworks**
 
-- `langchain` — the LangChain 1.0 core library.
-- `langchain-core` — the primitives (`Runnable`, `BaseMessage`, `PromptTemplate`, etc.) that `langchain` and `langgraph` share.
-- `langgraph` — the LangGraph 1.0 stateful-agent framework.
-- `langgraph-checkpoint-sqlite` — the `SqliteSaver` checkpointer backend that makes a LangGraph agent restart-safe (Chapter 5).
-- `llama-index-core` — the LlamaIndex 0.14+ core library.
+- `langchain`: the LangChain 1.0 core library.
+- `langchain-core`: the primitives (`Runnable`, `BaseMessage`, `PromptTemplate`, etc.) that `langchain` and `langgraph` share.
+- `langgraph`: the LangGraph 1.0 stateful-agent framework.
+- `langgraph-checkpoint-sqlite`: the `SqliteSaver` checkpointer backend that makes a LangGraph agent restart-safe (Chapter 5).
+- `llama-index-core`: the LlamaIndex 0.14+ core library.
 
-Notice `langchain-community` is not on this list. Earlier editions leaned on it for SQL toolkits, retrievers, and cross-encoders; the version that shipped alongside LangChain 1.0 dropped several of those (`SQLDatabaseToolkit`, `ContextualCompressionRetriever`/`CrossEncoderReranker`, `EnsembleRetriever`, `BM25Retriever`, `HuggingFaceCrossEncoder` all lost their import paths at one point or another). Rather than pull in a large legacy package for pieces that keep moving, the chapters that used to need it (Chapters 2 and 8) reimplement the specific piece directly on `langchain_core.retrievers.BaseRetriever` or raw SQLAlchemy — usually 20-40 lines. You will see why, with the actual code, in those chapters.
+Notice `langchain-community` is not on this list. Earlier editions leaned on it for SQL toolkits, retrievers, and cross-encoders; the version that shipped alongside LangChain 1.0 dropped several of those (`SQLDatabaseToolkit`, `ContextualCompressionRetriever`/`CrossEncoderReranker`, `EnsembleRetriever`, `BM25Retriever`, `HuggingFaceCrossEncoder` all lost their import paths at one point or another). Rather than pull in a large legacy package for pieces that keep moving, the chapters that used to need it (Chapters 2 and 8) reimplement the specific piece directly on `langchain_core.retrievers.BaseRetriever` or raw SQLAlchemy, usually 20-40 lines. You will see why, with the actual code, in those chapters.
 
 **LLM providers (pick as needed per chapter)**
 
-- `langchain-ollama` and `llama-index-llms-ollama` — the default LLM provider for the book. Local models via Ollama.
-- `langchain-openai` and `llama-index-llms-openai` — for readers who want to use OpenAI or an OpenAI-compatible endpoint such as Fireworks.ai. Used directly in the "swap the model" examples in Chapters 1 and 11.
+- `langchain-ollama` and `llama-index-llms-ollama`: the default LLM provider for the book. Local models via Ollama.
+- `langchain-openai` and `llama-index-llms-openai`: for readers who want to use OpenAI or an OpenAI-compatible endpoint such as Fireworks.ai. Used directly in the "swap the model" examples in Chapters 1 and 11.
 
 **Embeddings and vector stores**
 
-- `langchain-huggingface` and `llama-index-embeddings-huggingface` — local embedding models (BGE, nomic-embed).
-- `langchain-chroma` — Chroma vector store integration, wrapping `chromadb`; a local vector store that persists to disk in a single directory.
-- `sentence-transformers` — the reranker examples, and the raw pipeline behind the local-transformer LlamaIndex LLM example.
-- `rank-bm25` and `llama-index-retrievers-bm25` — sparse (keyword) retrieval for the hybrid RAG patterns, dense-plus-sparse in each framework.
+- `langchain-huggingface` and `llama-index-embeddings-huggingface`: local embedding models (BGE, nomic-embed).
+- `langchain-chroma`: Chroma vector store integration, wrapping `chromadb`; a local vector store that persists to disk in a single directory.
+- `sentence-transformers`: the reranker examples, and the raw pipeline behind the local-transformer LlamaIndex LLM example.
+- `rank-bm25` and `llama-index-retrievers-bm25`: sparse (keyword) retrieval for the hybrid RAG patterns, dense-plus-sparse in each framework.
 
 **Data-source and tool packages**
 
-- `ddgs` — the free web search backend used throughout.
-- `SPARQLWrapper` — for the DBpedia and Wikidata chapter.
-- `trafilatura` — for pulling clean text out of arbitrary web pages.
-- `pydantic` — for structured-output schemas.
-- `pydrive2` — Google Drive API access (the maintained fork of the abandoned `pydrive`).
-- `sqlalchemy` — direct database access for the SQL agent chapter, which hand-rolls its tools on top of it instead of a toolkit.
-- `langchain-text-splitters` — chunking text before embedding.
+- `ddgs`: the free web search backend used throughout.
+- `SPARQLWrapper`: for the DBpedia and Wikidata chapter.
+- `trafilatura`: for pulling clean text out of arbitrary web pages.
+- `pydantic`: for structured-output schemas.
+- `pydrive2`: Google Drive API access (the maintained fork of the abandoned `pydrive`).
+- `sqlalchemy`: direct database access for the SQL agent chapter, which hand-rolls its tools on top of it instead of a toolkit.
+- `langchain-text-splitters`: chunking text before embedding.
 
 **Local Hugging Face models and deployment**
 
-- `transformers` and `torch` — running a Hugging Face model directly through a local `transformers` pipeline, both standalone and wrapped as a custom LlamaIndex LLM.
-- `fastapi`, `uvicorn`, and `httpx` — serving a LlamaIndex Workflow over plain HTTP, no managed deployment platform involved.
+- `transformers` and `torch`: running a Hugging Face model directly through a local `transformers` pipeline, both standalone and wrapped as a custom LlamaIndex LLM.
+- `fastapi`, `uvicorn`, and `httpx`: serving a LlamaIndex Workflow over plain HTTP, no managed deployment platform involved.
 
-That list is exhaustive for the numbered chapters — every package above is a real dependency of at least one `source-code/<chapter>/pyproject.toml`, and every package in every chapter's `pyproject.toml` is above. (A handful of older, standalone example directories predate this edition's chapter structure and are not part of the book; they are not represented here.)
+That list is exhaustive for the numbered chapters: every package above is a real dependency of at least one `source-code/<chapter>/pyproject.toml`, and every package in every chapter's `pyproject.toml` is above. (A handful of older, standalone example directories predate this edition's chapter structure and are not part of the book; they are not represented here.)
 
 Every chapter's `source-code/<chapter>/pyproject.toml` pins a *version range*, not an exact version such as `langchain>=1.0,<2`, `pydantic>=2.7,<3`, and so on, so a `uv sync` next year still gets compatible bugfixes. The part that actually pins exact versions is the `uv.lock` file next to it, generated the day the chapter was written and checked into the repo; `uv sync` reads the lock file by default, so what you install matches what was tested unless you deliberately `uv lock --upgrade`.
 
@@ -51,11 +51,11 @@ Every chapter's `source-code/<chapter>/pyproject.toml` pins a *version range*, n
 
 These are the packages that a search for "LangChain" or "LlamaIndex" will turn up first, and that we do not use anywhere in this book. It is worth naming them explicitly so you know why they are absent.
 
-- **`langsmith`** — the client for LangSmith observability, evaluation, and prompt-hub features. LangSmith is a paid SaaS product ($39/seat/month for the Plus tier, plus per-trace usage). Everything the book does for observability we do with local tools like `set_debug(True)`, callbacks, and (optionally) a self-hosted OpenInference collector.
-- **`langgraph-sdk`** (cloud client) — the client for the managed LangGraph deployment platform. We use `langgraph` itself, which is MIT-licensed and runs anywhere Python runs.
-- **`langserve`** (in its managed form) — where we serve LangGraph or LlamaIndex apps, we use plain FastAPI plus the framework's own primitives.
-- **`llama-cloud-services`** and **`llama-parse`** — the SDKs for LlamaCloud and LlamaParse. Both are credits-based commercial services. Where we need document parsing we use `pypdf`, `unstructured`, or Python's own text handling, plus the OSS ingestion pipeline built into `llama-index-core`.
-- **`llama-index-agent-openai`** as the *primary* agent story — LlamaIndex now recommends the Workflows API for new agent development, and that is what Part II uses.
+- **`langsmith`**: the client for LangSmith observability, evaluation, and prompt-hub features. LangSmith is a paid SaaS product ($39/seat/month for the Plus tier, plus per-trace usage). Everything the book does for observability we do with local tools like `set_debug(True)`, callbacks, and (optionally) a self-hosted OpenInference collector.
+- **`langgraph-sdk`** (cloud client): the client for the managed LangGraph deployment platform. We use `langgraph` itself, which is MIT-licensed and runs anywhere Python runs.
+- **`langserve`** (in its managed form): where we serve LangGraph or LlamaIndex apps, we use plain FastAPI plus the framework's own primitives.
+- **`llama-cloud-services`** and **`llama-parse`**: the SDKs for LlamaCloud and LlamaParse. Both are credits-based commercial services. Where we need document parsing we use `pypdf`, `unstructured`, or Python's own text handling, plus the OSS ingestion pipeline built into `llama-index-core`.
+- **`llama-index-agent-openai`** as the *primary* agent story: LlamaIndex now recommends the Workflows API for new agent development, and that is what Part II uses.
 
 If you already pay for one or more of these platforms and want to use them alongside the code in this book, nothing here will stop you. But nothing here will require you to.
 

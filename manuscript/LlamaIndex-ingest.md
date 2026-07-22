@@ -51,15 +51,15 @@ Four options worth internalizing.
 
 **`exclude=[...]`.** Glob patterns to skip. This is where you filter out `.DS_Store`, `.git`, images, source code, or anything else you don't want indexed.
 
-**`file_metadata=callable`.** A function that runs once per file and returns a dict. Whatever you return here gets merged into the Document's metadata alongside the fields the reader adds automatically (`file_name`, `file_path`, `file_type`, `file_size`, `creation_date`, `last_modified_date`). Use it for anything not derivable from the file path — a category, a project ID, an author.
+**`file_metadata=callable`.** A function that runs once per file and returns a dict. Whatever you return here gets merged into the Document's metadata alongside the fields the reader adds automatically (`file_name`, `file_path`, `file_type`, `file_size`, `creation_date`, `last_modified_date`). Use it for anything not derivable from the file path: a category, a project ID, an author.
 
 The metadata a Document carries is not decorative. It flows through chunking so every resulting Node has the same metadata, and it survives all the way to retrieval time as `node.metadata`. That means you can use it for filtered queries ("only search in topic='sports' notes"), for citations ("this answer came from `sports.txt`"), or for post-retrieval routing in a supervisor graph.
 
-Beyond `.txt`, `SimpleDirectoryReader` also handles Markdown, CSV, JSON, PDF, DOCX, PowerPoint, images (with OCR), and audio — but each format needs an extra reader package installed (`llama-index-readers-file` covers most of them). The book stays with `.txt` throughout because it keeps the setup light; a real project just does `uv add llama-index-readers-file` and points the reader at whatever mix of formats you have.
+Beyond `.txt`, `SimpleDirectoryReader` also handles Markdown, CSV, JSON, PDF, DOCX, PowerPoint, images (with OCR), and audio, but each format needs an extra reader package installed (`llama-index-readers-file` covers most of them). The book stays with `.txt` throughout because it keeps the setup light; a real project just does `uv add llama-index-readers-file` and points the reader at whatever mix of formats you have.
 
 ## Building Documents by hand
 
-When your source is anything other than a filesystem — a REST API, a database query, a Kafka topic, a directory listing that lives inside a zip file — you construct `Document` objects yourself. There is no ceremony to this; the rest of LlamaIndex has no idea (and no need to know) where the Documents came from.
+When your source is anything other than a filesystem (a REST API, a database query, a Kafka topic, a directory listing that lives inside a zip file), you construct `Document` objects yourself. There is no ceremony to this; the rest of LlamaIndex has no idea (and no need to know) where the Documents came from.
 
 `02_custom_documents.py`:
 
@@ -156,11 +156,11 @@ Both are small (under 150 MB), both are free, both run locally in tens of millis
 
 A rough taxonomy of the local embedding models worth knowing about in 2026:
 
-- **`BAAI/bge-small-en-v1.5`** (~130 MB) — my default. Fast, high quality for its size, English-only.
-- **`BAAI/bge-base-en-v1.5`** (~440 MB) — a step up in quality. Roughly 3× slower to embed but the ranking is noticeably tighter on hard queries.
-- **`sentence-transformers/all-MiniLM-L6-v2`** (~90 MB) — a classic. Older than the BGE models, slightly less accurate on modern benchmarks, still perfectly usable.
-- **`nomic-ai/nomic-embed-text-v1.5`** (~550 MB) — trained on longer contexts (up to 8k tokens), useful when your Nodes are large and you don't want to chunk aggressively. Requires `trust_remote_code=True`.
-- **`BAAI/bge-m3`** (~2.3 GB) — multilingual, multi-vector, top-of-the-line quality. Overkill for most projects; reach for it when you actually need any of those things.
+- **`BAAI/bge-small-en-v1.5`** (~130 MB): my default. Fast, high quality for its size, English-only.
+- **`BAAI/bge-base-en-v1.5`** (~440 MB): a step up in quality. Roughly 3× slower to embed but the ranking is noticeably tighter on hard queries.
+- **`sentence-transformers/all-MiniLM-L6-v2`** (~90 MB): a classic. Older than the BGE models, slightly less accurate on modern benchmarks, still perfectly usable.
+- **`nomic-ai/nomic-embed-text-v1.5`** (~550 MB): trained on longer contexts (up to 8k tokens), useful when your Nodes are large and you don't want to chunk aggressively. Requires `trust_remote_code=True`.
+- **`BAAI/bge-m3`** (~2.3 GB): multilingual, multi-vector, top-of-the-line quality. Overkill for most projects; reach for it when you actually need any of those things.
 
 I default to BGE-small for prototypes and move up to BGE-base when I see the small model missing obvious matches. Below that threshold, effort is better spent on retrieval quality (Chapter 14's reranker) than on a bigger embedding model.
 
@@ -194,7 +194,7 @@ print(f"Produced {len(nodes)} nodes after splitting\n")
 index = VectorStoreIndex(nodes)
 ```
 
-`SentenceSplitter(chunk_size=200, chunk_overlap=20)` breaks documents at sentence boundaries into chunks of at most 200 tokens each, with a 20-token overlap between consecutive chunks. The overlap is there to prevent chunks from splitting mid-thought — if a key sentence lands right at a chunk boundary, both chunks will contain it. For the small corpus here, `chunk_size=200` produces about 10 Nodes from the 4 Documents.
+`SentenceSplitter(chunk_size=200, chunk_overlap=20)` breaks documents at sentence boundaries into chunks of at most 200 tokens each, with a 20-token overlap between consecutive chunks. The overlap is there to prevent chunks from splitting mid-thought: if a key sentence lands right at a chunk boundary, both chunks will contain it. For the small corpus here, `chunk_size=200` produces about 10 Nodes from the 4 Documents.
 
 Standard chunk sizes in my own projects:
 
@@ -204,9 +204,9 @@ Standard chunk sizes in my own projects:
 
 `IngestionPipeline` accepts a list of transformations, and the ones useful beyond `SentenceSplitter` include:
 
-- **`TitleExtractor`** — asks an LLM to generate a title for each chunk and adds it as metadata. Improves retrieval on queries that mention high-level topics.
-- **`KeywordExtractor`** — extracts N keywords per chunk. Cheap way to give queries a keyword-matching path even in a vector store.
-- **`SummaryExtractor`** — adds a per-chunk summary. Useful for retrieval interfaces that show a preview of each result.
+- **`TitleExtractor`**: asks an LLM to generate a title for each chunk and adds it as metadata. Improves retrieval on queries that mention high-level topics.
+- **`KeywordExtractor`**: extracts N keywords per chunk. Cheap way to give queries a keyword-matching path even in a vector store.
+- **`SummaryExtractor`**: adds a per-chunk summary. Useful for retrieval interfaces that show a preview of each result.
 
 Each of these costs one LLM call per chunk at ingestion time, so on a real corpus you would only pick the transformations that actually help your queries.
 

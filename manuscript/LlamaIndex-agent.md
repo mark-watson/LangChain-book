@@ -36,7 +36,7 @@ def web_search(query: str) -> str:
     )
 ```
 
-Plain Python functions. LlamaIndex wraps them with `FunctionTool.from_defaults(fn=...)` at the call site — analogous to LangChain's `@tool` decorator, just applied later.
+Plain Python functions. LlamaIndex wraps them with `FunctionTool.from_defaults(fn=...)` at the call site, analogous to LangChain's `@tool` decorator, just applied later.
 
 ## Version 1: `FunctionAgent`
 
@@ -81,7 +81,7 @@ async def main():
 asyncio.run(main())
 ```
 
-`FunctionAgent(tools, llm, system_prompt=...)` returns a compiled Workflow. Under the hood it is exactly the shape you would build in version 2 — LlamaIndex ships it as a factory because 90% of agents want this shape.
+`FunctionAgent(tools, llm, system_prompt=...)` returns a compiled Workflow. Under the hood it is exactly the shape you would build in version 2; LlamaIndex ships it as a factory because 90% of agents want this shape.
 
 Representative output:
 
@@ -158,7 +158,7 @@ Three things worth spelling out.
 
 **`call_model` accepts a union of two events.** It runs on the initial `StartEvent` and on every subsequent `ToolCallEvent` from the `run_tools` step. Inside, an `isinstance` check distinguishes the first invocation (which initializes the transcript) from the loop iterations (which pull it from `ctx`).
 
-**Looping is expressed by event flow, not explicit edges.** `run_tools` returns a `ToolCallEvent`, which `call_model` accepts, which either returns another `ToolCallEvent` (looping) or a `DoneEvent` (terminating). No explicit `add_edge("tools", "model")` — the loop is implicit in the event types.
+**Looping is expressed by event flow, not explicit edges.** `run_tools` returns a `ToolCallEvent`, which `call_model` accepts, which either returns another `ToolCallEvent` (looping) or a `DoneEvent` (terminating). No explicit `add_edge("tools", "model")`; the loop is implicit in the event types.
 
 The workflow produces the same output as the `FunctionAgent` version. Which is exactly the point: the prebuilt is just this workflow with the plumbing hidden.
 
@@ -175,4 +175,4 @@ Same guidance as Chapter 4:
 - The manual `Workflow` version is not much more code and unlocks all of Chapter 15's flexibility.
 - `Context` is Workflows' shared-state mechanism; use it whenever multiple steps need to see or update the same data.
 
-Chapter 17 covers multi-index query pipelines — the LlamaIndex equivalent of Chapter 7's supervisor pattern, but for retrieval instead of tool use.
+Chapter 17 covers multi-index query pipelines, the LlamaIndex equivalent of Chapter 7's supervisor pattern, but for retrieval instead of tool use.

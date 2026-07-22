@@ -6,7 +6,7 @@ Please note, dear reader, that commercial chat apps like ChatGPT and Gemini beca
 
 ![RAG System Overview](RAG_diagram.png)
 
-Everything I wrote in the previous edition about *why* RAG works still applies. What has changed is that in 2026, the parts that used to be interesting — chunking, embedding, storing — are commoditized and take about six lines each. The interesting choice now is which *retrieval pattern* to use, because a naive retriever is often not good enough, and the differences between the good patterns are meaningful and worth understanding.
+Everything I wrote in the previous edition about *why* RAG works still applies. What has changed is that in 2026, the parts that used to be interesting (chunking, embedding, storing) are commoditized and take about six lines each. The interesting choice now is which *retrieval pattern* to use, because a naive retriever is often not good enough, and the differences between the good patterns are meaningful and worth understanding.
 
 This chapter walks through four patterns over the same tiny four-file corpus. Everything runs locally on your laptop with `qwen3.5:4b` served by Ollama as the LLM and use BGE from Hugging Face as the embedding model.
 
@@ -25,7 +25,7 @@ $ uv sync
 $ ollama pull qwen3.5:4b
 ```
 
-The first script will also download two small models from Hugging Face — the BGE embedding model and, in the reranker example, a BGE cross-encoder. Roughly 350 MB total, cached under `~/.cache/huggingface/` after the first run.
+The first script will also download two small models from Hugging Face: the BGE embedding model and, in the reranker example, a BGE cross-encoder. Roughly 350 MB total, cached under `~/.cache/huggingface/` after the first run.
 
 ## A shared corpus loader
 
@@ -112,7 +112,7 @@ The retriever asks the vector store for the top *k* = 2 most similar documents b
 
 Sentence embeddings are fast but coarse. Every document gets encoded once, offline; every query gets encoded once, online; you compare with a cosine similarity that treats the query and each document independently. A cross-encoder is the opposite: it sees the query and one candidate document together in a single forward pass and scores their relevance directly. Cross-encoders are much more accurate and much slower, so you cannot use them on your whole corpus. The trick is to use the cheap embedding retriever to pull a wider set of candidates, then let the cross-encoder rerank them.
 
-`02_reranked_rag.py` differs from the naive version in the retriever setup — plus two small classes that would not have existed in earlier editions of this chapter. `langchain_community.cross_encoders.HuggingFaceCrossEncoder` and `langchain.retrievers.ContextualCompressionRetriever`/`CrossEncoderReranker` are all retired; neither the `langchain-community` package nor a `langchain.retrievers` module exists to import them from anymore. Both are short enough to reimplement directly on top of `sentence-transformers` and `langchain_core`:
+`02_reranked_rag.py` differs from the naive version in the retriever setup, plus two small classes that would not have existed in earlier editions of this chapter. `langchain_community.cross_encoders.HuggingFaceCrossEncoder` and `langchain.retrievers.ContextualCompressionRetriever`/`CrossEncoderReranker` are all retired; neither the `langchain-community` package nor a `langchain.retrievers` module exists to import them from anymore. Both are short enough to reimplement directly on top of `sentence-transformers` and `langchain_core`:
 
 ```python
 from typing import Any
@@ -196,7 +196,7 @@ A: Based on the provided context, there is no information regarding how body che
 The text discusses general chemical principles in **[chemistry.txt]**... but does not mention human physiology or exercise performance. The **sports** section in **[sports.txt]** defines sport and physical activity based on athleticism, dexterity, and rules for competition, without linking these concepts to chemical processes within the body.
 ```
 
-On this four-file corpus the reranker's effect is subtle because the corpus is small — notice the third answer still comes up empty, which the hybrid pattern next fixes. On a real corpus of thousands of chunks, adding a reranker is often the single biggest single quality improvement you can make to a RAG system for the smallest amount of code, and I add it early in almost every project.
+On this four-file corpus the reranker's effect is subtle because the corpus is small; notice the third answer still comes up empty, which the hybrid pattern next fixes. On a real corpus of thousands of chunks, adding a reranker is often the single biggest single quality improvement you can make to a RAG system for the smallest amount of code, and I add it early in almost every project.
 
 ## Pattern 3: hybrid dense + sparse retrieval
 
@@ -274,11 +274,11 @@ dense = vectorstore.as_retriever(search_kwargs={"k": 3})
 retriever = RRFEnsembleRetriever(retrievers=[bm25, dense], weights=[0.5, 0.5])
 ```
 
-`RRFEnsembleRetriever` is reciprocal rank fusion, spelled out: each source retriever produces a ranked list, each document earns `weight / (k + rank)` from every list it appears in (`k = 60` is the standard RRF constant — it flattens out the difference between, say, rank 1 and rank 2 so one retriever's top pick cannot completely dominate), and the fused ranking is the sum of those scores, highest first. Equal weights are a reasonable default. In production I usually push a bit toward dense (say `[0.4, 0.6]`) for prose-heavy corpora and toward BM25 (`[0.6, 0.4]`) for corpora full of identifiers, product SKUs, or legal citations.
+`RRFEnsembleRetriever` is reciprocal rank fusion, spelled out: each source retriever produces a ranked list, each document earns `weight / (k + rank)` from every list it appears in (`k = 60` is the standard RRF constant, which flattens out the difference between, say, rank 1 and rank 2 so one retriever's top pick cannot completely dominate), and the fused ranking is the sum of those scores, highest first. Equal weights are a reasonable default. In production I usually push a bit toward dense (say `[0.4, 0.6]`) for prose-heavy corpora and toward BM25 (`[0.6, 0.4]`) for corpora full of identifiers, product SKUs, or legal citations.
 
 Notable: BM25 has no embedding step, so `BM25Retriever.from_documents` returns immediately regardless of corpus size. That makes hybrid retrieval more or less free to add on the retrieval side; the only cost is that you do two lookups per query instead of one.
 
-Representative output — notice the third question, which came up empty for both the naive and reranked patterns, gets a real answer here because BM25's exact-term matching pulls in `health.txt`'s ATP/anaerobic-exercise passage that dense retrieval alone was missing:
+Representative output: notice the third question, which came up empty for both the naive and reranked patterns, gets a real answer here because BM25's exact-term matching pulls in `health.txt`'s ATP/anaerobic-exercise passage that dense retrieval alone was missing:
 
 ```console
 $ uv run 03_hybrid_rag.py
@@ -360,7 +360,7 @@ retriever = MultiQueryRetriever(
 
 The chain composition, prompt, and answering model below this are identical to the naive script. The tradeoff is one extra LLM call per user query (the rewriter's call), traded for meaningfully better recall on questions whose surface form is unlike the corpus.
 
-You can also read the generated queries yourself — `retriever._generate_queries(q)` — which is helpful when debugging why a particular question is or isn't finding the right documents.
+You can also read the generated queries yourself with `retriever._generate_queries(q)`, which is helpful when debugging why a particular question is or isn't finding the right documents.
 
 Representative output:
 
@@ -381,7 +381,7 @@ Q: How does body chemistry affect exercise?
 A: 
 ```
 
-That third answer is not a typo: it is genuinely empty, reproducibly, on this corpus. With four short files and `k = 3`, unioning four query variants' retrievals pulls in nearly the entire corpus (all three non-sports files, in this run), and the resulting context pushes `qwen3.5:4b` into a degenerate generation for this particular question: `done_reason` comes back `"length"` after thousands of tokens, with nothing usable in `.content` even at `thinking=False` and with an explicit `num_predict` cap. The naive, reranked, and hybrid patterns above never hit this because they hand the model a much smaller, more targeted context. It is a genuine limitation of multi-query on a tiny corpus with a small local model, not a bug in the retriever logic above — and a good reminder that "retrieve more, union it all" is not free: past some point, more context can make a small model's job harder, not easier. Watching for exactly this kind of silent failure is why every RAG chain in this book prints the answer instead of assuming one arrived.
+That third answer is not a typo: it is genuinely empty, reproducibly, on this corpus. With four short files and `k = 3`, unioning four query variants' retrievals pulls in nearly the entire corpus (all three non-sports files, in this run), and the resulting context pushes `qwen3.5:4b` into a degenerate generation for this particular question: `done_reason` comes back `"length"` after thousands of tokens, with nothing usable in `.content` even at `thinking=False` and with an explicit `num_predict` cap. The naive, reranked, and hybrid patterns above never hit this because they hand the model a much smaller, more targeted context. It is a genuine limitation of multi-query on a tiny corpus with a small local model, not a bug in the retriever logic above, and a good reminder that "retrieve more, union it all" is not free: past some point, more context can make a small model's job harder, not easier. Watching for exactly this kind of silent failure is why every RAG chain in this book prints the answer instead of assuming one arrived.
 
 ## Which pattern for which situation
 
@@ -389,13 +389,13 @@ A rough decision tree from projects I have shipped:
 
 - Start with **naive** if your corpus is under a few hundred documents. Anything more complex is over-engineering until you have real query traffic to measure against.
 - Add **reranking** the moment your corpus exceeds a few thousand chunks or the moment you notice the model answering from irrelevant passages. This is nearly always the highest-return upgrade.
-- Add **hybrid** if your corpus is heavy in proper nouns, product identifiers, code snippets, or legal/medical citations — anything where exact string matches matter more than semantic similarity.
+- Add **hybrid** if your corpus is heavy in proper nouns, product identifiers, code snippets, or legal/medical citations: anything where exact string matches matter more than semantic similarity.
 - Add **multi-query** last, when you have evidence that user queries and corpus phrasing are systematically different. It is the most expensive of the four and the improvement is the hardest to predict.
 
 You can also stack them. A reasonable production retriever is "hybrid BM25 + dense, then cross-encoder rerank," and that is what I default to for new projects when I have no other information.
 
 ## What we covered
 
-RAG has boiled down to two concrete choices in 2026: which retrieval pattern (this chapter) and which retriever+reranker+chunker stack (LangChain gives you the pieces, LlamaIndex will give you an even richer set in Part II). The chain composition, the prompt template, and the model call are essentially fixed shapes at this point. Learn the four patterns above and you can compose a strong retriever for almost any application without leaving the boundaries of `langchain-core`, `langchain-ollama`, and `langchain-huggingface` — `langchain-community` is not a dependency anywhere in this chapter; every retriever this book needed but the framework no longer ships is about forty lines of `langchain_core.retrievers.BaseRetriever` away.
+RAG has boiled down to two concrete choices in 2026: which retrieval pattern (this chapter) and which retriever+reranker+chunker stack (LangChain gives you the pieces, LlamaIndex will give you an even richer set in Part II). The chain composition, the prompt template, and the model call are essentially fixed shapes at this point. Learn the four patterns above and you can compose a strong retriever for almost any application without leaving the boundaries of `langchain-core`, `langchain-ollama`, and `langchain-huggingface`. `langchain-community` is not a dependency anywhere in this chapter; every retriever this book needed but the framework no longer ships is about forty lines of `langchain_core.retrievers.BaseRetriever` away.
 
-Tool binding — the primitive from Chapter 1 (section )"Tool binding", example file 06_tool_binding.py) is as far as this book goes for low-level tool calling by itself. Chapter 3 introduces LangGraph, which is where we start building agents that use RAG as one of several tools rather than as the whole app.
+Tool binding, the primitive from Chapter 1 (section "Tool binding"), example file 06_tool_binding.py), is as far as this book goes for low-level tool calling by itself. Chapter 3 introduces LangGraph, which is where we start building agents that use RAG as one of several tools rather than as the whole app.

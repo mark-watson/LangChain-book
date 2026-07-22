@@ -1,6 +1,6 @@
 # LangChain 1.0 in one hour
 
-[LangChain](https://github.com/langchain-ai/langchain) 1.0 shipped in October 2025 as the first version the maintainers committed to no breaking changes on until 2.0. The library has been through a lot of API churn since I wrote the first edition of this book in early 2023, so if you have used LangChain before and stopped a year or two ago, be prepared for most of what you remember to have moved. The good news is that the 1.0 surface is small, well-organized, and — for the purposes of this book — entirely usable without any of the commercial services LangChain Inc. sells on top of it.
+[LangChain](https://github.com/langchain-ai/langchain) 1.0 shipped in October 2025 as the first version the maintainers committed to no breaking changes on until 2.0. The library has been through a lot of API churn since I wrote the first edition of this book in early 2023, so if you have used LangChain before and stopped a year or two ago, be prepared for most of what you remember to have moved. The good news is that the 1.0 surface is small, well-organized, and, for the purposes of this book, entirely usable without any of the commercial services LangChain Inc. sells on top of it.
 
 This chapter is the one-hour tour. By the end of it you will have run six standalone Python programs that together cover every LangChain primitive we use in the rest of Part I: chat models, `.invoke` / `.stream` / `.batch`, prompt templates, the LCEL `|` operator, output parsers (including structured Pydantic output), and tool binding. The example code lives in `source-code/langchain_getting_started/`.
 
@@ -55,7 +55,7 @@ There are three things worth pointing out in fourteen lines of code.
 
 -The import paths. In LangChain version 1.0, LangChain is broken up into a handful of small packages. `langchain_core` holds the primitives (messages, prompt templates, runnables, output parsers). Each LLM provider has its own package: `langchain_ollama`, `langchain_openai`, `langchain_google_genai`, and so on. The umbrella `langchain` package pulls in higher-level pieces built on top of the core. In practice you almost always import messages and prompts from `langchain_core` and models from the provider package that matches the LLM you are using.
 - Second, the message objects. `SystemMessage` sets up the assistant's persona and instructions; `HumanMessage` is the user's turn. There is also `AIMessage`, which is what `.invoke()` returns and what you would include in a `messages` list to represent prior assistant turns in a multi-turn conversation.
-- Third, `.invoke()`. Every LangChain component that can be called — models, prompt templates, chains, agents, output parsers — is a `Runnable`, and every `Runnable` has the same `.invoke()`, `.stream()`, and `.batch()` methods. That uniformity is the point of the 1.0 API refactor.
+- Third, `.invoke()`. Every LangChain component that can be called (models, prompt templates, chains, agents, output parsers) is a `Runnable`, and every `Runnable` has the same `.invoke()`, `.stream()`, and `.batch()` methods. That uniformity is the point of the 1.0 API refactor.
 
 Run this example:
 
@@ -91,7 +91,7 @@ response = model.invoke(messages)
 print(response.content)
 ```
 
-The message list, the `.invoke()` call, and the response type are all identical. Only the constructor changes. This holds for the Gemini and Fireworks.ai chat classes too. If you write the rest of your application against the abstract `BaseChatModel` protocol — accept a model as a parameter, do not import a specific provider class in your business logic — you can move between local and hosted models without touching anything else.
+The message list, the `.invoke()` call, and the response type are all identical. Only the constructor changes. This holds for the Gemini and Fireworks.ai chat classes too. If you write the rest of your application against the abstract `BaseChatModel` protocol (accept a model as a parameter, do not import a specific provider class in your business logic), you can move between local and hosted models without touching anything else.
 
 I mostly develop against a local `ChatOllama` because iteration is instant and I do not pay for tokens I waste. When I want to compare against a stronger model I flip the constructor, and that is usually the entire diff.
 
@@ -120,9 +120,9 @@ for prompt, response in zip(prompts, responses):
     print(f"{prompt!r} -> {response.content.strip()}")
 ```
 
-`.stream()` yields `AIMessageChunk` objects one at a time as the model produces tokens. Use it any time a human is watching the output appear — a CLI, a chat UI, a terminal script. `.batch()` runs multiple inputs concurrently and returns the results in the same order. Use it for offline data processing where per-item latency does not matter but total throughput does.
+`.stream()` yields `AIMessageChunk` objects one at a time as the model produces tokens. Use it any time a human is watching the output appear: a CLI, a chat UI, a terminal script. `.batch()` runs multiple inputs concurrently and returns the results in the same order. Use it for offline data processing where per-item latency does not matter but total throughput does.
 
-Both methods work identically whether the underlying model is local or hosted, and both work on any `Runnable`, not just models — a whole chain composed with `|` streams and batches the same way.
+Both methods work identically whether the underlying model is local or hosted, and both work on any `Runnable`, not just models: a whole chain composed with `|` streams and batches the same way.
 
 ## Prompt templates and the LCEL pipe
 
@@ -151,7 +151,7 @@ for task in ["get to the store", "hang a picture on the wall"]:
 
 `ChatPromptTemplate.from_messages(...)` builds a template with named `{placeholder}` variables. The `|` operator wires that template's output into the model's input, producing a new `Runnable` that takes a dict of variable values and returns an `AIMessage`.
 
-Read `prompt | model` as "call the prompt with whatever I pass in, then feed its result into the model." The whole thing behaves like a function you can `.invoke()`, `.stream()`, or `.batch()`. This is not clever operator overloading for its own sake — it is how the framework encourages you to compose steps without writing glue functions.
+Read `prompt | model` as "call the prompt with whatever I pass in, then feed its result into the model." The whole thing behaves like a function you can `.invoke()`, `.stream()`, or `.batch()`. This is not clever operator overloading for its own sake; it is how the framework encourages you to compose steps without writing glue functions.
 
 ## Output parsers and structured output
 
@@ -246,13 +246,13 @@ else:
         print(f"Model called {call['name']}({call['args']}) -> {result}")
 ```
 
-The `@tool` decorator wraps a plain Python function into an object the model can understand. The function's docstring is the description the model sees; the type annotations become the JSON schema for the arguments. Both matter — poor docstrings produce poor tool selection.
+The `@tool` decorator wraps a plain Python function into an object the model can understand. The function's docstring is the description the model sees; the type annotations become the JSON schema for the arguments. Both matter: poor docstrings produce poor tool selection.
 
 Two important caveats before you go build an agent on this.
 
 First, this example does exactly one round trip. The model responds with a tool call, we execute the call, and we stop. A real agent feeds the tool's result back to the model as a `ToolMessage`, gets the next response, executes the next call, and so on until the model returns plain text as the final answer. That loop is what Chapter 3 builds on top of LangGraph. Rolling your own loop is fine for a one-off script; for anything durable you want the state machine LangGraph gives you.
 
-Second, tool calling requires a model that supports it. Not every Ollama model does. As of mid-2026 the ones I use for the book examples are `qwen3.5:4b`, `llama3.2:3b`, `gemma3:12b-it-qat`, and `mistral-small`. If you point `bind_tools` at a chat-only model the code will not crash — the model will just respond with prose describing what it *would* do instead of returning a `tool_call`. That is one of the least helpful failure modes in the whole framework, and it is worth committing the list of tool-capable models to memory (or, more realistically, to a `README` in your project).
+Second, tool calling requires a model that supports it. Not every Ollama model does. As of mid-2026 the ones I use for the book examples are `qwen3.5:4b`, `llama3.2:3b`, `gemma3:12b-it-qat`, and `mistral-small`. If you point `bind_tools` at a chat-only model the code will not crash; the model will just respond with prose describing what it *would* do instead of returning a `tool_call`. That is one of the least helpful failure modes in the whole framework, and it is worth committing the list of tool-capable models to memory (or, more realistically, to a `README` in your project).
 
 ## What we covered
 
@@ -265,4 +265,4 @@ Six primitives. That is the whole surface area you need for the next dozen chapt
 5. **`StrOutputParser`** and **`.with_structured_output(PydanticModel)`** to turn model output into useful values.
 6. **`.bind_tools([...])`** and the `@tool` decorator to let the model call your Python functions.
 
-Everything else in Part I builds on those six primitives rather than introducing new ones. Chapter 2 puts them to work in a RAG pipeline. Chapters 3 through 7 introduce LangGraph and use it to build stateful, durable, human-in-the-loop agents. If any of the primitives in this chapter feels shaky, run the example, tweak it, break it — the feedback loop with a local model is fast enough that experimenting is basically free.
+Everything else in Part I builds on those six primitives rather than introducing new ones. Chapter 2 puts them to work in a RAG pipeline. Chapters 3 through 7 introduce LangGraph and use it to build stateful, durable, human-in-the-loop agents. If any of the primitives in this chapter feels shaky, run the example, tweak it, break it; the feedback loop with a local model is fast enough that experimenting is basically free.

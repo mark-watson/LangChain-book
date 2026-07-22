@@ -1,6 +1,6 @@
 # Examples Using Hugging Face Open Source Models
 
-Both examples in this chapter run entirely on your laptop — no Hugging Face account, no API key, no `HUGGINGFACEHUB_API_TOKEN`. Earlier editions of this chapter used LangChain's `HuggingFaceHub` wrapper, which calls Hugging Face's *hosted* inference endpoints and does need an account and a token. That wrapper is gone from LangChain 1.0; the current integration, `langchain_huggingface.HuggingFacePipeline`, downloads a model once and runs it locally with `transformers`, the same as every other local-model chapter in this book.
+Both examples in this chapter run entirely on your laptop: no Hugging Face account, no API key, no `HUGGINGFACEHUB_API_TOKEN`. Earlier editions of this chapter used LangChain's `HuggingFaceHub` wrapper, which calls Hugging Face's *hosted* inference endpoints and does need an account and a token. That wrapper is gone from LangChain 1.0; the current integration, `langchain_huggingface.HuggingFacePipeline`, downloads a model once and runs it locally with `transformers`, the same as every other local-model chapter in this book.
 
 Setup:
 
@@ -37,7 +37,7 @@ chain = prompt | hf_llm | StrOutputParser()
 print(chain.invoke({"name": "George Bush"}))
 ```
 
-`google/flan-t5-base` is a small (~250M parameter) instruction-tuned model, downloaded once on first run and cached under `~/.cache/huggingface/hub`. Two details worth getting right: `HuggingFacePipeline.from_model_id` takes separate `model_kwargs` and `pipeline_kwargs` dictionaries, and generation settings like `temperature` belong in the latter — passing `temperature` inside `model_kwargs` sends it to the model's constructor instead of the generation call and raises a `TypeError`. And `temperature` has no effect unless `do_sample=True` is also set; without it, generation is greedy and the temperature is silently ignored. The rest of the example is the LCEL shape you have seen throughout Part I: `prompt | hf_llm | StrOutputParser()`.
+`google/flan-t5-base` is a small (~250M parameter) instruction-tuned model, downloaded once on first run and cached under `~/.cache/huggingface/hub`. Two details worth getting right: `HuggingFacePipeline.from_model_id` takes separate `model_kwargs` and `pipeline_kwargs` dictionaries, and generation settings like `temperature` belong in the latter; passing `temperature` inside `model_kwargs` sends it to the model's constructor instead of the generation call and raises a `TypeError`. And `temperature` has no effect unless `do_sample=True` is also set; without it, generation is greedy and the temperature is silently ignored. The rest of the example is the LCEL shape you have seen throughout Part I: `prompt | hf_llm | StrOutputParser()`.
 
 The output:
 
@@ -46,13 +46,13 @@ $ uv run simple_example.py
 1980
 ```
 
-Wrong, for what it's worth — George W. Bush was elected in 2000 — which is a fair reminder that a 250M-parameter model is not going to be a reliable source of facts. It is a demonstration of the plumbing, not a research assistant. By changing just the `model_id`, you can run this same pattern against any other local Hugging Face model that supports `text2text-generation` or `text-generation`.
+Wrong, for what it's worth (George W. Bush was elected in 2000), which is a fair reminder that a 250M-parameter model is not going to be a reliable source of facts. It is a demonstration of the plumbing, not a research assistant. By changing just the `model_id`, you can run this same pattern against any other local Hugging Face model that supports `text2text-generation` or `text-generation`.
 
 ## Creating a Custom LlamaIndex Hugging Face LLM Wrapper Class That Runs on Your Laptop
 
 We will be downloading the Hugging Face model **facebook/opt-iml-1.3b**, a 2.6 gigabyte file. This model is downloaded the first time it is requested and is then cached in **~/.cache/huggingface/hub** for later reuse.
 
-This example wraps a raw `transformers` pipeline as a LlamaIndex `CustomLLM`, the extension point LlamaIndex provides for exactly this — plugging in a model that has no first-party integration package.
+This example wraps a raw `transformers` pipeline as a LlamaIndex `CustomLLM`, the extension point LlamaIndex provides for exactly this: plugging in a model that has no first-party integration package.
 
 ```python
 """Local HuggingFace transformer as a custom LLM with LlamaIndex 0.14.
@@ -135,7 +135,7 @@ time3 = time.time()
 print(f"Time for query/prediction: {time3 - time2:.1f} seconds.")
 ```
 
-A `CustomLLM` in current LlamaIndex is a Pydantic model, which is why `model_name` and `pipeline_obj` need the `ClassVar` annotation — without it, Pydantic tries to treat the live `transformers.Pipeline` object as a validated field and raises at class-definition time. `complete()` must return a `CompletionResponse`, not a bare string; and `min_new_tokens=8` turns out to matter more than it looks — without it, this particular small, weakly instruction-tuned model will sometimes predict an immediate end-of-sequence token on LlamaIndex's longer "Context information is below... answer the query" prompt template and generate nothing at all.
+A `CustomLLM` in current LlamaIndex is a Pydantic model, which is why `model_name` and `pipeline_obj` need the `ClassVar` annotation; without it, Pydantic tries to treat the live `transformers.Pipeline` object as a validated field and raises at class-definition time. `complete()` must return a `CompletionResponse`, not a bare string; and `min_new_tokens=8` turns out to matter more than it looks; without it, this particular small, weakly instruction-tuned model will sometimes predict an immediate end-of-sequence token on LlamaIndex's longer "Context information is below... answer the query" prompt template and generate nothing at all.
 
 When running on my Mac using Apple Silicon (the `mps` backend that PyTorch selects automatically), loading the model from cache and building the tiny index takes a couple of seconds, and the query itself well under a second:
 
@@ -146,4 +146,4 @@ Anything humans find amusing or entertaining. Answer Sport
 Time for query/prediction: 0.8 seconds.
 ```
 
-Exact wording will vary between runs and between machines — 1.3B-parameter models are small enough to be noticeably less polished than the models used elsewhere in this book, and this one is quoting fragments of the source document (`../data_small/sports.txt`) more than composing a fluent new sentence. That is a fair trade for a model this size, and it is still clearly grounded in the retrieved text rather than invented. If you want fluency as well as speed, `qwen3.5:4b` via Ollama — the model used everywhere else in this book — is both faster and much better at following instructions; this chapter uses a raw Hugging Face `transformers` pipeline specifically to show how to wrap a model that has no dedicated integration package.
+Exact wording will vary between runs and between machines; 1.3B-parameter models are small enough to be noticeably less polished than the models used elsewhere in this book, and this one is quoting fragments of the source document (`../data_small/sports.txt`) more than composing a fluent new sentence. That is a fair trade for a model this size, and it is still clearly grounded in the retrieved text rather than invented. If you want fluency as well as speed, `qwen3.5:4b` via Ollama (the model used everywhere else in this book) is both faster and much better at following instructions; this chapter uses a raw Hugging Face `transformers` pipeline specifically to show how to wrap a model that has no dedicated integration package.

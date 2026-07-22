@@ -22,7 +22,7 @@ Use medium models for anything with tools, anything with structured output requi
 
 **Large (roughly 27B+ parameters).** In 2026 the strongest representatives are `qwen3:30b`, `gemma3:27b-it-qat`, `deepseek-r1:32b`, `mistral-small:24b`. RAM footprint: 15-20 GB. Inference speed: 8-15 tokens per second on a laptop. On a workstation with 32-40 GB of GPU memory, faster.
 
-These are close to hosted-model quality on many tasks. Multi-hop reasoning holds up. Tool calling is robust. Long-context handling is genuine, not simulated. The tradeoff is that they are slow enough that streaming becomes important — waiting 30 seconds for a first token to arrive is not viable for interactive use.
+These are close to hosted-model quality on many tasks. Multi-hop reasoning holds up. Tool calling is robust. Long-context handling is genuine, not simulated. The tradeoff is that they are slow enough that streaming becomes important: waiting 30 seconds for a first token to arrive is not viable for interactive use.
 
 Use large models when quality is your bottleneck: research assistants, complex agent orchestration, high-stakes structured extraction. Or when you specifically need to keep everything local for compliance or privacy.
 
@@ -35,7 +35,7 @@ Local models cover more ground than most developers expect. Hosted models still 
 - **You need a specific capability only some hosted models have.** Vision, extremely long context (millions of tokens), specialized fine-tunes, or an unusually strong specific benchmark.
 - **You need multiple people to share access** to the same "AI" without setting up infrastructure.
 
-Among hosted providers the book mentions three: Gemini, Fireworks.ai, and OpenAI. All three offer OpenAI-compatible chat APIs; all three are competitive on quality and pricing in 2026. The choice between them mostly comes down to which prices happen to be lowest this quarter for your specific token mix. None of them is a lock-in decision — LangChain and LlamaIndex both wrap them uniformly.
+Among hosted providers the book mentions three: Gemini, Fireworks.ai, and OpenAI. All three offer OpenAI-compatible chat APIs; all three are competitive on quality and pricing in 2026. The choice between them mostly comes down to which prices happen to be lowest this quarter for your specific token mix. None of them is a lock-in decision, since LangChain and LlamaIndex both wrap them uniformly.
 
 ## Roles a model can play
 

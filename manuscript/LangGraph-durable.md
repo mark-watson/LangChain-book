@@ -1,18 +1,18 @@
 # Durable, restart-safe agents
 
-The agents from Chapter 4 have one important limitation: they forget everything the moment the Python process exits. If you build a chatbot on top of `create_react_agent`, every user turn starts from scratch — no memory of the previous message, let alone yesterday's conversation. That is a script, not a service.
+The agents from Chapter 4 have one important limitation: they forget everything the moment the Python process exits. If you build a chatbot on top of `create_react_agent`, every user turn starts from scratch, with no memory of the previous message, let alone yesterday's conversation. That is a script, not a service.
 
-LangGraph fixes this with one concept: the **checkpointer**. You pass a checkpointer to `.compile()`, you thread a `thread_id` through your invoke config, and now every step of your graph — every state update from every node — gets serialized to whatever storage the checkpointer manages. Multi-turn conversations remember previous turns. Interrupted work resumes where it stopped. Crashed processes come back up mid-transaction with no lost state.
+LangGraph fixes this with one concept: the **checkpointer**. You pass a checkpointer to `.compile()`, you thread a `thread_id` through your invoke config, and now every step of your graph (every state update from every node) gets serialized to whatever storage the checkpointer manages. Multi-turn conversations remember previous turns. Interrupted work resumes where it stopped. Crashed processes come back up mid-transaction with no lost state.
 
-This chapter builds four small scripts that demonstrate this progressively: in-process memory, on-disk SQLite persistence, cross-process restart, and inspecting the recorded checkpoint history. All four share one uncompiled state graph — the checkpointer is the only thing that varies.
+This chapter builds four small scripts that demonstrate this progressively: in-process memory, on-disk SQLite persistence, cross-process restart, and inspecting the recorded checkpoint history. All four share one uncompiled state graph; the checkpointer is the only thing that varies.
 
 ## Three flavors of checkpointer
 
 LangGraph ships several checkpointer implementations. Only the first is included in the core package; the others are separate PyPI packages.
 
-- **`MemorySaver`** — from `langgraph.checkpoint.memory`, included in the core `langgraph` install. Stores checkpoints in a Python dict. Fast, zero configuration, forgotten on process exit. Use in tests, notebooks, and request-scoped web endpoints where conversation state only needs to live as long as the request.
-- **`SqliteSaver`** — from `langgraph.checkpoint.sqlite`, in the separate `langgraph-checkpoint-sqlite` package. Persists checkpoints to a single SQLite file. Zero infrastructure — no server, no daemon, no config file. Perfect for personal projects, small tools, and single-node services where a SQLite file is enough storage.
-- **`PostgresSaver`** — from `langgraph.checkpoint.postgres`, in the separate `langgraph-checkpoint-postgres` package. For production services with multiple workers or high concurrency. You bring your own Postgres.
+- **`MemorySaver`**: from `langgraph.checkpoint.memory`, included in the core `langgraph` install. Stores checkpoints in a Python dict. Fast, zero configuration, forgotten on process exit. Use in tests, notebooks, and request-scoped web endpoints where conversation state only needs to live as long as the request.
+- **`SqliteSaver`**: from `langgraph.checkpoint.sqlite`, in the separate `langgraph-checkpoint-sqlite` package. Persists checkpoints to a single SQLite file. Zero infrastructure: no server, no daemon, no config file. Perfect for personal projects, small tools, and single-node services where a SQLite file is enough storage.
+- **`PostgresSaver`**: from `langgraph.checkpoint.postgres`, in the separate `langgraph-checkpoint-postgres` package. For production services with multiple workers or high concurrency. You bring your own Postgres.
 
 All three implement the same `BaseCheckpointSaver` interface, so swapping between them is a one-line change. Nothing in the graph itself changes.
 
@@ -140,14 +140,14 @@ with SqliteSaver.from_conn_string(CHECKPOINT_DB) as checkpointer:
     print("Now run 03_sqlite_second_run.py in a fresh process.")
 ```
 
-`SqliteSaver.from_conn_string(path)` is a context manager that opens the SQLite file, creates the checkpoint tables on first use, and closes cleanly on exit. Everything else — thread config, `.compile()`, `.invoke()` — is identical to the `MemorySaver` version.
+`SqliteSaver.from_conn_string(path)` is a context manager that opens the SQLite file, creates the checkpoint tables on first use, and closes cleanly on exit. Everything else (thread config, `.compile()`, `.invoke()`) is identical to the `MemorySaver` version.
 
 Run it:
 
 ```console
 $ uv run 02_sqlite_first_run.py
 USER: My name is Mark and I live in Sedona, Arizona. Please remember that.
-AGENT: Got it, Mark — noted that you live in Sedona, Arizona.
+AGENT: Got it, Mark - noted that you live in Sedona, Arizona.
 
 Saved to 'checkpoints.db' on thread 'sqlite-demo'.
 Now run 03_sqlite_second_run.py in a fresh process.
@@ -191,7 +191,7 @@ AGENT: Your name is Mark, and you live in Sedona, Arizona.
 
 Full transcript for thread 'sqlite-demo':
   HumanMessage: My name is Mark and I live in Sedona, Arizona. Please remember that.
-  AIMessage: Got it, Mark — noted that you live in Sedona, Arizona.
+  AIMessage: Got it, Mark - noted that you live in Sedona, Arizona.
   HumanMessage: What is my name and where do I live?
   AIMessage: Your name is Mark, and you live in Sedona, Arizona.
 ```
@@ -204,8 +204,8 @@ Delete `checkpoints.db` to reset and start fresh.
 
 Every state update from every node in every invocation is a checkpoint. The graph exposes two methods to inspect them:
 
-- `agent.get_state(config)` — returns the current state as a `StateSnapshot`.
-- `agent.get_state_history(config)` — yields every checkpoint recorded for the thread, newest first.
+- `agent.get_state(config)` returns the current state as a `StateSnapshot`.
+- `agent.get_state_history(config)` yields every checkpoint recorded for the thread, newest first.
 
 `04_state_history.py`:
 
@@ -236,11 +236,11 @@ with SqliteSaver.from_conn_string(CHECKPOINT_DB) as checkpointer:
         print(f"  [{i}] step={step} source={source} messages_len={n_messages}")
 ```
 
-After running scripts 2 and 3, this shows the current transcript and then a summary of every checkpoint the graph has recorded for the thread. Each `StateSnapshot` carries a `.config` field you can pass back to `.invoke()` to time-travel — restart the graph from that historical state and run it forward with a different input. That is the mechanism the next chapter uses for human-in-the-loop editing: pause the graph, inspect its state, edit it, then resume.
+After running scripts 2 and 3, this shows the current transcript and then a summary of every checkpoint the graph has recorded for the thread. Each `StateSnapshot` carries a `.config` field you can pass back to `.invoke()` to time-travel: restart the graph from that historical state and run it forward with a different input. That is the mechanism the next chapter uses for human-in-the-loop editing: pause the graph, inspect its state, edit it, then resume.
 
 ## Two design points worth internalizing
 
-**`thread_id` is your problem, not the framework's.** The graph does not invent one for you. Any invocation that omits `thread_id` from the config gets a fresh empty state, which is almost never what you want in a durable app. In practice you generate a stable `thread_id` per conversation at your application layer — session cookie, user ID plus timestamp, chat room ID — and thread it through every invoke and stream call.
+**`thread_id` is your problem, not the framework's.** The graph does not invent one for you. Any invocation that omits `thread_id` from the config gets a fresh empty state, which is almost never what you want in a durable app. In practice you generate a stable `thread_id` per conversation at your application layer (session cookie, user ID plus timestamp, chat room ID) and thread it through every invoke and stream call.
 
 **Checkpoints are automatic and per-step.** You do not call `.save_state()` or `.load_state()` anywhere. Every time a node produces a state update, the checkpointer writes it. Every time you invoke the graph, the checkpointer loads the latest state for the thread. This is what makes the migration from "prototype in a notebook with `MemorySaver`" to "production service with `PostgresSaver`" a two-line change instead of a rewrite.
 

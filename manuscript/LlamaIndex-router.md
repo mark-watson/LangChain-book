@@ -4,7 +4,7 @@ Every example so far in Part II has used a single index over a single corpus. Re
 
 LlamaIndex has two prebuilt patterns for querying across multiple indices: **`RouterQueryEngine`** and **`SubQuestionQueryEngine`**. Both wrap several per-corpus query engines and use an LLM to decide how to combine them.
 
-Everything lives in `source-code/llama_index_router/`. For teaching purposes each of the four `../data/*.txt` files becomes its own tiny index — chemistry, economics, health, sports. In a real project the same code would drive four indices over four folders of hundreds of documents each.
+Everything lives in `source-code/llama_index_router/`. For teaching purposes each of the four `../data/*.txt` files becomes its own tiny index: chemistry, economics, health, sports. In a real project the same code would drive four indices over four folders of hundreds of documents each.
 
 Setup:
 
@@ -64,11 +64,11 @@ The mechanism is simple. Each per-topic engine gets wrapped in a `QueryEngineToo
 
 The quality of routing depends entirely on the quality of the tool descriptions. Vague descriptions produce wrong routing; overlapping descriptions produce coin-flip routing. This is the same discipline as writing good tool docstrings for a ReAct agent.
 
-`LLMMultiSelector.from_defaults()` is the sibling class that picks *multiple* tools and combines their responses — useful when questions might legitimately touch two or three indices.
+`LLMMultiSelector.from_defaults()` is the sibling class that picks *multiple* tools and combines their responses, useful when questions might legitimately touch two or three indices.
 
 ## `SubQuestionQueryEngine`: decompose and combine
 
-For compound questions that no single index can answer alone — "compare A and B," "how do X, Y, and Z relate?" — you want the engine to plan a series of subquestions, run each against the appropriate index, and synthesize a combined answer.
+For compound questions that no single index can answer alone ("compare A and B," "how do X, Y, and Z relate?"), you want the engine to plan a series of subquestions, run each against the appropriate index, and synthesize a combined answer.
 
 `02_subquestion_query_engine.py`:
 
@@ -122,13 +122,13 @@ print(engine.query(query))
 
 Behind the scenes: an LLM planner reads the compound query and the tool descriptions, produces a list of subquestions (typically one per relevant tool), each subquestion runs against its target index, and a final LLM call synthesizes the subquestion answers into a coherent response.
 
-Costs to be aware of. With four tools and a compound query, you may end up with three or four subquestion runs plus two synthesis calls — six or seven LLM calls per user query. On a local model this adds latency; on a hosted model it adds a real bill. `SubQuestionQueryEngine` is powerful but not the tool to reach for on every question.
+Costs to be aware of. With four tools and a compound query, you may end up with three or four subquestion runs plus two synthesis calls: six or seven LLM calls per user query. On a local model this adds latency; on a hosted model it adds a real bill. `SubQuestionQueryEngine` is powerful but not the tool to reach for on every question.
 
 ## When to reach for which
 
-- **`RouterQueryEngine` with `LLMSingleSelector`** — most queries clearly belong to one corpus. Cheap: one selector call plus one downstream query engine call.
-- **`RouterQueryEngine` with `LLMMultiSelector`** — most queries belong to one or two corpora. Slightly more expensive; useful when your corpora overlap.
-- **`SubQuestionQueryEngine`** — compound "compare / relate / synthesize" queries that no single index can answer. Most expensive; reach for it when you have evidence users actually ask these questions.
+- **`RouterQueryEngine` with `LLMSingleSelector`**: most queries clearly belong to one corpus. Cheap: one selector call plus one downstream query engine call.
+- **`RouterQueryEngine` with `LLMMultiSelector`**: most queries belong to one or two corpora. Slightly more expensive; useful when your corpora overlap.
+- **`SubQuestionQueryEngine`**: compound "compare / relate / synthesize" queries that no single index can answer. Most expensive; reach for it when you have evidence users actually ask these questions.
 
 You can also build routing yourself with the Workflows API from Chapters 15-16: a classify step, a routing step, per-corpus engines behind separate steps. That is what you would do when your routing logic is deterministic (based on user role, request metadata, or a fixed classification) rather than LLM-driven.
 
@@ -138,4 +138,4 @@ You can also build routing yourself with the Workflows API from Chapters 15-16: 
 - `SubQuestionQueryEngine` decomposes compound queries into per-corpus subquestions and synthesizes the results.
 - Both patterns depend heavily on the English descriptions attached to each `QueryEngineTool`. Treat descriptions like production API contracts.
 
-Chapter 18 covers structured extraction — using `PydanticProgram` to force LLM output into a validated data schema.
+Chapter 18 covers structured extraction, using `PydanticProgram` to force LLM output into a validated data schema.

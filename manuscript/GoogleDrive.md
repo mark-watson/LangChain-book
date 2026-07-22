@@ -4,7 +4,7 @@ My digital life consists of writing, working as an AI practitioner, and learning
 
 About ten years ago I spent two months of my time writing a system in Clojure that was planned to be my own custom and personal DropBox, augmented with various NLP tools and a FireFox plugin to send web clippings directly to my personal system. To be honest, I stopped using my own project after a few months because the time it took to organize my information was a greater opportunity cost than the value I received.
 
-In this chapter I walk through a small system for pulling text files out of Google Drive and making them queryable with a local LLM. It is deliberately minimal — a fetch script and an index-and-query script — but it is the same shape as anything larger you would build on top of your own Drive.
+In this chapter I walk through a small system for pulling text files out of Google Drive and making them queryable with a local LLM. It is deliberately minimal (a fetch script and an index-and-query script), but it is the same shape as anything larger you would build on top of your own Drive.
 
 With the Google setup directions listed below, you will get a pop-up web browsing window with a warning like (this shows my Gmail address, you should see your own Gmail address here assuming that you have recently logged into Gmail using your default web browser):
 
@@ -24,11 +24,11 @@ You need to create a credential at [https://console.cloud.google.com/cloud-resou
 - Input `http://localhost:8080` for 'Authorized JavaScript origins'.
 - Input `http://localhost:8080/` for 'Authorized redirect URIs'.
 - Click 'Save'.
-- Click 'Download JSON' on the right side of Client ID. Google names the download `client_secret_<really long ID>.json` — **rename it to exactly `client_secrets.json`** and copy it into the `source-code/google_drive_llm/` directory. The script below looks for that exact filename and prints setup instructions instead of a stack trace if it is missing.
+- Click 'Download JSON' on the right side of Client ID. Google names the download `client_secret_<really long ID>.json`; **rename it to exactly `client_secrets.json`** and copy it into the `source-code/google_drive_llm/` directory. The script below looks for that exact filename and prints setup instructions instead of a stack trace if it is missing.
 
 ## Write Utility To Fetch All Text Files From Top Level Google Drive Folder
 
-For this example we will just authenticate our test script with Google, and copy all top level text files with names ending with ".txt" to the local file system in subdirectory **data**. The library doing the Google Drive work is `pydrive2` — the maintained fork of the original `pydrive`, which stopped receiving updates some years ago. The code is in the directory **google_drive_llm** in file **fetch_txt_files.py**:
+For this example we will just authenticate our test script with Google, and copy all top level text files with names ending with ".txt" to the local file system in subdirectory **data**. The library doing the Google Drive work is `pydrive2`, the maintained fork of the original `pydrive`, which stopped receiving updates some years ago. The code is in the directory **google_drive_llm** in file **fetch_txt_files.py**:
 
 ```python
 """Fetch .txt files from Google Drive using PyDrive2.
@@ -60,7 +60,7 @@ To set up access to Google Drive:
   4. Full quickstart guide:
      https://developers.google.com/drive/api/quickstart/python
 
-Then re-run this script — a browser window will open to complete sign-in.
+Then re-run this script - a browser window will open to complete sign-in.
 """
 
 
@@ -99,7 +99,7 @@ if __name__ == "__main__":
     test()
 ```
 
-Two differences from an OAuth-less script worth noting. `get_txt_files` now takes `drive` as a parameter instead of closing over a module-level global — easier to test, and it makes the dependency on a successful auth step explicit. And `test()` checks for `client_secrets.json` before touching the network at all, so a reader who has not done the Google Cloud Console setup yet gets a short list of what to do next instead of an OAuth stack trace.
+Two differences from an OAuth-less script worth noting. `get_txt_files` now takes `drive` as a parameter instead of closing over a module-level global. That is easier to test, and it makes the dependency on a successful auth step explicit. And `test()` checks for `client_secrets.json` before touching the network at all, so a reader who has not done the Google Cloud Console setup yet gets a short list of what to do next instead of an OAuth stack trace.
 
 For testing I have one text file, `sports.txt`, that I want copied from my Google Drive. Running the script opens a browser for the OAuth consent flow, then lists and downloads every top-level `.txt` file:
 
@@ -117,11 +117,11 @@ title: sports.txt, id: 18RN4ojvURWt5yoKNtDdAJbh4fvmRpzwb
 ['sports.txt', '18RN4ojvURWt5yoKNtDdAJbh4fvmRpzwb', 'Sport is generally recognised as activities based in physical athleticism or physical dexterity...']
 ```
 
-That is a representative run against my own Drive, file IDs abbreviated — yours will list whatever `.txt` files sit at your Drive's top level. I have not re-run the OAuth flow itself for this edition, since it needs a real Google account and browser-based consent — exactly the kind of per-reader setup this book otherwise avoids — but `LocalWebserverAuth()`'s console output is standard PyDrive2 behavior and has been stable across versions.
+That is a representative run against my own Drive, file IDs abbreviated; yours will list whatever `.txt` files sit at your Drive's top level. I have not re-run the OAuth flow itself for this edition, since it needs a real Google account and browser-based consent (exactly the kind of per-reader setup this book otherwise avoids), but `LocalWebserverAuth()`'s console output is standard PyDrive2 behavior and has been stable across versions.
 
 ## Generate Vector Indices for Files in Specific Google Drive Directories
 
-The script in the last section should have created copies of your Drive's `.txt` files in `data/`. `index_and_QA.py` indexes that directory with LlamaIndex and answers a question against it — entirely locally, no OpenAI key required:
+The script in the last section should have created copies of your Drive's `.txt` files in `data/`. `index_and_QA.py` indexes that directory with LlamaIndex and answers a question against it, entirely locally, with no OpenAI key required:
 
 ```python
 """Index Google Drive text files and answer questions with LlamaIndex 0.14.
@@ -158,9 +158,9 @@ query_engine = index.as_query_engine()
 print(query_engine.query("What is the definition of sport?"))
 ```
 
-Two LlamaIndex-era details worth calling out, both covered in more depth in Part II of this book: `GPTSimpleVectorIndex` and `save_to_disk`/`load_from_disk` — the API this chapter used in earlier editions — no longer exist. `VectorStoreIndex.from_documents(...)` is the current equivalent, and `Settings.llm` / `Settings.embed_model` configure the LLM and embedding model globally instead of threading a `ServiceContext` through every call. And there is no `OPENAI_API_KEY` anywhere: the embedding model is a small local `HuggingFaceEmbedding`, and the LLM is a local Ollama model, so this whole example runs offline once the files are on disk.
+Two LlamaIndex-era details worth calling out, both covered in more depth in Part II of this book: `GPTSimpleVectorIndex` and `save_to_disk`/`load_from_disk` (the API this chapter used in earlier editions) no longer exist. `VectorStoreIndex.from_documents(...)` is the current equivalent, and `Settings.llm` / `Settings.embed_model` configure the LLM and embedding model globally instead of threading a `ServiceContext` through every call. And there is no `OPENAI_API_KEY` anywhere: the embedding model is a small local `HuggingFaceEmbedding`, and the LLM is a local Ollama model, so this whole example runs offline once the files are on disk.
 
-To try this without setting up Google OAuth at all, this repository ships a `data/sports.txt` sample file — the same file used as the worked example below — so you can run `index_and_QA.py` immediately and only deal with `fetch_txt_files.py` once you actually want to pull your own Drive contents.
+To try this without setting up Google OAuth at all, this repository ships a `data/sports.txt` sample file (the same file used as the worked example below), so you can run `index_and_QA.py` immediately and only deal with `fetch_txt_files.py` once you actually want to pull your own Drive contents.
 
 Output, run against that sample file:
 

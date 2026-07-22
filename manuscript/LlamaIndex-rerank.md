@@ -2,7 +2,7 @@
 
 Chapter 2's LangChain reranker chapter had the same argument I am about to make here, and it applies verbatim in LlamaIndex: cosine similarity over sentence embeddings is fast but coarse; a cross-encoder is slow but much more accurate; the trick is to retrieve wide with the cheap tool and rerank narrow with the expensive one.
 
-In LlamaIndex the mechanism is a **node postprocessor**. You pass one to `.as_query_engine(node_postprocessors=[...])` and it runs between the retriever's `.retrieve()` call and the LLM synthesis step. The framework ships several — `SimilarityPostprocessor` for score thresholding, `MetadataReplacementPostProcessor` for retrieved-content rewriting, `LongContextReorder` for reordering — but the one that matters most for retrieval quality is `SentenceTransformerRerank`.
+In LlamaIndex the mechanism is a **node postprocessor**. You pass one to `.as_query_engine(node_postprocessors=[...])` and it runs between the retriever's `.retrieve()` call and the LLM synthesis step. The framework ships several (`SimilarityPostprocessor` for score thresholding, `MetadataReplacementPostProcessor` for retrieved-content rewriting, `LongContextReorder` for reordering), but the one that matters most for retrieval quality is `SentenceTransformerRerank`.
 
 Everything lives in `source-code/llama_index_rerank/` and reads from `source-code/data/`. Setup:
 
@@ -68,7 +68,7 @@ Compare the two outputs. The baseline typically hands the LLM some low-scoring n
 
 ## What the reranker actually costs
 
-For each reranker call, the cross-encoder runs once per candidate. On the tiny corpus here, 10 candidates cost about 100 ms of extra latency on a modern laptop. On a real corpus where you might retrieve 50-100 candidates for reranking, the cost is 500 ms - 2 seconds — still cheap relative to a local LLM call, and usually the single highest-value quality improvement you can make to a RAG pipeline.
+For each reranker call, the cross-encoder runs once per candidate. On the tiny corpus here, 10 candidates cost about 100 ms of extra latency on a modern laptop. On a real corpus where you might retrieve 50-100 candidates for reranking, the cost is 500 ms - 2 seconds, still cheap relative to a local LLM call, and usually the single highest-value quality improvement you can make to a RAG pipeline.
 
 Rules of thumb from my own projects:
 
@@ -83,4 +83,4 @@ Rules of thumb from my own projects:
 - Pull a wider candidate set for the reranker to consider (5× your final desired count).
 - Reranking is nearly always the highest-value quality upgrade for a RAG pipeline.
 
-Chapter 15 changes gears from retrieval to orchestration, introducing the Workflows API — LlamaIndex's answer to LangGraph for multi-step LLM applications.
+Chapter 15 changes gears from retrieval to orchestration, introducing the Workflows API, LlamaIndex's answer to LangGraph for multi-step LLM applications.

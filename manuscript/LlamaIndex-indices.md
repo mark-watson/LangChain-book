@@ -2,7 +2,7 @@
 
 `VectorStoreIndex` is the right answer roughly 90% of the time. This chapter is about the other 10%, and about the one hybrid pattern that pushes the 90% number higher when you need to.
 
-LlamaIndex has always shipped several index types. In the previous edition I only mentioned them in passing because most were rarely worth the extra complexity. In 2026 that is still mostly true — but two of the alternatives (`SummaryIndex` and the BM25 + vector hybrid) have concrete use cases where they clearly outperform a naked `VectorStoreIndex`. The third one covered here (`SimpleKeywordTableIndex`) is worth knowing about even if you never ship it, because it makes the "why do we need embeddings at all" question concrete.
+LlamaIndex has always shipped several index types. In the previous edition I only mentioned them in passing because most were rarely worth the extra complexity. In 2026 that is still mostly true, but two of the alternatives (`SummaryIndex` and the BM25 + vector hybrid) have concrete use cases where they clearly outperform a naked `VectorStoreIndex`. The third one covered here (`SimpleKeywordTableIndex`) is worth knowing about even if you never ship it, because it makes the "why do we need embeddings at all" question concrete.
 
 All three scripts live in `source-code/llama_index_indices/` and read from `source-code/data/`. Setup:
 
@@ -12,7 +12,7 @@ $ uv sync
 $ ollama pull qwen3.5:4b
 ```
 
-## `SummaryIndex` — every query touches every Node
+## `SummaryIndex`: every query touches every Node
 
 `VectorStoreIndex` is optimized for "find the top-k Nodes most similar to this query." That is the wrong shape for questions like "summarize the whole corpus," "what themes recur across these documents," or "give me an overview of everything in this folder." Those queries want the LLM to see every Node, in order, and reason across all of them.
 
@@ -55,11 +55,11 @@ health sciences, and cultural studies.
 
 The tradeoff is obvious: `SummaryIndex` is O(n) per query, where n is the number of Nodes. Fine for corpora with dozens of Nodes, painful with thousands, unusable with millions. In practice I use it either for small curated collections (a research folder, a single project's docs, a book's chapters) or as a downstream tool for questions where the router has already narrowed the corpus to a small subset.
 
-## `SimpleKeywordTableIndex` — retrieval by exact keyword match
+## `SimpleKeywordTableIndex`: retrieval by exact keyword match
 
 Embeddings are not always the right retrieval mechanism. If your corpus is dominated by proper nouns, product identifiers, function names, drug names, or legal citations, semantic similarity is often *worse* than exact-string matching. The classic case: your query mentions "GPT-4o" and the relevant document is one of the few that also mentions "GPT-4o" verbatim. A dense retriever will happily return semantically-adjacent documents about "large language models," "OpenAI," or "GPT-4," pushing your actual match down or off the list.
 
-`SimpleKeywordTableIndex` builds an inverted index of the corpus using regex keyword extraction. No LLM, no embedding model, no ML dependency at all — just Python string processing. At query time, it extracts keywords from the query the same way and retrieves Nodes whose keyword sets overlap.
+`SimpleKeywordTableIndex` builds an inverted index of the corpus using regex keyword extraction. No LLM, no embedding model, no ML dependency at all: just Python string processing. At query time, it extracts keywords from the query the same way and retrieves Nodes whose keyword sets overlap.
 
 `02_keyword_table.py`:
 
@@ -88,13 +88,13 @@ Where this actually earns its keep in real projects:
 
 - **Factoid corpora full of specific terms.** Product catalogs, drug databases, legal statute collections, API references.
 - **Environments where you cannot install ML dependencies.** Air-gapped systems, minimal Docker images, edge devices.
-- **As a cheap first-pass filter** before a more expensive stage — pull a wide keyword-based set of candidates, then rerank them with an LLM or a cross-encoder.
+- **As a cheap first-pass filter** before a more expensive stage: pull a wide keyword-based set of candidates, then rerank them with an LLM or a cross-encoder.
 
 Where it fails: any query where the important word does not appear literally in the relevant Node. Paraphrases are invisible. That is why the hybrid pattern in the next section usually beats either dense-only or sparse-only in isolation.
 
-The `KeywordTableIndex` variant (no "Simple") uses an LLM to extract richer keyword lists including synonyms and related concepts. More accurate for hard queries, slower to build, needs a model. In practice I have not shipped the LLM version in a while — the LLM cost at ingestion time is high enough that if I can afford it, I would rather spend it on a reranker at query time.
+The `KeywordTableIndex` variant (no "Simple") uses an LLM to extract richer keyword lists including synonyms and related concepts. More accurate for hard queries, slower to build, needs a model. In practice I have not shipped the LLM version in a while; the LLM cost at ingestion time is high enough that if I can afford it, I would rather spend it on a reranker at query time.
 
-## `QueryFusionRetriever` — the practical hybrid pattern
+## `QueryFusionRetriever`: the practical hybrid pattern
 
 The one hybrid pattern I use in almost every real LlamaIndex project. Run both a dense (embedding) retriever and a sparse (BM25) retriever over the same corpus, then merge their ranked lists with reciprocal rank fusion.
 
@@ -139,12 +139,12 @@ for query in [
     print()
 ```
 
-The BM25 retriever wants a list of Nodes, not a full index — hence the slightly odd `list(vector_index.docstore.docs.values())` pattern. In a production setup where you have already run an ingestion pipeline, you would pass the Node list directly.
+The BM25 retriever wants a list of Nodes, not a full index, hence the slightly odd `list(vector_index.docstore.docs.values())` pattern. In a production setup where you have already run an ingestion pipeline, you would pass the Node list directly.
 
 Two `QueryFusionRetriever` parameters worth knowing about:
 
-- **`mode="reciprocal_rerank"`** — reciprocal rank fusion. Documents ranked highly by either retriever get a good final score; documents ranked highly by both get an excellent final score. This is the default and almost always what you want.
-- **`num_queries=1`** — the user's query is used as-is. If you set this to a higher number, the fusion retriever asks the LLM to generate that many query rewrites and runs *each* retriever on *each* rewrite. Similar to Chapter 2's `MultiQueryRetriever` from LangChain but built into the fusion retriever itself. Costs LLM calls, buys recall.
+- **`mode="reciprocal_rerank"`**: reciprocal rank fusion. Documents ranked highly by either retriever get a good final score; documents ranked highly by both get an excellent final score. This is the default and almost always what you want.
+- **`num_queries=1`**: the user's query is used as-is. If you set this to a higher number, the fusion retriever asks the LLM to generate that many query rewrites and runs *each* retriever on *each* rewrite. Similar to Chapter 2's `MultiQueryRetriever` from LangChain but built into the fusion retriever itself. Costs LLM calls, buys recall.
 
 On the two-query test in the script, the fusion retriever handles both cleanly: the "body chemistry / exercise" query gets a strong dense-retrieval boost, and the "Austrian School" query (a proper noun that appears verbatim in `economics.txt`) gets a strong BM25 boost. Neither retriever on its own would rank both queries as well as the fusion does.
 
@@ -154,16 +154,16 @@ A concrete decision procedure I use in my own projects:
 
 1. **Start with `VectorStoreIndex`** and see how retrieval quality holds up on real user queries. This is the right answer most of the time.
 2. **If overview-style queries do badly**, add a `SummaryIndex` over the same corpus and route those queries to it via a router (Chapter 17).
-3. **If exact-term queries do badly** (product names, function names, proper nouns), swap the `VectorStoreIndex` retriever for a `QueryFusionRetriever` over both dense and BM25. This is close to free — no extra models, no meaningful latency increase — and it fixes a wide class of retrieval failures.
+3. **If exact-term queries do badly** (product names, function names, proper nouns), swap the `VectorStoreIndex` retriever for a `QueryFusionRetriever` over both dense and BM25. This is close to free (no extra models, no meaningful latency increase) and it fixes a wide class of retrieval failures.
 4. **If ingestion-time budget is nonexistent** and you cannot install ML dependencies at all, use `SimpleKeywordTableIndex`. Ship it, measure, revisit.
 
-Reach for `TreeIndex` (not covered here) if you have thousands of Nodes and need a hierarchical retrieval that traverses top-down. Reach for `KnowledgeGraphIndex` if you want the framework to extract entities and relationships for you and query them as a graph — but at that point you may find Chapter 9's DBpedia/Wikidata SPARQL agents a cleaner fit.
+Reach for `TreeIndex` (not covered here) if you have thousands of Nodes and need a hierarchical retrieval that traverses top-down. Reach for `KnowledgeGraphIndex` if you want the framework to extract entities and relationships for you and query them as a graph, but at that point you may find Chapter 9's DBpedia/Wikidata SPARQL agents a cleaner fit.
 
 ## What we covered
 
 - `VectorStoreIndex` is the default, but not the only tool.
-- `SummaryIndex` handles overview / cross-corpus queries by touching every Node — O(n) per query, worth it when the shape of the question demands it.
-- `SimpleKeywordTableIndex` gives you keyword-based retrieval with zero ML dependencies — a fallback and a first-pass filter.
+- `SummaryIndex` handles overview / cross-corpus queries by touching every Node: O(n) per query, worth it when the shape of the question demands it.
+- `SimpleKeywordTableIndex` gives you keyword-based retrieval with zero ML dependencies: a fallback and a first-pass filter.
 - `QueryFusionRetriever` fuses BM25 and dense retrieval with reciprocal rank fusion. This is the hybrid pattern most projects should use once a vanilla vector retriever starts missing obvious matches.
 
-Chapter 14 covers reranking — the last piece of the retrieval-quality puzzle before we move on to LlamaIndex's Workflows API in Chapter 15.
+Chapter 14 covers reranking, the last piece of the retrieval-quality puzzle before we move on to LlamaIndex's Workflows API in Chapter 15.

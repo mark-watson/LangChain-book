@@ -35,7 +35,7 @@ deepseek-v4-flash:cloud      ea027821675c    -         2 months ago
 qwen3.5:9b                   6488c96fa5fa    6.6 GB    4 months ago    
 ```
 
-`qwen3.5:4b` is the model used throughout this book — small enough to run comfortably on a laptop, and it reliably supports tool calling, which several later chapters depend on.
+`qwen3.5:4b` is the model used throughout this book: small enough to run comfortably on a laptop, and it reliably supports tool calling, which several later chapters depend on.
 
 Setup:
 
@@ -69,7 +69,7 @@ s = llm.invoke("If Sam is 27, Mary is 42, and Jerry is 33, what are their age di
 print(s.content)
 ```
 
-`langchain_ollama.ChatOllama` is the current integration package — the older `langchain.llms.Ollama` shown in previous editions of this book is gone from LangChain 1.0. `.invoke()` returns an `AIMessage`; `.content` is the text.
+`langchain_ollama.ChatOllama` is the current integration package; the older `langchain.llms.Ollama` shown in previous editions of this book is gone from LangChain 1.0. `.invoke()` returns an `AIMessage`; `.content` is the text.
 
 Here is the output:
 
@@ -90,7 +90,7 @@ The following listing of file **ollama_langchain/rag_test.py** demonstrates crea
 - Create a persistent embeddings datastore from a directory of local documents.
 - Open a persisted embeddings datastore and use it for queries against local documents.
 
-One wrinkle that was not an issue in earlier editions: a chat model is not automatically an embedding model. `ollama show qwen3.5:4b` lists its capabilities as `completion`, `vision`, `tools`, and `thinking` — no `embedding` — and asking it for a vector fails with "This server does not support embeddings." Embeddings come from a small dedicated model instead, `nomic-embed-text` (274 MB):
+One wrinkle that was not an issue in earlier editions: a chat model is not automatically an embedding model. `ollama show qwen3.5:4b` lists its capabilities as `completion`, `vision`, `tools`, and `thinking`, with no `embedding`, and asking it for a vector fails with "This server does not support embeddings." Embeddings come from a small dedicated model instead, `nomic-embed-text` (274 MB):
 
 ```console
 $ ollama pull nomic-embed-text
@@ -183,9 +183,9 @@ while True:
     print(response)
 ```
 
-`load_text_documents` is a small stand-in for the old `DirectoryLoader` (removed along with the rest of `langchain.document_loaders` in 1.0) — read every `.txt` file under a path into a `Document`, nothing more. Everything downstream of that is the same LCEL shape you have seen since Chapter 2: split, embed, store, retrieve, format, prompt, generate.
+`load_text_documents` is a small stand-in for the old `DirectoryLoader` (removed along with the rest of `langchain.document_loaders` in 1.0): read every `.txt` file under a path into a `Document`, nothing more. Everything downstream of that is the same LCEL shape you have seen since Chapter 2: split, embed, store, retrieve, format, prompt, generate.
 
-Here is an example using this script, against the same **../data/** corpus used elsewhere in the book. The first question is answered from general document content; the second uses a detail — a fictional economist's name — that was deliberately added to **economics.txt** and exists nowhere in `qwen3.5:4b`'s training data, so a correct answer proves the response came from retrieval, not from the model's memory:
+Here is an example using this script, against the same **../data/** corpus used elsewhere in the book. The first question is answered from general document content; the second uses a detail (a fictional economist's name) that was deliberately added to **economics.txt** and exists nowhere in `qwen3.5:4b`'s training data, so a correct answer proves the response came from retrieval, not from the model's memory:
 
 ```console
 $ uv run rag_test.py
@@ -195,7 +195,7 @@ Ask a question: Who says that economics is bullshit?
 Pauli Blendergast
 ```
 
-The second answer is terse, but it is the right name, and it could only have come from the local document — proof the retrieval half of the chain is doing real work rather than the model coasting on what it already knew.
+The second answer is terse, but it is the right name, and it could only have come from the local document: proof the retrieval half of the chain is doing real work rather than the model coasting on what it already knew.
 
 ## Wrap Up for Running Local LLMs Using Ollama
 

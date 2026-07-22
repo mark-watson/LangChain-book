@@ -25,7 +25,7 @@ $ uv sync
 $ ollama pull qwen3.5:4b
 ```
 
-The example in file **summarization/summarization_example.py** reads the prompt file above and substitutes the text from **../data/economics.txt** — the same chemistry/economics/health/sports corpus used throughout the book:
+The example in file **summarization/summarization_example.py** reads the prompt file above and substitutes the text from **../data/economics.txt**, the same chemistry/economics/health/sports corpus used throughout the book:
 
 ```python
 from pathlib import Path
@@ -47,7 +47,7 @@ response = llm.invoke([HumanMessage(content=prompt)])
 print(response.content)
 ```
 
-No API key, no hosted service — `ChatOllama` and a single `HumanMessage` are the whole call. `Path.read_text()` replaces the `open(...)`/`file.read()` pattern you may be used to from other languages; for two small file reads it is the more idiomatic choice in current Python.
+No API key, no hosted service: `ChatOllama` and a single `HumanMessage` are the whole call. `Path.read_text()` replaces the `open(...)`/`file.read()` pattern you may be used to from other languages; for two small file reads it is the more idiomatic choice in current Python.
 
 The output:
 
@@ -56,4 +56,4 @@ $ uv run summarization_example.py
 The text defines economics as a social science that analyzes the production, distribution, and consumption of goods and services by studying how economic agents manage scarce resources to achieve desired ends. It distinguishes between microeconomics (individuals and markets) and macroeconomics (the overall economy). A significant portion focuses on the Austrian School, which emphasizes subjective human choices, price mechanisms, laissez-faire policies, and minimal government intervention, founded by Carl Menger, Eugen von Böhm-Bawerk, and Ludwig von Mises. The text also notes that economics has been professionalized since around 1900 through graduate programs in universities.
 ```
 
-The source file is 550 words; this summary is 92 — roughly a sixth of the original, and it correctly pulls out the document's actual structure (the micro/macro distinction, the Austrian School's specific claims and founders, the professionalization note) rather than just trimming sentences from the top. That is the abstractive/extractive distinction from the introduction in practice: nothing here is a verbatim sentence lifted from the source, it is a paraphrase built from the model's understanding of the whole document.
+The source file is 550 words; this summary is 92, roughly a sixth of the original, and it correctly pulls out the document's actual structure (the micro/macro distinction, the Austrian School's specific claims and founders, the professionalization note) rather than just trimming sentences from the top. That is the abstractive/extractive distinction from the introduction in practice: nothing here is a verbatim sentence lifted from the source, it is a paraphrase built from the model's understanding of the whole document.

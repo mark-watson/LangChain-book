@@ -2,11 +2,11 @@
 
 ## What LangGraph is, and is not
 
-LangGraph is an MIT-licensed Python library that lets you build stateful LLM applications as directed graphs of small step functions. It runs entirely on your laptop with no hosted service in the loop. This chapter and the four that follow use only the open source `langgraph` package plus in-process persistence — no LangSmith account, no LangGraph Platform / LangGraph Cloud, no LangSmith Deployment, no LangGraph Studio. Those are separate paid or freemium products from the LangChain company that this book deliberately does not cover; the library on its own is complete for everything we do.
+LangGraph is an MIT-licensed Python library that lets you build stateful LLM applications as directed graphs of small step functions. It runs entirely on your laptop with no hosted service in the loop. This chapter and the four that follow use only the open source `langgraph` package plus in-process persistence: no LangSmith account, no LangGraph Platform / LangGraph Cloud, no LangSmith Deployment, no LangGraph Studio. Those are separate paid or freemium products from the LangChain company that this book deliberately does not cover; the library on its own is complete for everything we do.
 
 ## Why a graph at all
 
-By now you have seen that a `Runnable` chain — `prompt | model | parser` — is enough for a huge class of LLM apps. What it is not enough for is anything with a loop, a decision point, or state that persists across steps. A ReAct agent needs to alternate between "call the model" and "run a tool" as many times as the model asks. A human-in-the-loop workflow needs to pause partway through and wait for approval. A long-running assistant needs to remember the conversation across process restarts. LCEL chains cannot express any of that cleanly.
+By now you have seen that a `Runnable` chain (`prompt | model | parser`) is enough for a huge class of LLM apps. What it is not enough for is anything with a loop, a decision point, or state that persists across steps. A ReAct agent needs to alternate between "call the model" and "run a tool" as many times as the model asks. A human-in-the-loop workflow needs to pause partway through and wait for approval. A long-running assistant needs to remember the conversation across process restarts. LCEL chains cannot express any of that cleanly.
 
 LangGraph reintroduces the state machine as the primary abstraction. You describe your application as:
 
@@ -16,7 +16,7 @@ LangGraph reintroduces the state machine as the primary abstraction. You describ
 
 You compile the graph once and then `.invoke()` or `.stream()` it like any other `Runnable`. The graph engine handles running nodes in order, applying state updates, and threading the same state dict through the whole execution.
 
-Nothing in that description mentions LLMs. That is deliberate — the graph engine does not care whether a node happens to call a model, hit a database, do arithmetic, or all three. Teaching the graph mechanics first, without a model in sight, makes the machinery easy to reason about. We add an LLM in the last example of the chapter.
+Nothing in that description mentions LLMs. That is deliberate: the graph engine does not care whether a node happens to call a model, hit a database, do arithmetic, or all three. Teaching the graph mechanics first, without a model in sight, makes the machinery easy to reason about. We add an LLM in the last example of the chapter.
 
 ## Setup
 
@@ -64,7 +64,7 @@ final_state = app.invoke({"question": "What is the meaning of life?"})
 print(final_state)
 ```
 
-Five things happen. We declare a `State` TypedDict with two string fields. We write one node function that takes the full state and returns a dict containing only the fields it wants to update. We build a `StateGraph` around the schema, register the node, and wire it between two sentinels named `START` and `END`. We `.compile()` the graph — that returns a `Runnable` we can invoke. And we invoke it with an initial state dict.
+Five things happen. We declare a `State` TypedDict with two string fields. We write one node function that takes the full state and returns a dict containing only the fields it wants to update. We build a `StateGraph` around the schema, register the node, and wire it between two sentinels named `START` and `END`. We `.compile()` the graph, which returns a `Runnable` we can invoke. And we invoke it with an initial state dict.
 
 Output:
 
@@ -75,7 +75,7 @@ $ uv run 01_hello_graph.py
 
 The final state is a dict with both fields populated: the one we passed in and the one the node wrote.
 
-Two conventions worth stating explicitly. A node returns a *partial* state update, not the full state — the engine merges the returned dict into the current state. Fields the node did not mention are left alone. And a node is a *pure function* from state in to state update out. The engine is what mutates the state; the node just describes what should change.
+Two conventions worth stating explicitly. A node returns a *partial* state update, not the full state; the engine merges the returned dict into the current state. Fields the node did not mention are left alone. And a node is a *pure function* from state in to state update out. The engine is what mutates the state; the node just describes what should change.
 
 ## Example 2: state fields with reducers
 
@@ -256,7 +256,7 @@ for m in final_state["messages"]:
     print(f"{type(m).__name__}: {m.content}")
 ```
 
-Two things are new. The state has a single field, `messages`, reduced by `add_messages` — the standard shape for a chat-style graph. And the node function calls `model.invoke(state["messages"])` and returns the model's reply wrapped in a single-element list. The reducer appends it to the transcript.
+Two things are new. The state has a single field, `messages`, reduced by `add_messages`, the standard shape for a chat-style graph. And the node function calls `model.invoke(state["messages"])` and returns the model's reply wrapped in a single-element list. The reducer appends it to the transcript.
 
 Output:
 
@@ -267,15 +267,15 @@ HumanMessage: What is the capital of Arizona?
 AIMessage: The capital of Arizona is Phoenix.
 ```
 
-The final state contains the full transcript in order: the two messages we passed in plus the model's reply. If we ran the graph again with the returned state as the new initial state, we would have a two-turn conversation. If we added a second node that called the model on the transcript again, we would have a self-dialoguing loop. That is essentially the shape of a ReAct agent, minus the tool-calling step in the middle — which is what Chapter 4 assembles.
+The final state contains the full transcript in order: the two messages we passed in plus the model's reply. If we ran the graph again with the returned state as the new initial state, we would have a two-turn conversation. If we added a second node that called the model on the transcript again, we would have a self-dialoguing loop. That is essentially the shape of a ReAct agent, minus the tool-calling step in the middle, which is what Chapter 4 assembles.
 
 ## What we covered
 
 Four primitives are the entire vocabulary of LangGraph:
 
-1. A **state schema** — a `TypedDict` with fields the graph tracks.
-2. **Nodes** — pure functions from state to partial state update.
-3. **Reducers** — `Annotated[type, reducer_fn]` to control how new values merge with old ones.
-4. **Edges** — plain sequential ones with `add_edge`, or state-dependent ones with `add_conditional_edges`.
+1. A **state schema**: a `TypedDict` with fields the graph tracks.
+2. **Nodes**: pure functions from state to partial state update.
+3. **Reducers**: `Annotated[type, reducer_fn]` to control how new values merge with old ones.
+4. **Edges**: plain sequential ones with `add_edge`, or state-dependent ones with `add_conditional_edges`.
 
 Everything else in Part I is a combination of those four. Chapter 4 builds a ReAct agent by combining a "call model" node, a "run tool" node, and a conditional edge that routes between them. Chapter 5 adds a `SqliteSaver` checkpoint so the same graph can pause and resume across process restarts. Chapter 6 uses interrupts and checkpoint editing to hand control to a human mid-run. Chapter 7 composes multiple graphs into a supervisor pattern. All of it is the same four primitives, in slightly different arrangements.

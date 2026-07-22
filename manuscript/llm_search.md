@@ -1,8 +1,8 @@
 # A Perplexity-style local search agent
 
-I subscribe to [Perplexity](https://www.perplexity.ai) and use it most days. It does one thing very well: given a natural-language question, it searches the web, reads the top pages, and synthesizes a multi-paragraph answer that cites the sources it used. That pattern — search, filter, fetch, summarize, synthesize — is broadly useful and about eighty lines of Python to build for yourself. This chapter builds it as a LangGraph pipeline, running entirely on your laptop, with Ollama for the LLM, DuckDuckGo for search, and `trafilatura` for HTML-to-text extraction.
+I subscribe to [Perplexity](https://www.perplexity.ai) and use it most days. It does one thing very well: given a natural-language question, it searches the web, reads the top pages, and synthesizes a multi-paragraph answer that cites the sources it used. That pattern (search, filter, fetch, summarize, synthesize) is broadly useful and about eighty lines of Python to build for yourself. This chapter builds it as a LangGraph pipeline, running entirely on your laptop, with Ollama for the LLM, DuckDuckGo for search, and `trafilatura` for HTML-to-text extraction.
 
-This is also the last chapter of Part I. Everything that follows in Part II covers LlamaIndex — a different framework with a different mental model, but many of the same underlying ideas.
+This is also the last chapter of Part I. Everything that follows in Part II covers LlamaIndex, a different framework with a different mental model, but many of the same underlying ideas.
 
 ## The pipeline
 
@@ -12,7 +12,7 @@ Five nodes, one long straight edge, no conditional routing:
 START -> search -> filter -> fetch -> summarize -> synthesize -> END
 ```
 
-Each node takes state in and produces a partial state update — the same shape as every graph in Chapters 3 through 9. The state accumulates as the pipeline runs:
+Each node takes state in and produces a partial state update, the same shape as every graph in Chapters 3 through 9. The state accumulates as the pipeline runs:
 
 | Field after node | Contents |
 |---|---|
@@ -22,7 +22,7 @@ Each node takes state in and produces a partial state update — the same shape 
 | `summaries` | One per-page summary focused on the query. |
 | `final_answer` | The multi-paragraph synthesis. |
 
-Nothing in this graph requires an agent's decision-making. It is a straight pipeline. LangGraph is still the right tool because each stage benefits from being an isolated, streamable, replaceable unit — but no conditional edges, no loops, no ReAct.
+Nothing in this graph requires an agent's decision-making. It is a straight pipeline. LangGraph is still the right tool because each stage benefits from being an isolated, streamable, replaceable unit, but there are no conditional edges, no loops, no ReAct.
 
 Setup:
 
@@ -144,15 +144,15 @@ def build_pipeline():
 
 Notes on the individual nodes.
 
-**`search_node`.** DuckDuckGo does not require an API key. Its `.text()` method is rate-limited, which is why we cap at five results. If the endpoint fails (occasional for busy times of day), we return an empty list and let the pipeline continue — the synthesis node handles the "no sources" case.
+**`search_node`.** DuckDuckGo does not require an API key. Its `.text()` method is rate-limited, which is why we cap at five results. If the endpoint fails (occasional for busy times of day), we return an empty list and let the pipeline continue; the synthesis node handles the "no sources" case.
 
-**`filter_node`.** One LLM call per raw result, each a very short prompt. This is where the pipeline spends most of its tokens per pass; it is also what separates good results from noise. If your model is slow, you can drop this node and take a small quality hit — but for local models where quality is the bottleneck, filtering pays for itself.
+**`filter_node`.** One LLM call per raw result, each a very short prompt. This is where the pipeline spends most of its tokens per pass; it is also what separates good results from noise. If your model is slow, you can drop this node and take a small quality hit, but for local models where quality is the bottleneck, filtering pays for itself.
 
 **`fetch_node`.** `trafilatura.extract()` handles the whole "HTML to clean text" problem well enough that this node is three lines of real logic. We cap page text at 6000 characters because larger inputs occasionally overwhelm smaller local models, and the model does not usually need more than a page or two of context to summarize accurately.
 
-**`summarize_node`.** One LLM call per fetched page. The prompt explicitly says "only material relevant to the query" — without that, the model tends to summarize the whole page, which then dilutes the synthesis step downstream.
+**`summarize_node`.** One LLM call per fetched page. The prompt explicitly says "only material relevant to the query"; without that, the model tends to summarize the whole page, which then dilutes the synthesis step downstream.
 
-**`synthesize_node`.** One final LLM call combining the per-page summaries into the actual answer. The prompt tells the model not to include a source list — Perplexity does that in its UI, and adding it inline tends to make local models produce noisy citation strings that do not link to anything.
+**`synthesize_node`.** One final LLM call combining the per-page summaries into the actual answer. The prompt tells the model not to include a source list; Perplexity does that in its UI, and adding it inline tends to make local models produce noisy citation strings that do not link to anything.
 
 ## Running it
 
@@ -204,7 +204,7 @@ throttling that can cut throughput in half after a few minutes of continuous
 generation.
 ```
 
-The exact sources and phrasing will differ every run — DuckDuckGo returns different results at different times, and the model has some non-determinism even at `temperature=0`. That is inherent to the pattern, not a bug.
+The exact sources and phrasing will differ every run: DuckDuckGo returns different results at different times, and the model has some non-determinism even at `temperature=0`. That is inherent to the pattern, not a bug.
 
 Total run time is typically 10-60 seconds. The dominant cost is the five per-source summarize calls; if you want it faster, drop `MAX_RESULTS` to three.
 
@@ -259,4 +259,4 @@ Part I has been a tour of what a solo developer can build with LangChain 1.0 and
 
 Everything above runs on your laptop with the packages listed in "The Stack We're Building On." No LangSmith, no LangGraph Cloud, no LangSmith Deployment, no LlamaCloud, no LlamaParse.
 
-Part II covers the same design space with LlamaIndex — starting with its own quick tour, then RAG patterns, then the Workflows API that plays a role similar to LangGraph in the LlamaIndex ecosystem.
+Part II covers the same design space with LlamaIndex, starting with its own quick tour, then RAG patterns, then the Workflows API that plays a role similar to LangGraph in the LlamaIndex ecosystem.

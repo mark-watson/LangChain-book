@@ -1,10 +1,10 @@
 # More Useful Libraries for Working with Unstructured Text Data
 
-Here we look at replacements for two libraries that were useful in earlier editions of this book — EmbedChain and Kor — and are no longer a good recommendation. Both illustrate a pattern worth knowing about generally: a small wrapper library earns its keep only as long as it stays ahead of the framework it wraps. Both of these were eventually overtaken by their underlying frameworks growing the exact convenience they provided.
+Here we look at replacements for two libraries that were useful in earlier editions of this book (EmbedChain and Kor) and are no longer a good recommendation. Both illustrate a pattern worth knowing about generally: a small wrapper library earns its keep only as long as it stays ahead of the framework it wraps. Both of these were eventually overtaken by their underlying frameworks growing the exact convenience they provided.
 
 ## What Used to Be EmbedChain: "Query Your Own Data" with LlamaIndex
 
-Taranjeet Singh's EmbedChain library — [https://github.com/embedchain/embedchain](https://github.com/embedchain/embedchain) — used to be a nice wrapper that simplified writing "query your own data" applications by choosing good defaults on top of LangChain. It has since been folded into a commercial memory-layer product, and the pattern it made convenient — point a loader at a directory, build an index, query it — is now just as easy directly in LlamaIndex, with the added benefit of running entirely on local models instead of requiring an OpenAI key.
+Taranjeet Singh's EmbedChain library ([https://github.com/embedchain/embedchain](https://github.com/embedchain/embedchain)) used to be a nice wrapper that simplified writing "query your own data" applications by choosing good defaults on top of LangChain. It has since been folded into a commercial memory-layer product, and the pattern it made convenient (point a loader at a directory, build an index, query it) is now just as easy directly in LlamaIndex, with the added benefit of running entirely on local models instead of requiring an OpenAI key.
 
 I will show the same example I ran in earlier editions: searching the contents of some of the books and technical writing I have on my laptop. The code is `source-code/embedchain_test/`. Setup:
 
@@ -14,13 +14,13 @@ $ uv sync
 $ ollama pull qwen3.5:4b
 ```
 
-`process_pdfs.py` builds the index (the filename is kept for continuity with the earlier edition — the bundled sample data in `data/` is plain `.txt`, and `SimpleDirectoryReader` handles real PDFs the same way, no code change required):
+`process_pdfs.py` builds the index (the filename is kept for continuity with the earlier edition; the bundled sample data in `data/` is plain `.txt`, and `SimpleDirectoryReader` handles real PDFs the same way, no code change required):
 
 ```python
 """Process PDFs with LlamaIndex 0.14 (replaces embedchain).
 
 Uses LlamaIndex's SimpleDirectoryReader to load PDF files and build
-a vector index. Local models only — no external API keys required.
+a vector index. Local models only - no external API keys required.
 """
 
 import os
@@ -113,11 +113,11 @@ How can I scrape a website using Common Lisp?
 Common Lisp libraries can be managed by cloning repositories into the `~/quicklisp/local-projects/` directory and running a Makefile target `make fetch`. Detailed methods for scraping websites specifically are not elaborated in this section regarding example distribution and installation procedures.
 ```
 
-Two things worth noticing. First, this took a while — roughly a minute and a half per question, because `data/` here is two entire books (about 130,000 words combined), a much bigger corpus than the few-paragraph examples used elsewhere in this book, and a small local model reading a full retrieved chunk takes real time. Second, the third answer is honest about its limits rather than confidently wrong: it does not invent a scraping library or a `wget` command, it says the retrieved section does not cover that topic. A weaker or more eagerly fine-tuned model might have filled that gap with something plausible-sounding and false; watching a small local model decline to do that is, in its own way, reassuring.
+Two things worth noticing. First, this took a while: roughly a minute and a half per question, because `data/` here is two entire books (about 130,000 words combined), a much bigger corpus than the few-paragraph examples used elsewhere in this book, and a small local model reading a full retrieved chunk takes real time. Second, the third answer is honest about its limits rather than confidently wrong: it does not invent a scraping library or a `wget` command, it says the retrieved section does not cover that topic. A weaker or more eagerly fine-tuned model might have filled that gap with something plausible-sounding and false; watching a small local model decline to do that is, in its own way, reassuring.
 
 ## What Used to Be Kor: Structured Extraction with `.with_structured_output()`
 
-The Kor library, written by Eugene Yurtsev, used to be a nice way to get an LLM to extract structured data from unstructured text — it generated the prompt boilerplate for you from a schema you defined. Kor itself is essentially unmaintained today, for a good reason: LangChain 1.0's `.with_structured_output()`, covered in the Extraction chapter, now does natively and more reliably what Kor used to paper over with prompt engineering. There is no need for a separate library or a separate schema language — a Pydantic model is the schema.
+The Kor library, written by Eugene Yurtsev, used to be a nice way to get an LLM to extract structured data from unstructured text; it generated the prompt boilerplate for you from a schema you defined. Kor itself is essentially unmaintained today, for a good reason: LangChain 1.0's `.with_structured_output()`, covered in the Extraction chapter, now does natively and more reliably what Kor used to paper over with prompt engineering. There is no need for a separate library or a separate schema language: a Pydantic model is the schema.
 
 Here is the same date-extraction task Kor used to handle, in `source-code/kor/dates.py`:
 
@@ -166,4 +166,4 @@ $ uv run dates.py
 DateExtraction(month='May', full_date='May 1, 2024')
 ```
 
-A validated Pydantic object, not a dict you have to trust and unpack by hand — `result.month` and `result.full_date` are typed attributes, and if the model's response does not fit the schema, this raises instead of silently handing you something malformed. That reliability, built into the framework itself, is exactly what a wrapper library like Kor used to add on top.
+A validated Pydantic object, not a dict you have to trust and unpack by hand: `result.month` and `result.full_date` are typed attributes, and if the model's response does not fit the schema, this raises instead of silently handing you something malformed. That reliability, built into the framework itself, is exactly what a wrapper library like Kor used to add on top.

@@ -1,14 +1,14 @@
 # Human-in-the-loop patterns
 
-The agents from Chapters 4 and 5 run to completion without ever pausing to check in with a human. That is exactly what you want for most background tasks and most read-only assistants. It is exactly what you *do not* want any time an agent is about to take a consequential action — send an email, make a purchase, publish a post, execute a shell command — or produce output that a human needs to see and possibly correct before anything downstream consumes it.
+The agents from Chapters 4 and 5 run to completion without ever pausing to check in with a human. That is exactly what you want for most background tasks and most read-only assistants. It is exactly what you *do not* want any time an agent is about to take a consequential action (send an email, make a purchase, publish a post, execute a shell command) or produce output that a human needs to see and possibly correct before anything downstream consumes it.
 
 This chapter covers three LangGraph mechanisms for putting a human in the loop:
 
-- **`interrupt()`** — called from inside a node, halts the graph and returns control to the caller with a payload. The caller decides what to do, then resumes with `Command(resume=value)`. The value shows up as the return of `interrupt()`, and the node continues.
-- **`interrupt_before=[...]` and `interrupt_after=[...]`** — compile-time arguments that tell the graph to pause before or after specific nodes without any special code in the node bodies.
-- **`agent.update_state(config, values)`** — modify the recorded state of a paused graph before resuming. Combined with `interrupt_after`, this is the pattern for "let the human see and edit what the graph produced."
+- **`interrupt()`**: called from inside a node, halts the graph and returns control to the caller with a payload. The caller decides what to do, then resumes with `Command(resume=value)`. The value shows up as the return of `interrupt()`, and the node continues.
+- **`interrupt_before=[...]` and `interrupt_after=[...]`**: compile-time arguments that tell the graph to pause before or after specific nodes without any special code in the node bodies.
+- **`agent.update_state(config, values)`**: modify the recorded state of a paused graph before resuming. Combined with `interrupt_after`, this is the pattern for "let the human see and edit what the graph produced."
 
-Everything in this chapter assumes a checkpointer. `interrupt()` without a checkpointer would just be a crash — the graph would have nowhere to save the paused state to. All three examples use `MemorySaver` because the human lives in the same Python process, but every mechanism works identically with `SqliteSaver` or `PostgresSaver`, and in a real web-app deployment that is what you would use.
+Everything in this chapter assumes a checkpointer. `interrupt()` without a checkpointer would just be a crash: the graph would have nowhere to save the paused state to. All three examples use `MemorySaver` because the human lives in the same Python process, but every mechanism works identically with `SqliteSaver` or `PostgresSaver`, and in a real web-app deployment that is what you would use.
 
 ## Example 1: the minimum viable interrupt
 
@@ -81,11 +81,11 @@ interrupt payload: [Interrupt(value={'question': 'What should I record next?'}, 
   step three done
 ```
 
-The first `.invoke()` returns after step_one but before step_two finishes; the log has one entry, and `__interrupt__` in the returned state holds the payload the node passed to `interrupt()`. The second `.invoke()` uses `Command(resume="hello from the human")` — the resume value goes back to the paused `interrupt()` call, which returns it, and step_two proceeds. Step_three runs afterwards as normal.
+The first `.invoke()` returns after step_one but before step_two finishes; the log has one entry, and `__interrupt__` in the returned state holds the payload the node passed to `interrupt()`. The second `.invoke()` uses `Command(resume="hello from the human")`; the resume value goes back to the paused `interrupt()` call, which returns it, and step_two proceeds. Step_three runs afterwards as normal.
 
 Two things worth internalizing:
 
-- **The interrupt happens inside the node body**, but the caller decides the payload's meaning. The graph does not know or care that "reject" is different from "approve" — it just hands whatever value it receives back to the paused node.
+- **The interrupt happens inside the node body**, but the caller decides the payload's meaning. The graph does not know or care that "reject" is different from "approve"; it just hands whatever value it receives back to the paused node.
 - **Resume is not restart.** When you resume, the node continues from the `interrupt()` call; it does not re-run from the top. Anything the node did before the interrupt is intact, and no state changes have been committed yet (nodes commit their return value on completion, not during execution).
 
 ## Example 2: a tool-approval gate
@@ -132,7 +132,7 @@ def approving_tools(state: State) -> dict:
 
 Compared to the vanilla `ToolNode` from Chapter 4, this custom node adds one branch: if the tool is dangerous, call `interrupt()`, and act on the returned decision. If the decision is `"approve"` the tool runs. Otherwise the node records a `ToolMessage` with content `"[user rejected send_email]"` so the model sees on the next turn that its request was refused and can respond accordingly.
 
-The driver code runs three cases through the same agent — safe tool, dangerous tool approved, dangerous tool rejected — feeding a scripted list of "approve" / "reject" responses to whatever interrupts fire. Representative output:
+The driver code runs three cases through the same agent (safe tool, dangerous tool approved, dangerous tool rejected), feeding a scripted list of "approve" / "reject" responses to whatever interrupts fire. Representative output:
 
 ```console
 $ uv run 02_approval_gate.py
@@ -150,9 +150,9 @@ $ uv run 02_approval_gate.py
   final: The user rejected sending the email, so no message was sent.
 ```
 
-Notice how the model handles the rejection gracefully in case 3. It sees the `[user rejected send_email]` ToolMessage on the next turn, reasons that no email was sent, and produces a sensible final answer. That is why we return a `ToolMessage` rather than raising — the model needs to know its action was refused so it can adapt.
+Notice how the model handles the rejection gracefully in case 3. It sees the `[user rejected send_email]` ToolMessage on the next turn, reasons that no email was sent, and produces a sensible final answer. That is why we return a `ToolMessage` rather than raising: the model needs to know its action was refused so it can adapt.
 
-This approval pattern generalizes. Any tool with side effects — filesystem writes, database mutations, external API calls, financial transactions — belongs in the `DANGEROUS` set until you can prove the model handles it responsibly. Start conservative and remove tools from the list as you build evidence for each one.
+This approval pattern generalizes. Any tool with side effects (filesystem writes, database mutations, external API calls, financial transactions) belongs in the `DANGEROUS` set until you can prove the model handles it responsibly. Start conservative and remove tools from the list as you build evidence for each one.
 
 ## Example 3: pause after a node, edit the checkpoint, resume
 
@@ -253,7 +253,7 @@ $ uv run 03_edit_draft.py
   Sedona is a small municipality located in the state of Arizona, distinguished by its notable red-rock geological features.
 ```
 
-The `refine` node runs on the edited draft, not the original one. From the graph's point of view, nothing unusual happened — the propose node produced state, then the refine node ran on the state it found. The fact that a human sat in between and modified the state is invisible to the nodes themselves. That is exactly the encapsulation you want for HITL: the graph's business logic does not know or care whether a human is watching.
+The `refine` node runs on the edited draft, not the original one. From the graph's point of view, nothing unusual happened: the propose node produced state, then the refine node ran on the state it found. The fact that a human sat in between and modified the state is invisible to the nodes themselves. That is exactly the encapsulation you want for HITL: the graph's business logic does not know or care whether a human is watching.
 
 ## Two mechanisms, when to reach for each
 
@@ -263,11 +263,11 @@ Both `interrupt()` and `interrupt_after`+`update_state` can pause a graph and in
 
 **Use `interrupt_after` + `update_state`** when the pause is a review point and the human is editing intermediate output. Draft review, retrieval curation, transcript correction. The node has already done its job; the human is modifying the output before the next node consumes it.
 
-You can also combine both in the same graph — an `interrupt()` for an approval decision, then an `interrupt_after` on a downstream node so the human can edit the tool's result before the model reads it. Any node graph can have any mix.
+You can also combine both in the same graph: an `interrupt()` for an approval decision, then an `interrupt_after` on a downstream node so the human can edit the tool's result before the model reads it. Any node graph can have any mix.
 
 ## What we covered
 
-- HITL requires a checkpointer (already covered in Chapter 5) — the pause has to save the state somewhere.
+- HITL requires a checkpointer (already covered in Chapter 5): the pause has to save the state somewhere.
 - `interrupt(payload)` inside a node halts the graph. Caller sees the payload in the returned state's `__interrupt__` key.
 - `Command(resume=value)` on the next `.invoke()` resumes the paused node with `value` as the return of `interrupt()`.
 - `interrupt_before=[node]` and `interrupt_after=[node]` at `.compile()` time create pause points without any special code in the nodes.

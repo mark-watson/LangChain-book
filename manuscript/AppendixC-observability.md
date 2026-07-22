@@ -28,7 +28,7 @@ For interactive development, `.stream()` output is more informative than dashboa
 
 ## Layer 3: OpenInference + Phoenix
 
-For everything more structured than "read the print output" — collecting traces from multiple users, comparing them across runs, dashboarding aggregate metrics — the open standard is [**OpenInference**](https://github.com/Arize-ai/openinference), an OpenTelemetry-based schema for LLM traces. Both LangChain and LlamaIndex ship OpenInference exporters.
+For everything more structured than "read the print output" (collecting traces from multiple users, comparing them across runs, dashboarding aggregate metrics), the open standard is [**OpenInference**](https://github.com/Arize-ai/openinference), an OpenTelemetry-based schema for LLM traces. Both LangChain and LlamaIndex ship OpenInference exporters.
 
 The receiver most people pair with them is [**Phoenix**](https://github.com/Arize-ai/phoenix) from Arize. It runs as a single Python process locally:
 
@@ -39,7 +39,7 @@ $ phoenix serve
 
 Point your LangChain / LlamaIndex OpenInference exporter at `http://localhost:6006` and every trace shows up in the Phoenix UI: prompts, responses, timings, tool calls, retrieval hits. Similar shape to LangSmith, no bill, runs on your laptop.
 
-If you outgrow Phoenix — you want a shared service across a team, or you want long retention — the same OpenInference traces can be shipped to any OpenTelemetry-compatible backend: Jaeger, Grafana Tempo, self-hosted or managed. This is one of the concrete arguments for staying on open standards: your instrumentation code does not change when your storage does.
+If you outgrow Phoenix (you want a shared service across a team, or you want long retention), the same OpenInference traces can be shipped to any OpenTelemetry-compatible backend: Jaeger, Grafana Tempo, self-hosted or managed. This is one of the concrete arguments for staying on open standards: your instrumentation code does not change when your storage does.
 
 ## Layer 4: what LangSmith gives you that Phoenix does not
 
@@ -48,7 +48,7 @@ To be honest about the tradeoff. LangSmith's differentiators over an OpenInferen
 - **Prompt versioning UI**, with diff and rollback. You can approximate this with Git.
 - **A "Playground" for iterating on prompts** against real traces. You can approximate this by pasting the prompt into whatever tool you use for interactive iteration.
 - **Managed retention and search across long time periods** without you running any infrastructure. You can approximate this by running Phoenix on a small VPS (Appendix D covers the practical setup).
-- **LangGraph Studio integration** — a graphical debugger for LangGraph runs. Free for local use; paid tiers for hosted. If you love graphical debuggers, worth trying even if you skip the rest of LangSmith.
+- **LangGraph Studio integration**: a graphical debugger for LangGraph runs. Free for local use; paid tiers for hosted. If you love graphical debuggers, worth trying even if you skip the rest of LangSmith.
 
 For a solo developer building small-to-medium projects, none of the above justify the subscription cost. For a five-person team building on top of LangGraph, it is a conversation worth having.
 

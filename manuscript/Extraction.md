@@ -69,7 +69,7 @@ $ ollama run qwen3.5:4b --think=false < two-shot-2.txt
 }
 ```
 
-Clean, bare JSON — nothing to strip before you can hand it to `json.loads()`. That is not the default behavior. Drop the "be concise" sentence — the file **two-shot-2-verbose.txt** is the same prompt without it — and run it again:
+Clean, bare JSON, with nothing to strip before you can hand it to `json.loads()`. That is not the default behavior. Drop the "be concise" sentence (the file **two-shot-2-verbose.txt** is the same prompt without it) and run it again:
 
 ```console
 $ ollama run qwen3.5:4b --think=false < two-shot-2-verbose.txt
@@ -82,9 +82,9 @@ $ ollama run qwen3.5:4b --think=false < two-shot-2-verbose.txt
 ```
 ```
 
-Same facts, but now wrapped in a Markdown code fence — harmless to a human reading a terminal, and a `JSONDecodeError` waiting to happen in code that expects bare JSON. One sentence in the prompt is the whole difference.
+Same facts, but now wrapped in a Markdown code fence: harmless to a human reading a terminal, and a `JSONDecodeError` waiting to happen in code that expects bare JSON. One sentence in the prompt is the whole difference.
 
-`--think=false` disables `qwen3.5`'s reasoning trace at the CLI level. Without it, `ollama run` prints several paragraphs of visible "thinking" before either answer — try it once to see what it looks like, then leave the flag on for anything you actually want to read. `person_data.py` below sets the same behavior through the Python API with `thinking=False`.
+`--think=false` disables `qwen3.5`'s reasoning trace at the CLI level. Without it, `ollama run` prints several paragraphs of visible "thinking" before either answer; try it once to see what it looks like, then leave the flag on for anything you actually want to read. `person_data.py` below sets the same behavior through the Python API with `thinking=False`.
 
 ## Example Code
 
@@ -94,7 +94,7 @@ To use this example we make the **Process Text** a variable that is replaced bef
 Process Text: "{input_text}"
 ```
 
-Now let's wrap these ideas up in a short Python example. `source-code/extraction/person_data.py` uses LangChain 1.0's structured output instead of hand-parsing JSON out of a text completion — you give it a Pydantic model, and `.with_structured_output()` handles getting the model to fill it in correctly:
+Now let's wrap these ideas up in a short Python example. `source-code/extraction/person_data.py` uses LangChain 1.0's structured output instead of hand-parsing JSON out of a text completion: you give it a Pydantic model, and `.with_structured_output()` handles getting the model to fill it in correctly:
 
 ```python
 from pydantic import BaseModel, Field
@@ -126,7 +126,7 @@ result = structured_llm.invoke(prompt)
 print(result)
 ```
 
-`prompt.txt` here is the same two-shot template as `two-shot-2-var.txt`, just kept alongside the script instead of in `prompt_examples/`. `.with_structured_output(PersonData)` wraps the model so that instead of returning an `AIMessage` you get back a validated `PersonData` instance directly — no JSON parsing, no code fence to strip, no missing-field bugs, because Pydantic raises immediately if the model's output does not fit the schema. This is strictly more reliable than the prompt-only approach above; the two-shot examples in the prompt still help, but the schema is now enforced in code rather than requested in English.
+`prompt.txt` here is the same two-shot template as `two-shot-2-var.txt`, just kept alongside the script instead of in `prompt_examples/`. `.with_structured_output(PersonData)` wraps the model so that instead of returning an `AIMessage` you get back a validated `PersonData` instance directly: no JSON parsing, no code fence to strip, no missing-field bugs, because Pydantic raises immediately if the model's output does not fit the schema. This is strictly more reliable than the prompt-only approach above; the two-shot examples in the prompt still help, but the schema is now enforced in code rather than requested in English.
 
 The output looks like:
 
@@ -135,7 +135,7 @@ $ uv run person_data.py
 name='Mark Johnson' address='102 Dunston Street, Berkeley California' email='mjess@foobar.com'
 ```
 
-That is Pydantic's default `repr()` for the `PersonData` object — `result.name`, `result.address`, and `result.email` are ordinary typed attributes, ready to use without any parsing step.
+That is Pydantic's default `repr()` for the `PersonData` object; `result.name`, `result.address`, and `result.email` are ordinary typed attributes, ready to use without any parsing step.
 
 ## From One Record to Many: CSV to JSON
 
@@ -177,7 +177,7 @@ for person in result.people:
     print(person)
 ```
 
-`test.csv` is deliberately messy — inconsistent quoting, inconsistent spacing — the kind of file you actually get from someone's ad hoc export rather than a clean data pipeline:
+`test.csv` is deliberately messy (inconsistent quoting, inconsistent spacing), the kind of file you actually get from someone's ad hoc export rather than a clean data pipeline:
 
 ```csv
 last_name,first_name,email
@@ -186,7 +186,7 @@ Jordan,Michael,"mike@retired.com"
 Smith, John, john@acme41.com
 ```
 
-A hand-written CSV parser would need explicit rules for the quoting inconsistencies and the stray leading space before `John`. The LLM does not care — it reads the file as text and fills in the schema:
+A hand-written CSV parser would need explicit rules for the quoting inconsistencies and the stray leading space before `John`. The LLM does not care: it reads the file as text and fills in the schema:
 
 ```console
 $ uv run csv_to_json.py
@@ -195,10 +195,10 @@ last_name='Jordan' first_name='Michael' email='mike@retired.com'
 last_name='Smith' first_name='John' email='john@acme41.com'
 ```
 
-`PersonRecords.people` is a plain Python list of `PersonRecord` objects — no per-row LLM calls, no manual JSON assembly, and the same reliability guarantee as the single-record example: if the model's response does not fit the schema, Pydantic raises rather than handing you a malformed record. For a handful of rows like this, one call is plenty; for a much larger file you would chunk it and call `.with_structured_output()` once per chunk rather than trying to fit thousands of rows in a single prompt.
+`PersonRecords.people` is a plain Python list of `PersonRecord` objects, with no per-row LLM calls, no manual JSON assembly, and the same reliability guarantee as the single-record example: if the model's response does not fit the schema, Pydantic raises rather than handing you a malformed record. For a handful of rows like this, one call is plenty; for a much larger file you would chunk it and call `.with_structured_output()` once per chunk rather than trying to fit thousands of rows in a single prompt.
 
 ## What we covered
 
 - A two-shot prompt is a fast way to prototype an extraction task before writing any code, and small instructions inside it (like "be concise") change the shape of the output, not just its tone.
 - `.with_structured_output(PydanticModel)` moves schema enforcement from the prompt into code: the model still does the extraction, but a malformed response raises instead of silently producing bad JSON.
-- The same pattern extracts one object from a paragraph or a list of objects from a whole file — wrap the per-item model in a container model and let the LLM read the input as unstructured text, regardless of how messy its formatting is.
+- The same pattern extracts one object from a paragraph or a list of objects from a whole file: wrap the per-item model in a container model and let the LLM read the input as unstructured text, regardless of how messy its formatting is.

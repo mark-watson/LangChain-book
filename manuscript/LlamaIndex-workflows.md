@@ -2,18 +2,18 @@
 
 LlamaIndex used to compose multi-step LLM applications by chaining query engines together with Python glue code. That was fine when applications were simple. Once anything needed branching, retries, or shared state across steps, the chain-of-query-engines pattern started to fall over.
 
-The 2026 answer is **Workflows** — LlamaIndex's own event-driven step-composition API. Structurally it plays the same role in LlamaIndex that LangGraph plays in the LangChain ecosystem: an explicit graph of small typed steps that orchestrates whatever the higher-level components (query engines, agents, retrievers) do individually.
+The 2026 answer is **Workflows**, LlamaIndex's own event-driven step-composition API. Structurally it plays the same role in LlamaIndex that LangGraph plays in the LangChain ecosystem: an explicit graph of small typed steps that orchestrates whatever the higher-level components (query engines, agents, retrievers) do individually.
 
-The two APIs solve the same problem with slightly different vocabularies. LangGraph is state-machine flavored — you define a state schema, nodes update it, edges route based on it. Workflows is event-flavored — steps consume typed events and produce other typed events; routing happens implicitly through the type system. Both can express the same set of programs. Which one feels more natural depends on your background and the shape of the specific problem.
+The two APIs solve the same problem with slightly different vocabularies. LangGraph is state-machine flavored: you define a state schema, nodes update it, edges route based on it. Workflows is event-flavored: steps consume typed events and produce other typed events; routing happens implicitly through the type system. Both can express the same set of programs. Which one feels more natural depends on your background and the shape of the specific problem.
 
 Everything in this chapter lives in `source-code/llama_index_workflows/`.
 
 ## The four primitives
 
-- **`Workflow`** — a class you subclass. Its `@step` methods are the units of work.
-- **`Event`** — the messages that flow between steps. Every step takes exactly one event and returns one event.
-- **`StartEvent`** and **`StopEvent`** — special events. The step that accepts a `StartEvent` runs first when you call `.run()`; a step that returns a `StopEvent` ends the workflow.
-- **`Context`** — an optional shared state object available to every step (analogous to LangGraph's state). Not used in the first three examples in this chapter; we introduce it in Chapter 16 when we need it.
+- **`Workflow`**: a class you subclass. Its `@step` methods are the units of work.
+- **`Event`**: the messages that flow between steps. Every step takes exactly one event and returns one event.
+- **`StartEvent`** and **`StopEvent`**: special events. The step that accepts a `StartEvent` runs first when you call `.run()`; a step that returns a `StopEvent` ends the workflow.
+- **`Context`**: an optional shared state object available to every step (analogous to LangGraph's state). Not used in the first three examples in this chapter; we introduce it in Chapter 16 when we need it.
 
 That is the whole surface. Workflows are asynchronous by default, which is why every step method is `async` and every top-level call is wrapped in `asyncio.run()`.
 
@@ -94,7 +94,7 @@ async def main():
 asyncio.run(main())
 ```
 
-The `uppercase` step returns an `UpperEvent`; the `reverse` step takes an `UpperEvent` as input. The framework matches them automatically. This is the whole edge-declaration mechanism — no `add_edge("uppercase", "reverse")` anywhere. Rearranging or renaming steps does not require touching the wiring, because there is no explicit wiring.
+The `uppercase` step returns an `UpperEvent`; the `reverse` step takes an `UpperEvent` as input. The framework matches them automatically. This is the whole edge-declaration mechanism: no `add_edge("uppercase", "reverse")` anywhere. Rearranging or renaming steps does not require touching the wiring, because there is no explicit wiring.
 
 ## Branching by event type
 
@@ -122,7 +122,7 @@ This is LlamaIndex's equivalent of LangGraph's `add_conditional_edges`. Same exp
 
 ## A three-step LLM workflow
 
-Putting it together with a real model. `04_llm_workflow.py` is a classify-then-answer-or-decline pattern — one of the most common shapes for content-moderation or routing workflows.
+Putting it together with a real model. `04_llm_workflow.py` is a classify-then-answer-or-decline pattern, one of the most common shapes for content-moderation or routing workflows.
 
 ```python
 class TopicRoutingWorkflow(Workflow):
@@ -158,7 +158,7 @@ class TopicRoutingWorkflow(Workflow):
         )
 ```
 
-The workflow instantiates its own LLM in `__init__` — that is one common pattern; another is to pass the LLM in as a constructor argument if you want to swap it. Every step is `async` and every LLM call uses the async variant (`.acomplete`, `.achat`) — that is the idiomatic style and it lets the workflow parallelize steps automatically if the graph allows.
+The workflow instantiates its own LLM in `__init__`, which is one common pattern; another is to pass the LLM in as a constructor argument if you want to swap it. Every step is `async` and every LLM call uses the async variant (`.acomplete`, `.achat`); that is the idiomatic style and it lets the workflow parallelize steps automatically if the graph allows.
 
 `.run(question=q)` accepts a `timeout` in the workflow constructor (`TopicRoutingWorkflow(timeout=120.0)` above); LLM calls can be slow on cold Ollama, and the default 10-second timeout will trip on a first call.
 
@@ -167,17 +167,17 @@ The workflow instantiates its own LLM in `__init__` — that is one common patte
 I have not shipped enough production systems on Workflows to make strong claims yet. What I can say from prototyping both:
 
 - **LangGraph's `StateGraph` is easier to explain in one sitting.** You have a state dict; nodes update it; edges route based on it. That maps directly onto the state-machine mental model that most programmers already have.
-- **LlamaIndex Workflows are easier to iterate on.** Adding a step means adding a class and a `@step` method — no wiring changes. Reorganizing the flow is often a matter of renaming event types. This friction difference matters when you are still figuring out what the workflow should do.
+- **LlamaIndex Workflows are easier to iterate on.** Adding a step means adding a class and a `@step` method, with no wiring changes. Reorganizing the flow is often a matter of renaming event types. This friction difference matters when you are still figuring out what the workflow should do.
 - **Both are fully open source.** No hosted-service dependency for either. Both work with Ollama and with hosted models.
 
-If your app is already LlamaIndex-heavy (query engines, indices, LlamaHub readers) — use Workflows. If it is already LangChain-heavy — use LangGraph. If you are starting from scratch, try both on a small prototype and pick the one whose ergonomics fit better.
+If your app is already LlamaIndex-heavy (query engines, indices, LlamaHub readers), use Workflows. If it is already LangChain-heavy, use LangGraph. If you are starting from scratch, try both on a small prototype and pick the one whose ergonomics fit better.
 
 ## What we covered
 
 - Workflows are event-driven step composition: subclass `Workflow`, decorate methods with `@step`, use type annotations to wire.
-- The framework matches producer and consumer steps by event type — no explicit edge declarations.
+- The framework matches producer and consumer steps by event type, with no explicit edge declarations.
 - Branching is a step whose return type is a union of possible events.
 - Every step is `async`; every top-level run is wrapped in `asyncio.run`.
 - Workflows and LangGraph solve the same problem with different styles. Pick based on the rest of your stack.
 
-Chapter 16 uses Workflows to build a proper ReAct agent — LlamaIndex's answer to Chapter 4's LangGraph ReAct agent.
+Chapter 16 uses Workflows to build a proper ReAct agent, LlamaIndex's answer to Chapter 4's LangGraph ReAct agent.

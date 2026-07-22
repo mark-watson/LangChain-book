@@ -105,7 +105,7 @@ This is the shape of nearly every "migrate a folder of unstructured notes into a
 
 ## When to reach for this vs a chat model with tools
 
-`structured_predict` and tool-calling look similar — both make the model output structured data. The difference is what you do with the result.
+`structured_predict` and tool-calling look similar: both make the model output structured data. The difference is what you do with the result.
 
 - **`structured_predict`** returns a Pydantic object directly. Use it when the LLM's job is to *produce* structured data as the final answer.
 - **Tool calling** (Chapters 4 and 16) returns tool call requests that you then execute. Use it when the LLM's job is to *decide* to do something that produces data.
@@ -115,8 +115,8 @@ There is overlap. A ReAct agent whose final answer is a Pydantic object is a val
 ## What we covered
 
 - `llm.structured_predict(SchemaClass, prompt, **vars)` extracts a validated Pydantic object from unstructured text in one call.
-- Field descriptions on the Pydantic model are part of the prompt — treat them carefully.
+- Field descriptions on the Pydantic model are part of the prompt, so treat them carefully.
 - Optional fields with `default=None` prevent the model from hallucinating missing values.
 - Batch extraction is just the same primitive in a loop; use `astructured_predict` for concurrency when needed.
 
-Chapter 19 wraps up Part II by deploying a workflow as a service with plain FastAPI — one process, no cloud.
+Chapter 19 wraps up Part II by deploying a workflow as a service with plain FastAPI: one process, no cloud.

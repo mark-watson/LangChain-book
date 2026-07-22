@@ -1,8 +1,8 @@
 # DBpedia and Wikidata as agent tools
 
-Two of the largest and most useful public knowledge graphs on the internet are [DBpedia](https://www.dbpedia.org) and [Wikidata](https://www.wikidata.org). Both are free to query, both use RDF as their data model, both speak SPARQL, and neither requires an API key. For a solo developer building anything that needs grounded factual data — people, places, organizations, dates, relationships — they are close to unbeatable, and they compose beautifully with LangGraph agents. This chapter builds one small agent per KG and shows how to give the model SPARQL as a tool.
+Two of the largest and most useful public knowledge graphs on the internet are [DBpedia](https://www.dbpedia.org) and [Wikidata](https://www.wikidata.org). Both are free to query, both use RDF as their data model, both speak SPARQL, and neither requires an API key. For a solo developer building anything that needs grounded factual data (people, places, organizations, dates, relationships), they are close to unbeatable, and they compose beautifully with LangGraph agents. This chapter builds one small agent per KG and shows how to give the model SPARQL as a tool.
 
-The previous edition of this chapter used the old `GPTSimpleVectorIndex` / `GPTTreeIndex` classes from LlamaIndex to wrap SPARQL results in an embedding index and query them as text. That was a workable pattern in 2023, but both classes have long since been removed from LlamaIndex, and the modern replacement — a ReAct agent that calls SPARQL directly — is simpler and answers a wider range of questions. It is also faster: no embedding step, no index build, no round trip through a vector store.
+The previous edition of this chapter used the old `GPTSimpleVectorIndex` / `GPTTreeIndex` classes from LlamaIndex to wrap SPARQL results in an embedding index and query them as text. That was a workable pattern in 2023, but both classes have long since been removed from LlamaIndex, and the modern replacement, a ReAct agent that calls SPARQL directly, is simpler and answers a wider range of questions. It is also faster: no embedding step, no index build, no round trip through a vector store.
 
 I am not going to teach SPARQL from scratch here. If you have never used it before, the short version is:
 
@@ -18,8 +18,8 @@ For a deeper introduction, the "Linked Data, the Semantic Web, and Knowledge Gra
 
 Two agents, one per KG. Both live in `source-code/kg_agent/`. Each has two tools:
 
-- **`find_entity(name)`** — search the KG by label and return candidate URIs (DBpedia) or QIDs (Wikidata).
-- **`run_sparql(query)`** — execute a SPARQL query and return the raw bindings as JSON.
+- **`find_entity(name)`**: search the KG by label and return candidate URIs (DBpedia) or QIDs (Wikidata).
+- **`run_sparql(query)`**: execute a SPARQL query and return the raw bindings as JSON.
 
 The agent's job is to first look up the entities its question mentions to get their identifiers, then write a SPARQL query using those identifiers, then execute it. Setup:
 
@@ -117,11 +117,11 @@ def build_dbpedia_agent():
 
 Three things to notice.
 
-**`SPARQLWrapper` handles the transport.** It POSTs the query to the endpoint, requests JSON back, and parses the response. Setting the `agent` string is worth doing — the DBpedia endpoint occasionally rate-limits requests that use its default user-agent, and a custom one is polite besides.
+**`SPARQLWrapper` handles the transport.** It POSTs the query to the endpoint, requests JSON back, and parses the response. Setting the `agent` string is worth doing: the DBpedia endpoint occasionally rate-limits requests that use its default user-agent, and a custom one is polite besides.
 
 **`find_entity` uses `json.dumps(name)` to escape the search string.** SPARQL string literals use quotes and are vulnerable to injection the same way SQL strings are. `json.dumps` produces a properly-escaped, double-quoted string, and SPARQL accepts JSON-style string literals.
 
-**`run_sparql` truncates results to 20 rows.** The DBpedia endpoint can return thousands of rows for a broad query, which would blow past the model's context window. Twenty is a compromise — enough to answer most questions, small enough that the model can inspect the results directly.
+**`run_sparql` truncates results to 20 rows.** The DBpedia endpoint can return thousands of rows for a broad query, which would blow past the model's context window. Twenty is a compromise: enough to answer most questions, small enough that the model can inspect the results directly.
 
 The driver script, `01_dbpedia_agent.py`, is short:
 
@@ -187,12 +187,12 @@ The `wikibase:label` service at the end automatically populates `?itemLabel` and
 
 **The system prompt calls out common properties.** Wikidata's properties are numbered (P31, P569, ...) and there is no way for a model to guess them without looking them up. The prompt seeds the agent with the ones it is likely to need:
 
-- `wdt:P31` — instance of
-- `wdt:P39` — position held
-- `wdt:P580` / `wdt:P582` — start / end time
-- `wdt:P17` — country
-- `wdt:P569` — date of birth
-- `wdt:P106` — occupation
+- `wdt:P31`: instance of
+- `wdt:P39`: position held
+- `wdt:P580` / `wdt:P582`: start / end time
+- `wdt:P17`: country
+- `wdt:P569`: date of birth
+- `wdt:P106`: occupation
 
 You could instead give the agent a third tool for looking up property IDs by name (the `EntitySearch` API returns properties as well as entities), and I have shipped versions of this agent both ways. Baking common properties into the prompt keeps this example short; a real project would probably want the extra tool.
 
@@ -234,7 +234,7 @@ Which one to reach for depends on the question.
 - **DBpedia** is easier to explore because URIs are readable (`dbr:Germany` instead of `wd:Q183`) and its property names are English words (`dbo:borders` instead of `wdt:P47`). Great for prototyping and for questions that mostly involve English-language Western topics.
 - **Wikidata** has broader coverage, more languages, and more reliable up-to-date data because its edits are curated. Its query patterns are more verbose but its data is generally cleaner.
 
-In practice I use DBpedia when I am writing a query interactively — its readable URIs are nicer to reason about — and Wikidata when I need coverage or freshness. An agent can be given tools for both, if a query needs it; you would just add both tool sets to a single `create_react_agent` call.
+In practice I use DBpedia when I am writing a query interactively (its readable URIs are nicer to reason about) and Wikidata when I need coverage or freshness. An agent can be given tools for both, if a query needs it; you would just add both tool sets to a single `create_react_agent` call.
 
 ## Where to take this next
 
@@ -242,12 +242,12 @@ Everything you learned in Chapters 4 through 7 composes with these KG agents:
 
 - **Add a checkpointer** (Chapter 5) for follow-up questions across turns. "Which of those countries has the largest population?" makes sense as a second turn only if the agent remembers the first answer.
 - **Add an approval interrupt** (Chapter 6) if the KG could ever return sensitive information you want a human to see before it goes to the user.
-- **Add these tools to a supervisor graph** (Chapter 7) as a "facts specialist" alongside your other specialists. This is the pattern I use most often — the KG agent is one of several specialists a supervisor can call on for grounded factual data.
+- **Add these tools to a supervisor graph** (Chapter 7) as a "facts specialist" alongside your other specialists. This is the pattern I use most often: the KG agent is one of several specialists a supervisor can call on for grounded factual data.
 
 ## What we covered
 
 - DBpedia and Wikidata are large public knowledge graphs with SPARQL endpoints and no API keys.
-- Giving a LangGraph agent two tools — entity lookup and SPARQL execution — turns SPARQL into an accessible skill for an LLM that does not know SPARQL by heart.
+- Giving a LangGraph agent two tools (entity lookup and SPARQL execution) turns SPARQL into an accessible skill for an LLM that does not know SPARQL by heart.
 - DBpedia is friendlier to prototype against; Wikidata has better coverage and cleaner data.
 - The pattern is identical for both KGs and composes with checkpointers, HITL, and supervisor graphs from earlier chapters.
 

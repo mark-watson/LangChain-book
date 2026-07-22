@@ -31,7 +31,7 @@ Everything above is open source. Nothing costs money except the VPS rental.
 
 ## Systemd unit for a LangGraph app
 
-Assuming your app is a FastAPI server that listens on `127.0.0.1:8000` — the same shape as the deployment chapter's `01_serve_workflow.py`:
+Assuming your app is a FastAPI server that listens on `127.0.0.1:8000`, the same shape as the deployment chapter's `01_serve_workflow.py`:
 
 ```ini
 # /etc/systemd/system/myapp.service
@@ -75,13 +75,13 @@ A concrete example. Suppose your app makes 10,000 LLM calls per month, averaging
 - **Domain name:** ~$12/year, so $1/month.
 - **Backups** (a cheap object storage bucket for daily snapshots of the vector store and any persistent data): $0.50/month.
 
-Total: under $15/month for an app that serves 10,000 real interactions. If usage doubles, the VPS bill stays the same and only the LLM bill scales — and even at 100,000 calls/month you are still under $60/month total.
+Total: under $15/month for an app that serves 10,000 real interactions. If usage doubles, the VPS bill stays the same and only the LLM bill scales; even at 100,000 calls/month you are still under $60/month total.
 
 For comparison: a single-seat LangSmith Plus subscription in 2026 is $39/month, plus per-trace usage. That budget alone covers your entire hosting and inference stack in this setup.
 
 ## Backups
 
-The one thing worth spending time on. Whatever the app persists — SQLite databases from Chapter 5, Chroma directories, LlamaIndex `storage/` folders — should be backed up daily. Simplest reliable pattern:
+The one thing worth spending time on. Whatever the app persists (SQLite databases from Chapter 5, Chroma directories, LlamaIndex `storage/` folders) should be backed up daily. Simplest reliable pattern:
 
 ```bash
 # /etc/cron.daily/myapp-backup
@@ -91,7 +91,7 @@ rclone move /tmp/myapp-*.tar.gz remote:myapp-backups/
 find /tmp -name 'myapp-*.tar.gz' -mtime +7 -delete
 ```
 
-`rclone` supports every object storage provider; a 10 GB backup bucket at Backblaze B2 or Cloudflare R2 is under $0.50/month. Test the restore path at least once — an untested backup is not a backup.
+`rclone` supports every object storage provider; a 10 GB backup bucket at Backblaze B2 or Cloudflare R2 is under $0.50/month. Test the restore path at least once: an untested backup is not a backup.
 
 ## When to leave the $5 VPS
 
