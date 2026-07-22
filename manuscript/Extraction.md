@@ -139,7 +139,7 @@ That is Pydantic's default `repr()` for the `PersonData` object — `result.name
 
 ## From One Record to Many: CSV to JSON
 
-The same technique extends past single paragraphs of prose. `source-code/extraction/csv_to_json.py` takes a whole CSV file — several rows at once — and extracts a *list* of structured records in a single call, by wrapping the per-row model in a container model:
+The same technique extends past single paragraphs of prose. `source-code/extraction/csv_to_json.py` takes a whole CSV file (or several rows at once) and extracts a *list* of structured records in a single call, by wrapping the per-row model in a container model:
 
 ```python
 from pydantic import BaseModel, Field
