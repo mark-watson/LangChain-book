@@ -44,7 +44,7 @@ class QAWorkflow(Workflow):
         return StopEvent(result=reply.text.strip())
 ```
 
-One step, one LLM call. In a real deployment this would be your actual workflow: a RAG pipeline, a ReAct agent, a multi-step research workflow. Nothing about the workflow class itself changes when you serve it; that is the point of the Workflow abstraction from Chapter 15.
+One step, one LLM call. In a real deployment this would be your actual workflow: a RAG pipeline, a ReAct agent, a multi-step research workflow. Nothing about the workflow class itself changes when you serve it; that is the point of the Workflow abstraction from Chapter "The Workflows API".
 
 ## Terminal 1: the server
 

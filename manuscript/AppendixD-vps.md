@@ -81,7 +81,7 @@ For comparison: a single-seat LangSmith Plus subscription in 2026 is $39/month, 
 
 ## Backups
 
-The one thing worth spending time on. Whatever the app persists (SQLite databases from Chapter 5, Chroma directories, LlamaIndex `storage/` folders) should be backed up daily. Simplest reliable pattern:
+The one thing worth spending time on. Whatever the app persists (SQLite databases from Chapter "Durable, restart-safe agents", Chroma directories, LlamaIndex `storage/` folders) should be backed up daily. Simplest reliable pattern:
 
 ```bash
 # /etc/cron.daily/myapp-backup

@@ -1,6 +1,6 @@
 # Durable, restart-safe agents
 
-The agents from Chapter 4 have one important limitation: they forget everything the moment the Python process exits. If you build a chatbot on top of `create_react_agent`, every user turn starts from scratch, with no memory of the previous message, let alone yesterday's conversation. That is a script, not a service.
+The agents from Chapter "Building a ReAct agent with LangGraph + Ollama" have one important limitation: they forget everything the moment the Python process exits. If you build a chatbot on top of `create_react_agent`, every user turn starts from scratch, with no memory of the previous message, let alone yesterday's conversation. That is a script, not a service.
 
 LangGraph fixes this with one concept: the **checkpointer**. You pass a checkpointer to `.compile()`, you thread a `thread_id` through your invoke config, and now every step of your graph (every state update from every node) gets serialized to whatever storage the checkpointer manages. Multi-turn conversations remember previous turns. Interrupted work resumes where it stopped. Crashed processes come back up mid-transaction with no lost state.
 
@@ -58,7 +58,7 @@ def build_graph() -> StateGraph:
     return graph
 ```
 
-Deliberately the smallest useful graph: `MessagesState`-style transcript, one node that calls the model on it. No tools. The tool-calling ReAct loop from Chapter 4 works exactly the same way once you add a checkpointer, but starting simple lets us focus on what the checkpointer does.
+Deliberately the smallest useful graph: `MessagesState`-style transcript, one node that calls the model on it. No tools. The tool-calling ReAct loop from Chapter "Building a ReAct agent with LangGraph + Ollama" works exactly the same way once you add a checkpointer, but starting simple lets us focus on what the checkpointer does.
 
 `build_graph()` returns an uncompiled `StateGraph`. Each script compiles it with a different checkpointer.
 
@@ -90,7 +90,7 @@ for user_turn in turns:
     print(f"AGENT: {reply.content.strip()}\n")
 ```
 
-Two things are new relative to Chapter 3's `04_llm_in_a_node.py`.
+Two things are new relative to the "LangGraph 1.0 fundamentals" chapter's `04_llm_in_a_node.py`.
 
 **The `checkpointer=` argument to `.compile()`.** Without a checkpointer, each `.invoke()` call starts from a fresh empty state. With one, `.invoke()` looks up the state for the configured thread, appends the new input, runs the graph, and saves the resulting state before returning.
 
@@ -252,4 +252,4 @@ After running scripts 2 and 3, this shows the current transcript and then a summ
 - The state survives full Python process restarts with no extra code.
 - `.get_state()` and `.get_state_history()` expose the recorded state for inspection and time-travel.
 
-Chapter 6 uses this same mechanism to build human-in-the-loop patterns: pause the graph mid-run with `interrupt()`, hand control back to your calling code (or a human), edit the checkpoint, then resume from where you stopped. Every one of those capabilities is a direct consequence of the checkpointer machinery in this chapter.
+Chapter "Human-in-the-loop patterns" uses this same mechanism: pause the graph mid-run with `interrupt()`, hand control back to your calling code (or a human), edit the checkpoint, then resume from where you stopped. Every one of those capabilities is a direct consequence of the checkpointer machinery in this chapter.

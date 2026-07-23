@@ -108,7 +108,7 @@ This is the shape of nearly every "migrate a folder of unstructured notes into a
 `structured_predict` and tool-calling look similar: both make the model output structured data. The difference is what you do with the result.
 
 - **`structured_predict`** returns a Pydantic object directly. Use it when the LLM's job is to *produce* structured data as the final answer.
-- **Tool calling** (Chapters 4 and 16) returns tool call requests that you then execute. Use it when the LLM's job is to *decide* to do something that produces data.
+- **Tool calling** (Chapters "Building a ReAct agent with LangGraph + Ollama" and "Building an agent as a Workflow") returns tool call requests that you then execute. Use it when the LLM's job is to *decide* to do something that produces data.
 
 There is overlap. A ReAct agent whose final answer is a Pydantic object is a valid pattern. But if all you need is "text in, structured record out," `structured_predict` is dramatically simpler.
 
@@ -119,4 +119,4 @@ There is overlap. A ReAct agent whose final answer is a Pydantic object is a val
 - Optional fields with `default=None` prevent the model from hallucinating missing values.
 - Batch extraction is just the same primitive in a loop; use `astructured_predict` for concurrency when needed.
 
-Chapter 19 wraps up Part II by deploying a workflow as a service with plain FastAPI: one process, no cloud.
+Chapter "Serving a Workflow with FastAPI" wraps up Part II by deploying a workflow as a service with plain FastAPI: one process, no cloud.

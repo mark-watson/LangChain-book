@@ -1,6 +1,6 @@
 # Natural-language SQLite
 
-The previous edition of this chapter used `SQLDatabaseChain` from `langchain_experimental.sql`. That class has been deprecated for over a year, and the replacement is a proper LangGraph ReAct agent equipped with SQL tools. The new version is more code but strictly better along every axis: the agent inspects the schema before writing queries, checks its own SQL for mistakes, retries on errors, and stays entirely within the primitives you have already learned in Chapters 3 through 7.
+The previous edition of this chapter used `SQLDatabaseChain` from `langchain_experimental.sql`. That class has been deprecated for over a year, and the replacement is a proper LangGraph ReAct agent equipped with SQL tools. The new version is more code but strictly better along every axis: the agent inspects the schema before writing queries, checks its own SQL for mistakes, retries on errors, and stays entirely within the primitives you have already learned in Chapters "LangGraph 1.0 fundamentals" through "Multi-agent supervisor pattern".
 
 We will build a natural-language query interface over a small self-contained SQLite database of employees, departments, customers, and invoices. Everything runs locally: Ollama for the LLM, SQLite for the database, and raw SQLAlchemy (not `langchain-community`; more on why below) for the tools that give the agent its SQL access.
 
@@ -311,8 +311,8 @@ Adapting this to a real project is a small number of changes:
 
 - **Point at a different database.** Change the URI passed to `sa.create_engine(...)`. SQLAlchemy speaks PostgreSQL, MySQL, SQL Server, Snowflake, BigQuery, and everything else the reader is likely to have; nothing else in `make_sql_tools` or `build_sql_agent` needs to change.
 - **Restrict which tables the agent can see.** `metadata.reflect(bind=engine, only=[...])` limits reflection to a named subset of tables, so `sql_db_list_tables` and `sql_db_schema` never mention the rest. Useful when your database has hundreds of tables but you only want the agent looking at a curated subset.
-- **Add an approval interrupt on `sql_db_query`.** Wrap the tool node with the pattern from Chapter 6 to require human approval on any query that touches specific tables, or on any query whose EXPLAIN plan is expensive.
-- **Add a checkpointer.** Chapter 5's `SqliteSaver` gives the agent per-thread conversation memory, useful when users ask a series of related questions ("...and what about last quarter?").
+- **Add an approval interrupt on `sql_db_query`.** Wrap the tool node with the pattern from Chapter "Human-in-the-loop patterns" to require human approval on any query that touches specific tables, or on any query whose EXPLAIN plan is expensive.
+- **Add a checkpointer.** The "Durable, restart-safe agents" chapter's `SqliteSaver` gives the agent per-thread conversation memory, useful when users ask a series of related questions ("...and what about last quarter?").
 
 ## What we covered
 
@@ -322,4 +322,4 @@ Adapting this to a real project is a small number of changes:
 - `create_react_agent(model, tools, prompt=SYSTEM_PROMPT)` is the whole agent; every other primitive (checkpointer, HITL interrupts, supervisor) from earlier chapters composes with it directly.
 - `.stream()` is the primary debugging tool. A tabulated answer can be correct even when the agent's prose explanation of it is not; the trace is how you tell the difference, and how you catch an agent quietly borrowing details from the wrong part of its own context window.
 
-Chapter 9 leaves relational data behind for the semantic web: DBpedia and Wikidata as agent tools, with SPARQL as the query language.
+Chapter "DBpedia and Wikidata as agent tools" leaves relational data behind for the semantic web, with SPARQL as the query language.

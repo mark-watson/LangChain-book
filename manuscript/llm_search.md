@@ -12,7 +12,7 @@ Five nodes, one long straight edge, no conditional routing:
 START -> search -> filter -> fetch -> summarize -> synthesize -> END
 ```
 
-Each node takes state in and produces a partial state update, the same shape as every graph in Chapters 3 through 9. The state accumulates as the pipeline runs:
+Each node takes state in and produces a partial state update, the same shape as every graph in Chapters "LangGraph 1.0 fundamentals" through "DBpedia and Wikidata as agent tools". The state accumulates as the pipeline runs:
 
 | Field after node | Contents |
 |---|---|
@@ -238,7 +238,7 @@ Streaming makes it very easy to see which stage is slow (usually summarize, occa
 
 ## Extending this
 
-Everything from Chapters 5, 6, and 7 composes with this pipeline:
+Everything from Chapters "Durable, restart-safe agents", "Human-in-the-loop patterns", and "Multi-agent supervisor pattern" composes with this pipeline:
 
 - **Add a checkpointer** and a `thread_id` so follow-up questions can reference prior searches ("of those, which is the cheapest option?"). The current graph has no memory between invocations.
 - **Add an approval interrupt** before `fetch` if you want a human to prune the URL list before you spend the time on downloads.
@@ -250,12 +250,12 @@ You can also swap the search backend. `ddgs` is the free default; if you want mo
 
 Part I has been a tour of what a solo developer can build with LangChain 1.0 and LangGraph 1.0 as open source libraries, without any of the commercial services LangChain Inc. sells on top. The primitives covered:
 
-- Chat models, `.invoke`/`.stream`/`.batch`, LCEL, prompts, structured output, tool binding (Chapter 1).
-- Retrieval patterns for RAG (Chapter 2).
-- LangGraph state machines: state, nodes, reducers, conditional edges (Chapter 3).
-- ReAct agents built on those primitives (Chapter 4).
-- Durability via checkpointers (Chapter 5), HITL via interrupts and state editing (Chapter 6), multi-agent supervisor patterns (Chapter 7).
-- Applied to a SQL database (Chapter 8), knowledge graphs (Chapter 9), and web search (this chapter).
+- Chat models, `.invoke`/`.stream`/`.batch`, LCEL, prompts, structured output, tool binding (Chapter "LangChain 1.0 in one hour").
+- Retrieval patterns for RAG (Chapter "RAG patterns with LangChain").
+- LangGraph state machines: state, nodes, reducers, conditional edges (Chapter "LangGraph 1.0 fundamentals").
+- ReAct agents built on those primitives (Chapter "Building a ReAct agent with LangGraph + Ollama").
+- Durability via checkpointers (Chapter "Durable, restart-safe agents"), HITL via interrupts and state editing (Chapter "Human-in-the-loop patterns"), multi-agent supervisor patterns (Chapter "Multi-agent supervisor pattern").
+- Applied to a SQL database (Chapter "Natural-language SQLite"), knowledge graphs (Chapter "DBpedia and Wikidata as agent tools"), and web search (this chapter).
 
 Everything above runs on your laptop with the packages listed in "The Stack We're Building On." No LangSmith, no LangGraph Cloud, no LangSmith Deployment, no LlamaCloud, no LlamaParse.
 
