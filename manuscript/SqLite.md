@@ -42,7 +42,7 @@ That set is deliberately narrow. The agent has enough tooling to *read* the data
 
 ## Building the agent
 
-`source-code/sql_agent/_agent.py`:
+We start by writing the agent library used by the later examples in this chapter `source-code/sql_agent/_agent.py`:
 
 ```python
 import sqlalchemy as sa
@@ -163,7 +163,7 @@ Four configuration decisions worth spelling out.
 
 **The system prompt.** The six-step procedure is not optional. Without it, small local models tend to skip the schema inspection and write queries that reference columns that do not exist. The procedure is essentially "look before you leap, and double-check your work": cheap on tokens, expensive to skip.
 
-**The prohibition on DML.** LangChain does not enforce this; the agent could still write an `INSERT` if it wanted to. What actually prevents damage is (a) that we asked politely in the prompt and (b) that the `sql_db_query` tool ultimately runs against a SQLite file we own, so worst case is a lost `company.db` we regenerate. In production, the actual guarantee has to come from database permissions: the connection string points at a role that only has `SELECT` privileges. The prompt is a belt-and-suspenders layer, not the primary defense.
+**The prohibition on Data Manipulation Language (DML).** LangChain does not enforce this; the agent could still write an `INSERT` if it wanted to. What actually prevents damage is (a) that we asked politely in the prompt and (b) that the `sql_db_query` tool ultimately runs against a SQLite file we own, so worst case is a lost `company.db` we regenerate. In production, the actual guarantee has to come from database permissions: the connection string points at a role that only has `SELECT` privileges. The prompt is a belt-and-suspenders layer, not the primary defense.
 
 **Passing the model into `make_sql_tools`.** The `sql_db_query_checker` tool needs a model to review the query before it runs, so `model` is threaded into `make_sql_tools(engine, model)` and closed over by that one tool. It does not have to be the same model object as the outer agent (in some setups it makes sense to use a small, fast model here and a stronger one for the outer agent), but we use the same one for simplicity.
 
@@ -171,7 +171,7 @@ Four configuration decisions worth spelling out.
 
 ## Running it
 
-`01_sql_agent.py`:
+Here is a listing of the first example using the agent library `01_sql_agent.py`:
 
 ```python
 from langchain_core.messages import HumanMessage
@@ -222,7 +222,7 @@ Two things worth noticing in that transcript. First, the numbers that matter are
 
 ## Watching the SQL get written
 
-For debugging any agent that writes SQL, `.stream()` is essential. `02_stream_sql_agent.py`:
+For debugging any agent that writes SQL, `.stream()` is essential as seen in the second example `02_stream_sql_agent.py`:
 
 ```python
 for step in agent.stream(
@@ -322,4 +322,4 @@ Adapting this to a real project is a small number of changes:
 - `create_react_agent(model, tools, prompt=SYSTEM_PROMPT)` is the whole agent; every other primitive (checkpointer, HITL interrupts, supervisor) from earlier chapters composes with it directly.
 - `.stream()` is the primary debugging tool. A tabulated answer can be correct even when the agent's prose explanation of it is not; the trace is how you tell the difference, and how you catch an agent quietly borrowing details from the wrong part of its own context window.
 
-Chapter "DBpedia and Wikidata as agent tools" leaves relational data behind for the semantic web, with SPARQL as the query language.
+The next chapter "DBpedia and Wikidata as agent tools" leaves relational data behind for the semantic web, with SPARQL as the query language.
