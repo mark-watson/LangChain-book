@@ -1,8 +1,8 @@
 # Multi-agent supervisor pattern
 
-The agents from Chapters "Building a ReAct agent with LangGraph + Ollama" through "Human-in-the-loop patterns" are all single agents with one flat list of tools. That is enough for a large class of applications. Once you have more than five or six tools, or tools that need clearly separate expertise (searching the web is nothing like writing SQL is nothing like reviewing legal documents), a single agent starts to feel unfocused. It hesitates, picks the wrong tool, or misinterprets the results of one tool by treating them like the results of another.
+The agents from Chapters "Building a ReAct agent with LangGraph + Ollama" through "Human-in-the-loop patterns" are all single agents with one flat list of tools. That is enough for a large class of applications. Once you have more than five or six tools, or tools that need clearly separate expertise (searching the web is nothing like writing SQL, which is nothing like reviewing legal documents), a single agent starts to feel unfocused. It hesitates, picks the wrong tool, or misinterprets the results of one tool by treating them like the results of another.
 
-The **supervisor pattern** is the standard response. Instead of one agent with all the tools, you build:
+The **supervisor pattern** is the standard response to this set of problems. Instead of one agent with all the tools, you build:
 
 - Several **specialists**, each a small compiled agent (typically `create_react_agent`) with its own focused tool set and system prompt.
 - One **supervisor**, a graph node that reads the current conversation and decides which specialist should handle the next step, or that the conversation is complete.
@@ -34,7 +34,7 @@ $ ollama pull qwen3.5:4b
 
 ## The specialists
 
-`_specialists.py`:
+We start with `_specialists.py`:
 
 ```python
 from langchain_core.tools import tool
@@ -75,11 +75,11 @@ research_agent = create_react_agent(_model, [web_search])
 math_agent = create_react_agent(_model, [add, multiply])
 ```
 
-Nothing in this file is new. Each specialist is exactly the single-agent ReAct graph from Chapter "Building a ReAct agent with LangGraph + Ollama", built with `create_react_agent(model, tools)`. Both use the same `ChatOllama`; you could just as easily give each specialist a different model, which is a common reason to reach for the pattern in the first place (a small, fast model for the research agent that mostly summarizes text; a stronger model for the math agent that has to reason about numbers).
+Nothing in this file is new. Each specialist is exactly the single-agent ReAct graph from Chapter "Building a ReAct agent with LangGraph + Ollama", built with `create_react_agent(model, tools)`. Both use the same `ChatOllama` class; you could just as easily give each specialist a different model, which is a common reason to reach for the pattern in the first place (a small, fast model for the research agent that mostly summarizes text; a stronger model for the math agent that has to reason about numbers).
 
 ## The supervisor and the graph
 
-`_supervisor.py` is where the actual pattern lives:
+The code in `_supervisor.py` is where the actual multi-agent supervisor pattern lives:
 
 ```python
 from typing import Annotated, Literal, TypedDict
@@ -165,7 +165,7 @@ def build_supervisor():
     return graph.compile()
 ```
 
-Walking the interesting parts.
+Here are the interesting parts of this code:
 
 **`RouterDecision`.** A one-field Pydantic model with a `Literal["research", "math", "FINISH"]` field. This is the schema we hand to `.with_structured_output()`. Because the field is a `Literal`, the model is constrained to return exactly one of those three values: no free-form text, no misspellings for the router function to handle.
 
@@ -179,7 +179,7 @@ Walking the interesting parts.
 
 ## Running it
 
-`01_run_supervisor.py`:
+Now we look at the top level example file `01_run_supervisor.py`:
 
 ```python
 from langchain_core.messages import HumanMessage
@@ -221,7 +221,7 @@ The third question required both specialists. The supervisor routed to research 
 
 ## Watching the routing
 
-`.stream()` makes the routing visible. `02_stream_supervisor.py` streams the third question:
+The utility method `.stream()` (initialized in line 1 of the following listing) makes the routing visible. Here we see the second example `02_stream_supervisor.py` that streams the questions:
 
 ```python
 for step in app.stream(
@@ -264,7 +264,7 @@ Five steps: three supervisor calls, one research call, one math call. Every supe
 
 ## When multi-agent is worth it
 
-The multi-agent pattern trades increased routing overhead (one extra LLM call per turn, plus the increased state complexity) for cleaner separation of concerns. Rough guidance from my own projects:
+The multi-agent pattern trades increased routing overhead (one extra LLM call per turn, plus the increased state complexity) for cleaner separation of concerns. Rough guidance from my own experience:
 
 - **Skip it** if your total tool count is under about six and the tools are all in the same domain. A single ReAct agent handles that fine.
 - **Reach for it** when tools cluster into obviously different domains (search + email + files + database + code execution), when different specialists need different LLMs (a fast small one for one job, a big one for another), or when specialists need different system prompts to behave correctly.
