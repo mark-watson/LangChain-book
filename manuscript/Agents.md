@@ -186,7 +186,7 @@ if __name__ == "__main__":
             print(m.content)
 ```
 
-Walking through it top to bottom.
+Let’s walk through the code:
 
 **The state.** A single `messages` field reduced by `add_messages`, exactly like the last example of Chapter "LangGraph 1.0 fundamentals". Every message the graph produces, the model's replies and the tool results, gets appended here.
 
@@ -198,7 +198,7 @@ Walking through it top to bottom.
 
 **The wiring.** Three edges. Start goes to the model. The model is followed by a conditional edge that either goes to the tool node or ends. After tools run, we always loop back to the model.
 
-Running it gives the same output as version 1. That is the point: the prebuilt factory is not magic, it is this file compressed.
+Running it gives the same output as the version 1 example code. That is the point: the prebuilt factory is not magic, it is version 2 of the example code compressed.
 
 ## When to reach for which version
 
@@ -209,9 +209,9 @@ In my own projects I probably start with `create_agent` about half the time and 
 
 ## Watching each step with `.stream()`
 
-The compiled agent is a `Runnable`, so it supports `.stream()`. Each yielded item is a dict of the form `{node_name: partial_state_update_the_node_produced}`. That is the fastest way I know to understand what an agent is actually doing.
+The compiled agent is a `Runnable`, so it supports `.stream()`. Each yielded item is a dict of the form `{node_name: partial_state_update_the_node_produced}`. That is an easy way to understand what an agent is actually doing.
 
-`source-code/langgraph_react_agent/03_streaming_agent.py` reconstructs the same manual graph and streams a two-tool question:
+The example `source-code/langgraph_react_agent/03_streaming_agent.py` reconstructs the same manual graph and streams a two-tool question:
 
 ```python
 question = (
@@ -265,15 +265,18 @@ I use `.stream()` for essentially every agent I write, and I usually convert it 
 
 ## Two failure modes worth knowing
 
-**The model does not call the tool at all.** If `bind_tools` is pointed at a model that does not support tool calling (most 1-3 B parameter models, and some larger models that were not fine-tuned for it), the model will respond in prose describing what it *would* do instead of returning `.tool_calls`. The router will then send the response straight to `END` and the agent will terminate with a plausible-sounding but wrong answer. If you see the model narrating its plan instead of executing it, you probably have the wrong model. As of mid-2026 the models I use for tool-calling work in this book are `qwen3.5:4b`, `llama3.2:3b`, `gemma3:12b-it-qat`, and `mistral-small`.
+Often (too often) things don’t wrk as we expect. Here are two failure modes you will likely encounter:
 
-**The agent loops forever.** With a bad system prompt or a weak model, the ReAct loop can call the same tool over and over. LangGraph does not enforce a step limit by default. In production I always pass `recursion_limit` when invoking:
+- **The model does not call the tool at all.** If `bind_tools` is pointed at a model that does not support tool calling (most 1-3 B parameter models, and some larger models that were not fine-tuned for it), the model will respond in prose describing what it *would* do instead of returning `.tool_calls`. The router will then send the response straight to `END` and the agent will terminate with a plausible-sounding but wrong answer. If you see the model narrating its plan instead of executing it, you probably have the wrong model. As of mid-2026 the models I use for tool-calling work in this book are `qwen3.5:4b`, `llama3.2:3b`, `gemma3:12b-it-qat`, and `mistral-small`.
+- **The agent loops forever.** With a bad system prompt or a weak model, the ReAct loop can call the same tool over and over. LangGraph does not enforce a step limit by default.
+
+For the second failure more try setting a `recursion_limit` when invoking:
 
 ```python
 agent.invoke({"messages": [...]}, config={"recursion_limit": 25})
 ```
 
-Twenty-five is my usual number: enough for a real multi-step task, low enough to bail out before the LLM bill or the wall clock runs away.
+Twenty-five is a reasonable number: enough for a real multi-step task, low enough to bail out before the LLM bill or the wall clock runs away.
 
 ## What we covered
 

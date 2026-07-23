@@ -8,11 +8,11 @@ This chapter covers three LangGraph mechanisms for putting a human in the loop:
 - **`interrupt_before=[...]` and `interrupt_after=[...]`**: compile-time arguments that tell the graph to pause before or after specific nodes without any special code in the node bodies.
 - **`agent.update_state(config, values)`**: modify the recorded state of a paused graph before resuming. Combined with `interrupt_after`, this is the pattern for "let the human see and edit what the graph produced."
 
-Everything in this chapter assumes a checkpointer. `interrupt()` without a checkpointer would just be a crash: the graph would have nowhere to save the paused state to. All three examples use `MemorySaver` because the human lives in the same Python process, but every mechanism works identically with `SqliteSaver` or `PostgresSaver`, and in a real web-app deployment that is what you would use.
+Everything in this chapter assumes a checkpointer. Calling `interrupt()` without a checkpointer would result in a crash: the graph would have nowhere to save the paused state to. All three examples use `MemorySaver` because the human lives in the same Python process, but every mechanism works identically with `SqliteSaver` or `PostgresSaver`, and in a real web-app deployment that is what you would usually use.
 
 ## Example 1: the minimum viable interrupt
 
-`source-code/langgraph_hitl/01_interrupt_basic.py`:
+Our first example is `source-code/langgraph_hitl/01_interrupt_basic.py`:
 
 ```python
 from operator import add
@@ -65,9 +65,9 @@ for line in final["log"]:
     print(f"  {line}")
 ```
 
-Three-node linear graph. Nothing special until the middle node calls `interrupt({"question": "..."})`. The graph engine catches that call, records the payload as the interrupt info on the current state, and returns from `.invoke()` with the state as of *before* the interrupt fired.
+Three-node linear graph. Nothing special until the middle node calls `interrupt({"question": "..."})` in line 18 of the code listing. The graph engine catches that call, records the payload as the interrupt info on the current state, and returns from `.invoke()` with a new state that in this simple example is changed by adding the human response to the log.
 
-Expected output:
+Here is example output:
 
 ```console
 $ uv run 01_interrupt_basic.py
@@ -90,9 +90,9 @@ Two things worth internalizing:
 
 ## Example 2: a tool-approval gate
 
-Now the realistic use case. An agent has two tools; one is safe (`multiply`), the other is dangerous (`send_email`, mocked here so the example is self-contained). The tool node inspects each pending tool call: if the tool is on the dangerous list, it calls `interrupt()` with the tool name and args, waits for a decision from the caller, and either runs the tool or records a rejection.
+Now let’s look at a realistic use case. An agent has two tools; one is safe (`multiply`), the other is dangerous (`send_email`, mocked here so the example is self-contained). The tool node inspects each pending tool call: if the tool is on the dangerous list, it calls `interrupt()` with the tool name and args, waits for a decision from the caller, and either runs the tool or records a rejection.
 
-`source-code/langgraph_hitl/02_approval_gate.py`, showing the two new pieces on top of the standard ReAct shape:
+Example `source-code/langgraph_hitl/02_approval_gate.py` shows the two new pieces on top of the standard ReAct shape:
 
 ```python
 DANGEROUS = {"send_email"}
@@ -158,7 +158,7 @@ This approval pattern generalizes. Any tool with side effects (filesystem writes
 
 The third mechanism is compile-time interrupts combined with `update_state()`. Instead of the node itself deciding to pause, you tell the compiler "always pause after this node runs," inspect the recorded state, edit it, then resume.
 
-`source-code/langgraph_hitl/03_edit_draft.py`:
+The next example `source-code/langgraph_hitl/03_edit_draft.py` alters a node using a LLM inference call in lines 26-38:
 
 ```python
 from typing import TypedDict
@@ -274,4 +274,4 @@ You can also combine both in the same graph: an `interrupt()` for an approval de
 - `agent.update_state(config, values)` edits the recorded state of a paused graph before resuming.
 - `.invoke(None, config=config)` resumes from a compile-time pause without injecting new input.
 
-Chapter "Multi-agent supervisor pattern" combines everything so far: multiple specialized agents, a coordinating supervisor graph, and (optionally) human approvals on the transitions between them.
+The next chapter "Multi-agent supervisor pattern" combines everything so far: multiple specialized agents, a coordinating supervisor graph, and (optionally) human approvals on the transitions between them.

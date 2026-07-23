@@ -1,14 +1,14 @@
 # Durable, restart-safe agents
 
-The agents from Chapter "Building a ReAct agent with LangGraph + Ollama" have one important limitation: they forget everything the moment the Python process exits. If you build a chatbot on top of `create_react_agent`, every user turn starts from scratch, with no memory of the previous message, let alone yesterday's conversation. That is a script, not a service.
+The agents from the previous Chapter "Building a ReAct agent with LangGraph + Ollama" have one important limitation: they forget everything the moment the Python process exits. If you build a chatbot on top of `create_react_agent`, every user turn starts from scratch, with no memory of the previous message, let alone yesterday's conversation. That is a script, not a service.
 
-LangGraph fixes this with one concept: the **checkpointer**. You pass a checkpointer to `.compile()`, you thread a `thread_id` through your invoke config, and now every step of your graph (every state update from every node) gets serialized to whatever storage the checkpointer manages. Multi-turn conversations remember previous turns. Interrupted work resumes where it stopped. Crashed processes come back up mid-transaction with no lost state.
+LangGraph fixes this with one concept: the **checkpointer**. You pass a checkpointer to `.compile()`, you add a `thread_id` through your invoke config, and now every step of your graph (every state update from every node) gets serialized to whatever storage the checkpointer manages. Multi-turn conversations remember previous turns. Interrupted work resumes where it stopped. Crashed processes come back up mid-transaction with no lost state.
 
 This chapter builds four small scripts that demonstrate this progressively: in-process memory, on-disk SQLite persistence, cross-process restart, and inspecting the recorded checkpoint history. All four share one uncompiled state graph; the checkpointer is the only thing that varies.
 
 ## Three flavors of checkpointer
 
-LangGraph ships several checkpointer implementations. Only the first is included in the core package; the others are separate PyPI packages.
+LangGraph ships several checkpointer implementations. Only the first one is included in the core package; the others are separate PyPI packages.
 
 - **`MemorySaver`**: from `langgraph.checkpoint.memory`, included in the core `langgraph` install. Stores checkpoints in a Python dict. Fast, zero configuration, forgotten on process exit. Use in tests, notebooks, and request-scoped web endpoints where conversation state only needs to live as long as the request.
 - **`SqliteSaver`**: from `langgraph.checkpoint.sqlite`, in the separate `langgraph-checkpoint-sqlite` package. Persists checkpoints to a single SQLite file. Zero infrastructure: no server, no daemon, no config file. Perfect for personal projects, small tools, and single-node services where a SQLite file is enough storage.
@@ -18,7 +18,7 @@ All three implement the same `BaseCheckpointSaver` interface, so swapping betwee
 
 ## The shared graph
 
-All four scripts in `source-code/langgraph_durable/` use the same uncompiled state graph. `_graph.py`:
+All four scripts in `source-code/langgraph_durable/` use the same uncompiled state graph that is defined in the file `_graph.py`:
 
 ```python
 from typing import Annotated, TypedDict
@@ -58,13 +58,13 @@ def build_graph() -> StateGraph:
     return graph
 ```
 
-Deliberately the smallest useful graph: `MessagesState`-style transcript, one node that calls the model on it. No tools. The tool-calling ReAct loop from Chapter "Building a ReAct agent with LangGraph + Ollama" works exactly the same way once you add a checkpointer, but starting simple lets us focus on what the checkpointer does.
+This is an example of the smallest useful graph: `MessagesState`-style transcript, one node that calls the model on it, using no tools. The tool-calling ReAct loop from the last Chapter "Building a ReAct agent with LangGraph + Ollama" works exactly the same way once you add a checkpointer, but starting simple lets us focus on what the checkpointer does.
 
-`build_graph()` returns an uncompiled `StateGraph`. Each script compiles it with a different checkpointer.
+The call to `build_graph()` returns an uncompiled `StateGraph`. Each script compiles it with a different checkpointer.
 
 ## Example 1: `MemorySaver` and `thread_id`
 
-`01_memory_saver.py`:
+Here is the file example file `01_memory_saver.py`:
 
 ```python
 from langchain_core.messages import HumanMessage
@@ -90,7 +90,7 @@ for user_turn in turns:
     print(f"AGENT: {reply.content.strip()}\n")
 ```
 
-Two things are new relative to the "LangGraph 1.0 fundamentals" chapter's `04_llm_in_a_node.py`.
+Two things are new relative to the "LangGraph 1.0 fundamentals" chapter's example code `04_llm_in_a_node.py`.
 
 **The `checkpointer=` argument to `.compile()`.** Without a checkpointer, each `.invoke()` call starts from a fresh empty state. With one, `.invoke()` looks up the state for the configured thread, appends the new input, runs the graph, and saves the resulting state before returning.
 
@@ -110,11 +110,11 @@ USER: What is my name?
 AGENT: Your name is Mark.
 ```
 
-Three invocations, three growing transcripts, one thread. On the third invocation the model is given all six prior messages plus the new question, so of course it can answer. That is the whole trick.
+Three invocations, three growing transcripts, one thread. On the third invocation the model is given all six prior messages plus the new question, so of course it can answer. That is the whole trick: the system works at a cost of growing context size.
 
 ## Example 2: `SqliteSaver`, spread across two processes
 
-Now we replace the checkpointer and watch the same mechanism survive a process restart. `02_sqlite_first_run.py`:
+Now we replace the checkpointer and watch the same mechanism survive a process restart. Here is the next example file `02_sqlite_first_run.py`:
 
 ```python
 from langchain_core.messages import HumanMessage
@@ -140,9 +140,9 @@ with SqliteSaver.from_conn_string(CHECKPOINT_DB) as checkpointer:
     print("Now run 03_sqlite_second_run.py in a fresh process.")
 ```
 
-`SqliteSaver.from_conn_string(path)` is a context manager that opens the SQLite file, creates the checkpoint tables on first use, and closes cleanly on exit. Everything else (thread config, `.compile()`, `.invoke()`) is identical to the `MemorySaver` version.
+The object `SqliteSaver.from_conn_string(path)` is a context manager that opens the SQLite file, creates the checkpoint tables on first use, and closes cleanly on exit. Everything else (thread config, `.compile()`, `.invoke()`) is identical to the `MemorySaver` version.
 
-Run it:
+Let’s run this example:
 
 ```console
 $ uv run 02_sqlite_first_run.py
@@ -153,9 +153,9 @@ Saved to 'checkpoints.db' on thread 'sqlite-demo'.
 Now run 03_sqlite_second_run.py in a fresh process.
 ```
 
-The script exits. Python is gone. All we have is `checkpoints.db` on disk.
+The script exits and the Python runtime environment is gone so now all we have is `checkpoints.db` on disk.
 
-`03_sqlite_second_run.py` is nearly identical to script 2, except it asks a question that requires remembering:
+The next example `03_sqlite_second_run.py` is nearly identical to example 2, except it asks a question that requires remembering and uses the database created by the last example:
 
 ```python
 from langchain_core.messages import HumanMessage
@@ -182,7 +182,7 @@ with SqliteSaver.from_conn_string(CHECKPOINT_DB) as checkpointer:
         print(f"  {type(m).__name__}: {m.content[:120]}")
 ```
 
-Run it after script 2 has fully exited:
+Run example 3 after example 2 has finished running:
 
 ```console
 $ uv run 03_sqlite_second_run.py
@@ -207,7 +207,7 @@ Every state update from every node in every invocation is a checkpoint. The grap
 - `agent.get_state(config)` returns the current state as a `StateSnapshot`.
 - `agent.get_state_history(config)` yields every checkpoint recorded for the thread, newest first.
 
-`04_state_history.py`:
+Here is our fourth example `04_state_history.py`:
 
 ```python
 from langgraph.checkpoint.sqlite import SqliteSaver
@@ -240,7 +240,7 @@ After running scripts 2 and 3, this shows the current transcript and then a summ
 
 ## Two design points worth internalizing
 
-**`thread_id` is your problem, not the framework's.** The graph does not invent one for you. Any invocation that omits `thread_id` from the config gets a fresh empty state, which is almost never what you want in a durable app. In practice you generate a stable `thread_id` per conversation at your application layer (session cookie, user ID plus timestamp, chat room ID) and thread it through every invoke and stream call.
+**Setting a value for `thread_id` is your problem, not the framework's. The graph does not invent one for you. Any invocation that omits `thread_id` from the config gets a fresh empty state, which is almost never what you want in a durable app. In practice you generate a stable `thread_id` per conversation at your application layer (session cookie, user ID plus timestamp, chat room ID) and thread it through every invoke and stream call.
 
 **Checkpoints are automatic and per-step.** You do not call `.save_state()` or `.load_state()` anywhere. Every time a node produces a state update, the checkpointer writes it. Every time you invoke the graph, the checkpointer loads the latest state for the thread. This is what makes the migration from "prototype in a notebook with `MemorySaver`" to "production service with `PostgresSaver`" a two-line change instead of a rewrite.
 
@@ -252,4 +252,4 @@ After running scripts 2 and 3, this shows the current transcript and then a summ
 - The state survives full Python process restarts with no extra code.
 - `.get_state()` and `.get_state_history()` expose the recorded state for inspection and time-travel.
 
-Chapter "Human-in-the-loop patterns" uses this same mechanism: pause the graph mid-run with `interrupt()`, hand control back to your calling code (or a human), edit the checkpoint, then resume from where you stopped. Every one of those capabilities is a direct consequence of the checkpointer machinery in this chapter.
+The next chapter Chapter "Human-in-the-loop patterns" uses this same mechanism: pause the graph mid-run with `interrupt()`, hand control back to your calling code (or a human), edit the checkpoint, then resume from where you stopped. Every one of those capabilities is a direct consequence of the checkpointer machinery in this chapter.
