@@ -1,12 +1,12 @@
 # A Perplexity-style local search agent
 
-I subscribe to [Perplexity](https://www.perplexity.ai) and use it most days. It does one thing very well: given a natural-language question, it searches the web, reads the top pages, and synthesizes a multi-paragraph answer that cites the sources it used. That pattern (search, filter, fetch, summarize, synthesize) is broadly useful and about eighty lines of Python to build for yourself. This chapter builds it as a LangGraph pipeline, running entirely on your laptop, with Ollama for the LLM, DuckDuckGo for search, and `trafilatura` for HTML-to-text extraction.
+I used to subscribe to [Perplexity](https://www.perplexity.ai) and still use their commercial AIs. Perplexity does one thing very well: given a natural-language question, it searches the web, reads the top pages, and synthesizes a multi-paragraph answer that cites the sources it used. That pattern (search, filter, fetch, summarize, synthesize) is broadly useful and about eighty lines of Python to build for yourself. This chapter builds it as a LangGraph pipeline, running entirely on your laptop, with Ollama for the LLM, DuckDuckGo for search, and `trafilatura` for HTML-to-text extraction.
 
 This is also the last chapter of Part I. Everything that follows in Part II covers LlamaIndex, a different framework with a different mental model, but many of the same underlying ideas.
 
 ## The pipeline
 
-Five nodes, one long straight edge, no conditional routing:
+Consider five nodes, one long straight edge, no conditional routing:
 
 ```text
 START -> search -> filter -> fetch -> summarize -> synthesize -> END
@@ -34,7 +34,7 @@ $ ollama pull qwen3.5:4b
 
 ## The graph
 
-`_pipeline.py`, in full:
+The file `_pipeline.py` implements the graph pipeline in full:
 
 ```python
 from typing import TypedDict
@@ -142,7 +142,7 @@ def build_pipeline():
     return graph.compile()
 ```
 
-Notes on the individual nodes.
+Here are comments on the individual nodes:
 
 **`search_node`.** DuckDuckGo does not require an API key. Its `.text()` method is rate-limited, which is why we cap at five results. If the endpoint fails (occasional for busy times of day), we return an empty list and let the pipeline continue; the synthesis node handles the "no sources" case.
 
@@ -154,9 +154,9 @@ Notes on the individual nodes.
 
 **`synthesize_node`.** One final LLM call combining the per-page summaries into the actual answer. The prompt tells the model not to include a source list; Perplexity does that in its UI, and adding it inline tends to make local models produce noisy citation strings that do not link to anything.
 
-## Running it
+## Running a complete example
 
-`01_search.py`:
+The top level script is defined in the file `01_search.py`:
 
 ```python
 from _pipeline import build_pipeline
@@ -210,7 +210,7 @@ Total run time is typically 10-60 seconds. The dominant cost is the five per-sou
 
 ## Watching each stage
 
-`02_stream_search.py` streams the same query and shows one line per stage:
+The script `02_stream_search.py` streams the same query and shows one line per stage:
 
 ```python
 for step in app.stream(initial):
@@ -244,7 +244,7 @@ Everything from Chapters "Durable, restart-safe agents", "Human-in-the-loop patt
 - **Add an approval interrupt** before `fetch` if you want a human to prune the URL list before you spend the time on downloads.
 - **Swap `synthesize` for a supervisor graph** that routes to different downstream specialists based on the question ("if the summaries are about code, delegate to the code specialist; if factual, to the KG specialist").
 
-You can also swap the search backend. `ddgs` is the free default; if you want more consistent results, [Brave Search](https://api.search.brave.com/) offers a generous free tier and drops in with a two-line change to `search_node`.
+You can also swap the search backend. Using the Pyhton library `ddgs` is the free default; if you want more consistent results, [Brave Search](https://api.search.brave.com/) offers a generous free tier and drops in with a two-line change to `search_node`. I also use the Perplexity combined search and LLM APIs.
 
 ## Wrapping up Part I
 
