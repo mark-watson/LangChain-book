@@ -215,7 +215,7 @@ Conditional edges can also loop. The destination can be a node earlier in the gr
 
 ## Example 4: an LLM in a node
 
-Now we put an actual model inside a node. `04_llm_in_a_node.py`:
+Now we put an actual model inside a node in the example `04_llm_in_a_node.py`:
 
 ```python
 from typing import Annotated, TypedDict
