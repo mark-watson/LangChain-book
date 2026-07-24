@@ -1,10 +1,14 @@
 # Choosing an Index Type
 
-`VectorStoreIndex` is the right answer roughly 90% of the time. This chapter is about the other 10%, and about the one hybrid pattern that pushes the 90% number higher when you need to.
+`VectorStoreIndex` is the right answer roughly 90% of the time. This chapter is about the other 10%, and about the one hybrid pattern that further increases the quality of lookup results.
 
 LlamaIndex has always shipped several index types. In the previous edition I only mentioned them in passing because most were rarely worth the extra complexity. In 2026 that is still mostly true, but two of the alternatives (`SummaryIndex` and the BM25 + vector hybrid) have concrete use cases where they clearly outperform a naked `VectorStoreIndex`. The third one covered here (`SimpleKeywordTableIndex`) is worth knowing about even if you never ship it, because it makes the "why do we need embeddings at all" question concrete.
 
-All three scripts live in `source-code/llama_index_indices/` and read from `source-code/data/`. Setup:
+Dear reader, if you enjoy reading code, my Common Lisp book has a BM25 + vector hybrid implementation written using no third party libraries.
+
+All three scripts for this chapter live in `source-code/llama_index_indices/` and read from `source-code/data/`.
+
+The setup for running the examples is:
 
 ```console
 $ cd source-code/llama_index_indices
@@ -14,11 +18,9 @@ $ ollama pull qwen3.5:4b
 
 ## `SummaryIndex`: every query touches every Node
 
-`VectorStoreIndex` is optimized for "find the top-k Nodes most similar to this query." That is the wrong shape for questions like "summarize the whole corpus," "what themes recur across these documents," or "give me an overview of everything in this folder." Those queries want the LLM to see every Node, in order, and reason across all of them.
+`VectorStoreIndex` is optimized for "find the top-k Nodes most similar to this query." That is the wrong shape for other use cases such as questions like "summarize the whole corpus," "what themes recur across these documents," or "give me an overview of everything in this folder." Those queries want the LLM to see every Node, in order, and reason across all of them.
 
-`SummaryIndex` (the current name for what used to be called `ListIndex`) does exactly this. It maintains the Nodes in insertion order and, at query time, feeds all of them plus the query to the LLM.
-
-`01_summary_index.py`:
+`SummaryIndex` (the current name for what used to be called `ListIndex`) does exactly this. It maintains the Nodes in insertion order and, at query time, feeds all of them plus the query to the LLM as seen in our first example `01_summary_index.py`:
 
 ```python
 from llama_index.core import Settings, SimpleDirectoryReader, SummaryIndex
@@ -59,9 +61,7 @@ The tradeoff is obvious: `SummaryIndex` is O(n) per query, where n is the number
 
 Embeddings are not always the right retrieval mechanism. If your corpus is dominated by proper nouns, product identifiers, function names, drug names, or legal citations, semantic similarity is often *worse* than exact-string matching. The classic case: your query mentions "GPT-4o" and the relevant document is one of the few that also mentions "GPT-4o" verbatim. A dense retriever will happily return semantically-adjacent documents about "large language models," "OpenAI," or "GPT-4," pushing your actual match down or off the list.
 
-`SimpleKeywordTableIndex` builds an inverted index of the corpus using regex keyword extraction. No LLM, no embedding model, no ML dependency at all: just Python string processing. At query time, it extracts keywords from the query the same way and retrieves Nodes whose keyword sets overlap.
-
-`02_keyword_table.py`:
+`SimpleKeywordTableIndex` builds an inverted index of the corpus using regex keyword extraction. No LLM, no embedding model, no ML dependency at all: just Python string processing. At query time, it extracts keywords from the query the same way and retrieves Nodes whose keyword sets overlap as seen in our second example `02_keyword_table.py`:
 
 ```python
 from llama_index.core import SimpleDirectoryReader, SimpleKeywordTableIndex
@@ -96,9 +96,7 @@ The `KeywordTableIndex` variant (no "Simple") uses an LLM to extract richer keyw
 
 ## `QueryFusionRetriever`: the practical hybrid pattern
 
-The one hybrid pattern I use in almost every real LlamaIndex project. Run both a dense (embedding) retriever and a sparse (BM25) retriever over the same corpus, then merge their ranked lists with reciprocal rank fusion.
-
-`03_hybrid_fusion.py`:
+The one hybrid pattern I use in almost every real LlamaIndex project. Run both a dense (embedding) retriever and a sparse (BM25) retriever over the same corpus, then merge their ranked lists with reciprocal rank fusion as seen in ur third example `03_hybrid_fusion.py`:
 
 ```python
 from llama_index.core import Settings, SimpleDirectoryReader, VectorStoreIndex
@@ -166,4 +164,4 @@ Reach for `TreeIndex` (not covered here) if you have thousands of Nodes and need
 - `SimpleKeywordTableIndex` gives you keyword-based retrieval with zero ML dependencies: a fallback and a first-pass filter.
 - `QueryFusionRetriever` fuses BM25 and dense retrieval with reciprocal rank fusion. This is the hybrid pattern most projects should use once a vanilla vector retriever starts missing obvious matches.
 
-Chapter "RAG with Reranking" covers reranking, the last piece of the retrieval-quality puzzle before we move on to LlamaIndex's Workflows API in Chapter "The Workflows API".
+The next chapter "RAG with Reranking" covers reranking, the last piece of the retrieval-quality puzzle before we move on to LlamaIndex's Workflows API in Chapter "The Workflows API".
