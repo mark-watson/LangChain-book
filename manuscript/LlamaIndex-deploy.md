@@ -1,10 +1,10 @@
 # Serving a Workflow with FastAPI
 
-You have built a working Workflow. You want it to serve traffic (accept requests, run the workflow, return the answer) without a lot of ceremony. This chapter walks through the smallest useful setup: one HTTP server process, one client. The workflow itself is a two-step Q&A workflow (deliberately trivial so the deployment plumbing is the interesting part).
+You have built a working Workflow. You want it to serve traffic (accept requests, run the workflow, return the answer) without a lot of ceremony. This chapter walks through a small useful setup: one HTTP server process, one client. The workflow itself is a two-step Q&A workflow (deliberately trivial so the deployment plumbing is the interesting part).
 
-A quick note on `llama-deploy`. If you have read about LlamaIndex deployment before, you may expect this chapter to be built on it: a control plane, one or more workflow services, a Redis-backed message queue between them. That was the plan, and for most of this book's life it was the code sitting in this directory. It broke: the current `llama-deploy` release (0.9.x) is incompatible with `llama-index-core` 0.14, the version this book uses everywhere else. Rather than pin an old `llama-index-core` just to keep a deployment framework working, this chapter serves the workflow directly with FastAPI. It is simpler, it has no external dependencies (no Redis, nothing to install with Homebrew or Docker), and it is the same OSS-first, run-it-on-your-laptop approach as every other chapter in the book. If `llama-deploy` catches back up, the swap is confined to this one file; the workflow itself does not change at all.
+A quick note on `llama-deploy`: if you have read about LlamaIndex deployment before, you may expect this chapter to be built on it using such things as a control plane, one or more workflow services, a Redis-backed message queue between them. That was the plan, and for most of this book's life it was the code sitting in this directory. It broke: the current `llama-deploy` release (0.9.x) is incompatible with `llama-index-core` 0.14, the version this book uses everywhere else. Rather than pin an old `llama-index-core` just to keep a deployment framework working, this chapter serves the workflow directly with FastAPI. It is simpler, it has no other external dependencies (no Redis, nothing to install with Homebrew or Docker), and it is the same OSS-first, run-it-on-your-laptop approach as every other chapter in the book. If `llama-deploy` catches back up, the swap is confined to this one file; the workflow itself does not change at all.
 
-Everything lives in `source-code/llama_index_deploy/`. Setup:
+Everything lives in `source-code/llama_index_deploy/` with our usual setup:
 
 ```console
 $ cd source-code/llama_index_deploy
@@ -25,7 +25,7 @@ You run the server in one terminal and the client in another.
 
 ## The workflow being served
 
-`_workflow.py` is deliberately small:
+The utility `_workflow.py` is deliberately small:
 
 ```python
 from llama_index.core.workflow import StartEvent, StopEvent, Workflow, step
@@ -48,7 +48,7 @@ One step, one LLM call. In a real deployment this would be your actual workflow:
 
 ## Terminal 1: the server
 
-`01_serve_workflow.py`:
+The top-level server script for this example is `01_serve_workflow.py`:
 
 ```python
 from fastapi import FastAPI
@@ -97,7 +97,7 @@ INFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)
 
 ## Terminal 2: the client
 
-`02_client.py`:
+Here is a small example client script `02_client.py`:
 
 ```python
 import asyncio
