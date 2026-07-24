@@ -4,7 +4,7 @@ Chapter "RAG Patterns with LangChain" made the same argument I am about to make 
 
 In LlamaIndex the mechanism is a **node postprocessor**. You pass one to `.as_query_engine(node_postprocessors=[...])` and it runs between the retriever's `.retrieve()` call and the LLM synthesis step. The framework ships several (`SimilarityPostprocessor` for score thresholding, `MetadataReplacementPostProcessor` for retrieved-content rewriting, `LongContextReorder` for reordering), but the one that matters most for retrieval quality is `SentenceTransformerRerank`.
 
-Everything lives in `source-code/llama_index_rerank/` and reads from `source-code/data/`. Setup:
+Everything lives in `source-code/llama_index_rerank/` and reads from `source-code/data/` and the setup should look familiar to you:
 
 ```console
 $ cd source-code/llama_index_rerank
@@ -16,7 +16,7 @@ The BGE reranker model (~275 MB) downloads on first run.
 
 ## Baseline: no reranker
 
-`01_no_reranker.py`:
+We start with not using reranking in script `01_no_reranker.py`:
 
 ```python
 from llama_index.core import Settings, SimpleDirectoryReader, VectorStoreIndex
@@ -46,7 +46,7 @@ Retrieves the top 5 nodes by embedding cosine similarity, sends them to the LLM 
 
 ## Same query, with a reranker
 
-`02_with_reranker.py` differs from the baseline in three lines:
+The second example `02_with_reranker.py` differs from the baseline in three lines:
 
 ```python
 from llama_index.core.postprocessor import SentenceTransformerRerank
@@ -64,7 +64,7 @@ query_engine = index.as_query_engine(
 
 `similarity_top_k=10` pulls a wider set of candidates from the vector store. `node_postprocessors=[reranker]` runs each candidate through the cross-encoder against the query. `top_n=3` keeps the three highest-scoring candidates after reranking.
 
-Compare the two outputs. The baseline typically hands the LLM some low-scoring nodes that add noise to the context. The reranked version hands the LLM only the three the cross-encoder considers most relevant, and the resulting answer is usually tighter.
+Compare the two outputs by running both scripts. The baseline typically hands the LLM some low-scoring nodes that add noise to the context. The reranked version hands the LLM only the three the cross-encoder considers most relevant, and the resulting answer is usually tighter.
 
 ## What the reranker actually costs
 
@@ -83,4 +83,4 @@ Rules of thumb from my own projects:
 - Pull a wider candidate set for the reranker to consider (5× your final desired count).
 - Reranking is nearly always the highest-value quality upgrade for a RAG pipeline.
 
-Chapter "The Workflows API" changes gears from retrieval to orchestration, introducing the Workflows API, LlamaIndex's answer to LangGraph for multi-step LLM applications.
+The next chapter "The Workflows API" changes gears from retrieval to orchestration, introducing the Workflows API, LlamaIndex's answer to LangGraph for multi-step LLM applications.
