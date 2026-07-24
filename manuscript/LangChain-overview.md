@@ -1,4 +1,4 @@
-# LangChain 1.0 in one hour
+# LangChain 1.0 in One Hour
 
 [LangChain](https://github.com/langchain-ai/langchain) 1.0 shipped in October 2025 as the first version the maintainers committed to no breaking changes on until 2.0. The library has been through a lot of API churn since I wrote the first edition of this book in early 2023, so if you have used LangChain before and stopped a year or two ago, be prepared for most of what you remember to have moved. The good news is that the 1.0 surface is small, well-organized, and, for the purposes of this book, entirely usable without any of the commercial services LangChain Inc. sells on top of it.
 
@@ -250,7 +250,7 @@ The `@tool` decorator wraps a plain Python function into an object the model can
 
 Two important caveats before you go build an agent on this.
 
-First, this example does exactly one round trip. The model responds with a tool call, we execute the call, and we stop. A real agent feeds the tool's result back to the model as a `ToolMessage`, gets the next response, executes the next call, and so on until the model returns plain text as the final answer. That loop is what Chapter "LangGraph 1.0 fundamentals" builds on top of LangGraph. Rolling your own loop is fine for a one-off script; for anything durable you want the state machine LangGraph gives you.
+First, this example does exactly one round trip. The model responds with a tool call, we execute the call, and we stop. A real agent feeds the tool's result back to the model as a `ToolMessage`, gets the next response, executes the next call, and so on until the model returns plain text as the final answer. That loop is what Chapter "LangGraph 1.0 Fundamentals" builds on top of LangGraph. Rolling your own loop is fine for a one-off script; for anything durable you want the state machine LangGraph gives you.
 
 Second, tool calling requires a model that supports it. Not every Ollama model does. As of mid-2026 the ones I use for the book examples are `qwen3.5:4b`, `llama3.2:3b`, `gemma3:12b-it-qat`, and `mistral-small`. If you point `bind_tools` at a chat-only model the code will not crash; the model will just respond with prose describing what it *would* do instead of returning a `tool_call`. That is one of the least helpful failure modes in the whole framework, and it is worth committing the list of tool-capable models to memory (or, more realistically, to a `README` in your project).
 
@@ -265,4 +265,4 @@ Six primitives. That is the whole surface area you need for the next dozen chapt
 5. **`StrOutputParser`** and **`.with_structured_output(PydanticModel)`** to turn model output into useful values.
 6. **`.bind_tools([...])`** and the `@tool` decorator to let the model call your Python functions.
 
-Everything else in Part I builds on those six primitives rather than introducing new ones. Chapter "RAG patterns with LangChain" puts them to work in a RAG pipeline. Chapters "LangGraph 1.0 fundamentals" through "Multi-agent supervisor pattern" introduce LangGraph and use it to build stateful, durable, human-in-the-loop agents. If any of the primitives in this chapter feels shaky, run the example, tweak it, break it; the feedback loop with a local model is fast enough that experimenting is basically free.
+Everything else in Part I builds on those six primitives rather than introducing new ones. Chapter "RAG Patterns with LangChain" puts them to work in a RAG pipeline. Chapters "LangGraph 1.0 Fundamentals" through "Multi-Agent Supervisor Pattern" introduce LangGraph and use it to build stateful, durable, human-in-the-loop agents. If any of the primitives in this chapter feels shaky, run the example, tweak it, break it; the feedback loop with a local model is fast enough that experimenting is basically free.

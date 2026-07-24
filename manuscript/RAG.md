@@ -1,4 +1,4 @@
-# RAG patterns with LangChain
+# RAG Patterns with LangChain
 
 Retrieval-Augmented Generation was the workhorse pattern of early applied LLM development, and still has large practical use. The idea is one paragraph long: before you send a user's question to the model, look up the passages (we will call these samples of text "chunks")in your corpus that are most likely to contain the answer, and paste these matching chunks of text into the prompt as context. The model gets to condition its answer on your data, not just on what it saw during training. Hallucinations drop, answers stay grounded, and you can add or remove documents from the corpus without retraining anything.
 
@@ -398,4 +398,4 @@ You can also stack them. A reasonable production retriever is "hybrid BM25 + den
 
 RAG has boiled down to two concrete choices in 2026: which retrieval pattern (this chapter) and which retriever+reranker+chunker stack (LangChain gives you the pieces, LlamaIndex will give you an even richer set in Part II). The chain composition, the prompt template, and the model call are essentially fixed shapes at this point. Learn the four patterns above and you can compose a strong retriever for almost any application without leaving the boundaries of `langchain-core`, `langchain-ollama`, and `langchain-huggingface`. `langchain-community` is not a dependency anywhere in this chapter; every retriever this book needed but the framework no longer ships is about forty lines of `langchain_core.retrievers.BaseRetriever` away.
 
-Tool binding, the primitive from Chapter "LangChain 1.0 in one hour" (section "Tool binding"), example file 06_tool_binding.py), is as far as this book goes for low-level tool calling by itself. Chapter "LangGraph 1.0 fundamentals" introduces LangGraph, which is where we start building agents that use RAG as one of several tools rather than as the whole app.
+Tool binding, the primitive from Chapter "LangChain 1.0 in One Hour" (section "Tool binding"), example file 06_tool_binding.py), is as far as this book goes for low-level tool calling by itself. Chapter "LangGraph 1.0 Fundamentals" introduces LangGraph, which is where we start building agents that use RAG as one of several tools rather than as the whole app.

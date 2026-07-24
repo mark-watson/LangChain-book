@@ -19,7 +19,7 @@ The mental model, though, is the same as it always was: **Documents** get chunke
 
 -**Document**: A chunk of text plus metadata. `Document(text="...", metadata={"source": "..."})`. In practice you rarely construct them by hand; a reader like `SimpleDirectoryReader` produces them from files.
 - **Node**: A Document after chunking. The atomic unit the retriever returns. In vanilla setups, one Document becomes one Node; with a `SentenceSplitter` transformation in your ingestion pipeline, one Document becomes many Nodes.
-- **Index**: A queryable data structure built over Nodes. `VectorStoreIndex` is the one you will use 90% of the time; it stores each Node's embedding and does cosine-similarity lookup at query time. Others include `SummaryIndex`, `KeywordTableIndex`, and `TreeIndex`; we will look at when to reach for each in Chapter "Choosing an index type".
+- **Index**: A queryable data structure built over Nodes. `VectorStoreIndex` is the one you will use 90% of the time; it stores each Node's embedding and does cosine-similarity lookup at query time. Others include `SummaryIndex`, `KeywordTableIndex`, and `TreeIndex`; we will look at when to reach for each in Chapter "Choosing an Index Type".
 - **QueryEngine / Retriever**: The two ways to *use* an Index. `.as_query_engine()` gives you `engine.query(text)` which returns a synthesized answer from an LLM after retrieval. `.as_retriever()` gives you `retriever.retrieve(text)` which returns the raw Nodes without the LLM step. Both are useful; you pick based on whether you want an answer or the ingredients for one.
 
 ## Setup
@@ -32,11 +32,11 @@ $ uv sync
 $ ollama pull qwen3.5:4b
 ```
 
-The four scripts in this chapter share the four-file corpus in `source-code/data/`, the same one Chapter "RAG patterns with LangChain" used. Reusing the corpus lets you compare LlamaIndex's behavior directly against Chapter "RAG patterns with LangChain".
+The four scripts in this chapter share the four-file corpus in `source-code/data/`, the same one Chapter "RAG Patterns with LangChain" used. Reusing the corpus lets you compare LlamaIndex's behavior directly against Chapter "RAG Patterns with LangChain".
 
 ## Your first LlamaIndex program
 
-The smallest useful program that exercises Documents → Index → QueryEngine end-to-end. `01_hello_llamaindex.py`:
+A small useful program that exercises Documents → Index → QueryEngine end-to-end is shown in file `01_hello_llamaindex.py`:
 
 ```python
 from llama_index.core import Settings, SimpleDirectoryReader, VectorStoreIndex
@@ -56,15 +56,12 @@ response = query_engine.query("What is the Austrian School of Economics?")
 print(f"\nAnswer:\n{response}")
 ```
 
-Four things to notice.
+There are four things to notice in this Python script:
 
-**`Settings` is the LlamaIndex global config.** Set `Settings.llm` and `Settings.embed_model` at the top of your script, and every downstream component (`VectorStoreIndex`, query engines, retrievers, extractors) picks them up automatically. You can also pass `llm=` and `embed_model=` directly to individual constructors when you want overrides, but the global default handles most cases.
-
-**Provider packages match Part I's convention.** `Ollama` from `llama_index.llms.ollama`, `HuggingFaceEmbedding` from `llama_index.embeddings.huggingface`. Every LlamaIndex integration lives in its own package under the `llama-index-*` prefix, and you install only the ones you use.
-
-**`SimpleDirectoryReader` is the reader you will use most often.** It scans a directory, dispatches each file to the right parser based on extension (.txt, .md, .pdf, .docx, .csv, .json), and returns a list of Documents. It has options for recursion, exclusion patterns, and metadata extraction, but the default of "everything in this directory as text" is what you want most of the time.
-
-**`.query()` returns a Response object**, which prints as its text but also carries `.source_nodes` (the Nodes the retriever picked) and `.metadata`. In production you often want the source nodes for citations or debugging; a plain `print(response)` is fine for exploration.
+- **`Settings` is the LlamaIndex global config**: Set `Settings.llm` and `Settings.embed_model` at the top of your script, and every downstream component (`VectorStoreIndex`, query engines, retrievers, extractors) picks them up automatically. You can also pass `llm=` and `embed_model=` directly to individual constructors when you want overrides, but the global default handles most cases.
+- **Provider packages match Part I's convention**: `Ollama` from `llama_index.llms.ollama`, `HuggingFaceEmbedding` from `llama_index.embeddings.huggingface`. Every LlamaIndex integration lives in its own package under the `llama-index-*` prefix, and you install only the ones you use.
+- **`SimpleDirectoryReader` is the reader you will use most often**: It scans a directory, dispatches each file to the right parser based on extension (.txt, .md, .pdf, .docx, .csv, .json), and returns a list of Documents. It has options for recursion, exclusion patterns, and metadata extraction, but the default of "everything in this directory as text" is what you want most of the time.
+- **`.query()` returns a Response object**: Prints as its text but also carries `.source_nodes` (the Nodes the retriever picked) and `.metadata`. In production you often want the source nodes for citations or debugging; a plain `print(response)` is fine for exploration.
 
 Expected output:
 
@@ -81,20 +78,20 @@ transactions should be subject to minimal government intervention.
 
 ## Swapping in a hosted model
 
-The provider-swap in LlamaIndex is one line: swap what `Settings.llm` points at. `02_hosted_swap.py`:
+The provider-swap in LlamaIndex is one line change, for example, swap what `Settings.llm` points at in the file `02_hosted_swap.py`:
 
 ```python
 Settings.llm = OpenAI(model="gpt-4o-mini", temperature=0)
 Settings.embed_model = HuggingFaceEmbedding(model_name="BAAI/bge-small-en-v1.5")
 ```
 
-Everything downstream (documents, index, query engine, response) is identical to script 1. Notice that even in the "hosted" script, the embedding model stays local. Embeddings are cheap to run on your own hardware, they run in milliseconds, and there is no reason to pay a provider for something an open model can do fine. I keep hosted embedding providers in the same "avoid unless you have a specific reason" bucket as LlamaCloud.
+Everything downstream (documents, index, query engine, response) is identical to the rest of the first Python script in this chapter. Notice that even in the "hosted" script, the embedding model stays local. Embeddings are cheap to run on your own hardware, they run in milliseconds, and there is no reason to pay a provider for something an open model can do fine. I keep hosted embedding providers in the same "avoid unless you have a specific reason" bucket.
 
 ## Persist an index, reload it later
 
 Real projects almost never build an index every time they answer a query. Building is expensive (embed every document, potentially thousands of API calls or minutes of local GPU); querying is cheap (embed one query, do a nearest-neighbor lookup, one LLM call). The standard pattern is: build once, persist to disk, reload in the query script.
 
-`03_persist_and_reload.py`:
+The code in script `03_persist_and_reload.py` is in two parts that in an application would be separate: we create an index on disk, then we load the index from disk and use it:
 
 ```python
 from pathlib import Path
@@ -128,7 +125,7 @@ print(response)
 
 ## Retrievers, without the LLM
 
-`.as_query_engine().query(...)` bundles two steps: retrieve the top-k Nodes for the query, then send them to the LLM along with the query for synthesis. Sometimes you only want the first step. `04_retriever_only.py`:
+The method chain `.as_query_engine().query(...)` bundles two steps: retrieve the top-k Nodes for the query, then send them to the LLM along with the query for synthesis. Sometimes you only want the first step as seen in the Python script `04_retriever_only.py`:
 
 ```python
 retriever = index.as_retriever(similarity_top_k=3)
@@ -143,7 +140,7 @@ for i, node_with_score in enumerate(nodes, 1):
     print(f"    {snippet}...\n")
 ```
 
-`.retrieve()` returns a list of `NodeWithScore` objects. `.score` is the cosine similarity, `.node.text` is the chunk text, `.node.metadata` is the metadata dict (which for `SimpleDirectoryReader`-loaded documents includes `file_name`, `file_path`, and a few others).
+The method call `.retrieve()` returns a list of `NodeWithScore` objects. `.score` is the cosine similarity, `.node.text` is the chunk text, `.node.metadata` is the metadata dict (which for `SimpleDirectoryReader`-loaded documents includes `file_name`, `file_path`, and a few others).
 
 I reach for `.as_retriever()` whenever LlamaIndex is going to be one step in a larger pipeline whose synthesis step is not a straightforward LLM call: feeding the nodes into a LangGraph workflow, or into a custom multi-step prompt, or into a downstream reranker.
 
@@ -161,7 +158,7 @@ $ uv run 04_retriever_only.py
     Sport is generally recognised as activities based in physical athleticism ...
 ```
 
-The score gap tells the story: only the first result is meaningfully relevant. A production retriever would filter on a minimum score, apply a reranker (Chapter "RAG with reranking" covers this), or expand the query, techniques that translate one-to-one from the LangChain patterns in Chapter "RAG patterns with LangChain".
+The score gap tells the story: only the first result is meaningfully relevant. A production retriever would filter on a minimum score, apply a reranker (Chapter "RAG with Reranking" covers this), or expand the query, techniques that translate one-to-one from the LangChain patterns in Chapter "RAG Patterns with LangChain".
 
 ## What we covered
 
@@ -172,4 +169,4 @@ Four primitives, four scripts:
 3. **`.persist()` / `load_index_from_storage`** for saving and reloading indices.
 4. **`.as_retriever()`** to get raw Nodes without an LLM synthesis step.
 
-Everything in the rest of Part II is combinations and elaborations of those four. Chapter "Local documents and local embeddings" goes deeper on document loading and local embedding models. Chapter "Choosing an index type" covers the different index types and when to reach for each. Chapter "RAG with reranking" adds reranking. The chapters "The Workflows API" and "Building an agent as a Workflow" introduce the Workflows API (LlamaIndex's answer to LangGraph) and use it to build a real agent. Then come multi-index query pipelines in Chapter "Multi-index query pipelines", structured extraction with `PydanticProgram` in Chapter "Structured extraction", and serving a workflow with FastAPI in Chapter "Serving a Workflow with FastAPI".
+Everything in the rest of Part II is combinations and elaborations of those four. Chapter "Local Documents and Local Embeddings" goes deeper on document loading and local embedding models. Chapter "Choosing an Index Type" covers the different index types and when to reach for each. Chapter "RAG with Reranking" adds reranking. The chapters "The Workflows API" and "Building an Agent as a Workflow" introduce the Workflows API (LlamaIndex's answer to LangGraph) and use it to build a real agent. Then come multi-index query pipelines in Chapter "Multi-Index Query Pipelines", structured extraction with `PydanticProgram` in Chapter "Structured Extraction", and serving a workflow with FastAPI in Chapter "Serving a Workflow with FastAPI".

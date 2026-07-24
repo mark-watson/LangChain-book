@@ -1,4 +1,4 @@
-# Appendix A. Model sizes and what they're good for
+# Appendix A. Model Sizes and What They're Good For
 
 This is deliberately not a "best model of the month" appendix. Any concrete recommendation I make here will be dated by the time you read it. Instead, this is a stable-over-time discussion of what different *sizes* of models tend to be good and bad at, when a hosted model is worth the token cost, and how to think about the different *roles* a model can play in an application.
 
@@ -8,7 +8,7 @@ I group local models into three tiers based on parameter count, which is the clo
 
 **Small (roughly 1-4B parameters).** In 2026 the strongest representatives are `llama3.2:3b`, `gemma3:4b-it-qat`, `phi4-mini`, and `smollm2`. RAM footprint: 2-4 GB. Inference speed on Apple Silicon or a modern NVIDIA card: often over 40 tokens per second.
 
-These are good at: short-form generation, focused classification, on/off-topic filtering (the classic "reply Y or N" gate from the local-search pipeline in Chapter "A Perplexity-style local search agent"), simple prompt-following, generating small structured outputs.
+These are good at: short-form generation, focused classification, on/off-topic filtering (the classic "reply Y or N" gate from the local-search pipeline in Chapter "A Perplexity-Style Local Search Agent"), simple prompt-following, generating small structured outputs.
 
 These are bad at: multi-hop reasoning, sustained tool use, keeping their place in long conversations, handling ambiguity gracefully. A 3B model that gets a tool-calling scenario wrong will often silently produce prose describing what it *would* do instead of actually calling the tool. This failure mode is one of the most common gotchas in the whole book; if you see it, size up.
 
@@ -45,9 +45,9 @@ The word "model" hides several distinct roles in an application. Different sizes
 
 **Tool calling.** A specialization of chat. Not every chat-capable model supports tool calling well. As of mid-2026 the ones I use are qwen3, llama3.x, gemma3, and mistral-small. If your model of choice does not appear in tool-calling benchmarks, assume it does not support tools and pick a different one.
 
-**Embedding.** Turning text into vectors. Not related to the chat model in your pipeline; picked separately. Good defaults for local use: `BAAI/bge-small-en-v1.5` (fast, small), `BAAI/bge-base-en-v1.5` (slower, better). Chapter "Local documents and local embeddings" discusses the tradeoffs.
+**Embedding.** Turning text into vectors. Not related to the chat model in your pipeline; picked separately. Good defaults for local use: `BAAI/bge-small-en-v1.5` (fast, small), `BAAI/bge-base-en-v1.5` (slower, better). Chapter "Local Documents and Local Embeddings" discusses the tradeoffs.
 
-**Reranking.** Cross-encoder that scores query-document pairs for relevance. Chapter "RAG with reranking" covers this. Default: `BAAI/bge-reranker-base`. Nothing to do with your chat model; runs on CPU or GPU independently.
+**Reranking.** Cross-encoder that scores query-document pairs for relevance. Chapter "RAG with Reranking" covers this. Default: `BAAI/bge-reranker-base`. Nothing to do with your chat model; runs on CPU or GPU independently.
 
 **LLM judge.** A specialization of chat: an LLM asked to evaluate another LLM's output. Appendix B covers this. Use the strongest model you have available for the judge, because the judgment quality directly bounds the evaluation quality.
 

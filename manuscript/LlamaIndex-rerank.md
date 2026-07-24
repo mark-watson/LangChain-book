@@ -1,6 +1,6 @@
-# RAG with reranking
+# RAG with Reranking
 
-Chapter "RAG patterns with LangChain" made the same argument I am about to make here, and it applies verbatim in LlamaIndex: cosine similarity over sentence embeddings is fast but coarse; a cross-encoder is slow but much more accurate; the trick is to retrieve wide with the cheap tool and rerank narrow with the expensive one.
+Chapter "RAG Patterns with LangChain" made the same argument I am about to make here, and it applies verbatim in LlamaIndex: cosine similarity over sentence embeddings is fast but coarse; a cross-encoder is slow but much more accurate; the trick is to retrieve wide with the cheap tool and rerank narrow with the expensive one.
 
 In LlamaIndex the mechanism is a **node postprocessor**. You pass one to `.as_query_engine(node_postprocessors=[...])` and it runs between the retriever's `.retrieve()` call and the LLM synthesis step. The framework ships several (`SimilarityPostprocessor` for score thresholding, `MetadataReplacementPostProcessor` for retrieved-content rewriting, `LongContextReorder` for reordering), but the one that matters most for retrieval quality is `SentenceTransformerRerank`.
 

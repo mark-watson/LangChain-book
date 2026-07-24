@@ -1,4 +1,4 @@
-# Structured extraction
+# Structured Extraction
 
 Sometimes the LLM's job is not to answer a question or hold a conversation but to turn an unstructured input into a structured record. Extracting names, addresses, and emails from a customer message. Turning meeting notes into calendar events. Converting a paragraph of product description into fields for a database. This class of task is where a good structured-output primitive earns its weight.
 
@@ -108,7 +108,7 @@ This is the shape of nearly every "migrate a folder of unstructured notes into a
 `structured_predict` and tool-calling look similar: both make the model output structured data. The difference is what you do with the result.
 
 - **`structured_predict`** returns a Pydantic object directly. Use it when the LLM's job is to *produce* structured data as the final answer.
-- **Tool calling** (Chapters "Building a ReAct agent with LangGraph + Ollama" and "Building an agent as a Workflow") returns tool call requests that you then execute. Use it when the LLM's job is to *decide* to do something that produces data.
+- **Tool calling** (Chapters "Building a ReAct Agent with LangGraph + Ollama" and "Building an Agent as a Workflow") returns tool call requests that you then execute. Use it when the LLM's job is to *decide* to do something that produces data.
 
 There is overlap. A ReAct agent whose final answer is a Pydantic object is a valid pattern. But if all you need is "text in, structured record out," `structured_predict` is dramatically simpler.
 

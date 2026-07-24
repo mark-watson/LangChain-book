@@ -1,4 +1,4 @@
-# Local documents and local embeddings
+# Local Documents and Local Embeddings
 
 Chapter "LlamaIndex" covered the LlamaIndex primitives in the abstract. This chapter is about the two concrete, everyday operations you will do more than any others: getting your data into the framework as `Document` objects, and picking an embedding model to convert them into vectors. Both operations run entirely on your laptop.
 
@@ -162,7 +162,7 @@ A rough taxonomy of the local embedding models worth knowing about in 2026:
 - **`nomic-ai/nomic-embed-text-v1.5`** (~550 MB): trained on longer contexts (up to 8k tokens), useful when your Nodes are large and you don't want to chunk aggressively. Requires `trust_remote_code=True`.
 - **`BAAI/bge-m3`** (~2.3 GB): multilingual, multi-vector, top-of-the-line quality. Overkill for most projects; reach for it when you actually need any of those things.
 
-I default to BGE-small for prototypes and move up to BGE-base when I see the small model missing obvious matches. Below that threshold, effort is better spent on retrieval quality (the "RAG with reranking" chapter's reranker) than on a bigger embedding model.
+I default to BGE-small for prototypes and move up to BGE-base when I see the small model missing obvious matches. Below that threshold, effort is better spent on retrieval quality (the "RAG with Reranking" chapter's reranker) than on a bigger embedding model.
 
 ## Chunking with the ingestion pipeline
 
@@ -217,4 +217,4 @@ Each of these costs one LLM call per chunk at ingestion time, so on a real corpu
 - Local embedding models are small, fast, and free. BGE-small is my default; BGE-base if I need more quality; MiniLM as a classic backup.
 - `IngestionPipeline` with `SentenceSplitter` is the standard way to chunk. Chunk sizes in the 200-1000 token range with 10-20% overlap cover most needs.
 
-Chapter "Choosing an index type" covers the other end of the ingestion story: given a corpus of Nodes, which index type should you actually build?
+Chapter "Choosing an Index Type" covers the other end of the ingestion story: given a corpus of Nodes, which index type should you actually build?

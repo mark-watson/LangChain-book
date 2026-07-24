@@ -11,15 +11,15 @@ Across every chapter in this book, the total set of Python packages you will ins
 - `langchain`: the LangChain 1.0 core library.
 - `langchain-core`: the primitives (`Runnable`, `BaseMessage`, `PromptTemplate`, etc.) that `langchain` and `langgraph` share.
 - `langgraph`: the LangGraph 1.0 stateful-agent framework.
-- `langgraph-checkpoint-sqlite`: the `SqliteSaver` checkpointer backend that makes a LangGraph agent restart-safe (Chapter "Durable, restart-safe agents").
+- `langgraph-checkpoint-sqlite`: the `SqliteSaver` checkpointer backend that makes a LangGraph agent restart-safe (Chapter "Durable, Restart-Safe Agents").
 - `llama-index-core`: the LlamaIndex 0.14+ core library.
 
-Notice `langchain-community` is not on this list. Earlier editions leaned on it for SQL toolkits, retrievers, and cross-encoders; the version that shipped alongside LangChain 1.0 dropped several of those (`SQLDatabaseToolkit`, `ContextualCompressionRetriever`/`CrossEncoderReranker`, `EnsembleRetriever`, `BM25Retriever`, `HuggingFaceCrossEncoder` all lost their import paths at one point or another). Rather than pull in a large legacy package for pieces that keep moving, the chapters that used to need it (Chapters "RAG patterns with LangChain" and "Natural-language SQLite") reimplement the specific piece directly on `langchain_core.retrievers.BaseRetriever` or raw SQLAlchemy, usually 20-40 lines. You will see why, with the actual code, in those chapters.
+Notice `langchain-community` is not on this list. Earlier editions leaned on it for SQL toolkits, retrievers, and cross-encoders; the version that shipped alongside LangChain 1.0 dropped several of those (`SQLDatabaseToolkit`, `ContextualCompressionRetriever`/`CrossEncoderReranker`, `EnsembleRetriever`, `BM25Retriever`, `HuggingFaceCrossEncoder` all lost their import paths at one point or another). Rather than pull in a large legacy package for pieces that keep moving, the chapters that used to need it (Chapters "RAG Patterns with LangChain" and "Natural-Language SQLite") reimplement the specific piece directly on `langchain_core.retrievers.BaseRetriever` or raw SQLAlchemy, usually 20-40 lines. You will see why, with the actual code, in those chapters.
 
 **LLM providers (pick as needed per chapter)**
 
 - `langchain-ollama` and `llama-index-llms-ollama`: the default LLM provider for the book. Local models via Ollama.
-- `langchain-openai` and `llama-index-llms-openai`: for readers who want to use OpenAI or an OpenAI-compatible endpoint such as Fireworks.ai. Used directly in the "swap the model" examples in Chapters "LangChain 1.0 in one hour" and "LlamaIndex".
+- `langchain-openai` and `llama-index-llms-openai`: for readers who want to use OpenAI or an OpenAI-compatible endpoint such as Fireworks.ai. Used directly in the "swap the model" examples in Chapters "LangChain 1.0 in One Hour" and "LlamaIndex".
 
 **Embeddings and vector stores**
 

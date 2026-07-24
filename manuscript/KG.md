@@ -1,4 +1,4 @@
-# DBpedia and Wikidata as agent tools
+# DBpedia and Wikidata as Agent Tools
 
 Two of the largest and most useful public knowledge graphs on the internet are [DBpedia](https://www.dbpedia.org) and [Wikidata](https://www.wikidata.org). Both are free to query, both use RDF as their data model, both speak SPARQL, and neither requires an API key. For a solo developer building anything that needs grounded factual data (people, places, organizations, dates, relationships), they are high-value data assets, and they compose beautifully with LangGraph agents. This chapter builds one small agent per KG and shows how to give the model SPARQL as a tool.
 
@@ -166,7 +166,7 @@ SELECT DISTINCT ?country ?label WHERE {
 }
 ```
 
-then executed it and summarized the results. Add `.stream()` from the "Building a ReAct agent with LangGraph + Ollama" chapter's streaming example if you want to watch the intermediate tool calls.
+then executed it and summarized the results. Add `.stream()` from the "Building a ReAct Agent with LangGraph + Ollama" chapter's streaming example if you want to watch the intermediate tool calls.
 
 ## The Wikidata agent
 
@@ -353,11 +353,11 @@ In practice I use DBpedia when I am writing a query interactively (its readable 
 
 ## Where to take this next
 
-Everything you learned in Chapters "Building a ReAct agent with LangGraph + Ollama" through "Multi-agent supervisor pattern" composes with these KG agents:
+Everything you learned in Chapters "Building a ReAct Agent with LangGraph + Ollama" through "Multi-Agent Supervisor Pattern" composes with these KG agents:
 
-- **Add a checkpointer** (Chapter "Durable, restart-safe agents") for follow-up questions across turns. "Which of those countries has the largest population?" makes sense as a second turn only if the agent remembers the first answer.
-- **Add an approval interrupt** (Chapter "Human-in-the-loop patterns") if the KG could ever return sensitive information you want a human to see before it goes to the user.
-- **Add these tools to a supervisor graph** (Chapter "Multi-agent supervisor pattern") as a "facts specialist" alongside your other specialists. This is the pattern I use most often: the KG agent is one of several specialists a supervisor can call on for grounded factual data.
+- **Add a checkpointer** (Chapter "Durable, Restart-Safe Agents") for follow-up questions across turns. "Which of those countries has the largest population?" makes sense as a second turn only if the agent remembers the first answer.
+- **Add an approval interrupt** (Chapter "Human-in-the-Loop Patterns") if the KG could ever return sensitive information you want a human to see before it goes to the user.
+- **Add these tools to a supervisor graph** (Chapter "Multi-Agent Supervisor Pattern") as a "facts specialist" alongside your other specialists. This is the pattern I use most often: the KG agent is one of several specialists a supervisor can call on for grounded factual data.
 
 ## What we covered
 
@@ -366,4 +366,4 @@ Everything you learned in Chapters "Building a ReAct agent with LangGraph + Olla
 - DBpedia is friendlier to prototype against; Wikidata has better coverage and cleaner data.
 - The pattern is identical for both KGs and composes with checkpointers, HITL, and supervisor graphs from earlier chapters.
 
-The next chapter "A Perplexity-style local search agent" wraps up Part I, tying together web search, RAG, and multi-step reasoning.
+The next chapter "A Perplexity-Style Local Search Agent" wraps up Part I, tying together web search, RAG, and multi-step reasoning.

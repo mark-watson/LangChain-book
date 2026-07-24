@@ -1,4 +1,4 @@
-# A Perplexity-style local search agent
+# A Perplexity-Style Local Search Agent
 
 I used to subscribe to [Perplexity](https://www.perplexity.ai) and still use their commercial AIs. Perplexity does one thing very well: given a natural-language question, it searches the web, reads the top pages, and synthesizes a multi-paragraph answer that cites the sources it used. That pattern (search, filter, fetch, summarize, synthesize) is broadly useful and about eighty lines of Python to build for yourself. This chapter builds it as a LangGraph pipeline, running entirely on your laptop, with Ollama for the LLM, DuckDuckGo for search, and `trafilatura` for HTML-to-text extraction.
 
@@ -12,7 +12,7 @@ Consider five nodes, one long straight edge, no conditional routing:
 START -> search -> filter -> fetch -> summarize -> synthesize -> END
 ```
 
-Each node takes state in and produces a partial state update, the same shape as every graph in Chapters "LangGraph 1.0 fundamentals" through "DBpedia and Wikidata as agent tools". The state accumulates as the pipeline runs:
+Each node takes state in and produces a partial state update, the same shape as every graph in Chapters "LangGraph 1.0 Fundamentals" through "DBpedia and Wikidata as Agent Tools". The state accumulates as the pipeline runs:
 
 | Field after node | Contents |
 |---|---|
@@ -238,7 +238,7 @@ Streaming makes it very easy to see which stage is slow (usually summarize, occa
 
 ## Extending this
 
-Everything from Chapters "Durable, restart-safe agents", "Human-in-the-loop patterns", and "Multi-agent supervisor pattern" composes with this pipeline:
+Everything from Chapters "Durable, Restart-Safe Agents", "Human-in-the-Loop Patterns", and "Multi-Agent Supervisor Pattern" composes with this pipeline:
 
 - **Add a checkpointer** and a `thread_id` so follow-up questions can reference prior searches ("of those, which is the cheapest option?"). The current graph has no memory between invocations.
 - **Add an approval interrupt** before `fetch` if you want a human to prune the URL list before you spend the time on downloads.
@@ -250,12 +250,12 @@ You can also swap the search backend. Using the Pyhton library `ddgs` is the fre
 
 Part I has been a tour of what a solo developer can build with LangChain 1.0 and LangGraph 1.0 as open source libraries, without any of the commercial services LangChain Inc. sells on top. The primitives covered:
 
-- Chat models, `.invoke`/`.stream`/`.batch`, LCEL, prompts, structured output, tool binding (Chapter "LangChain 1.0 in one hour").
-- Retrieval patterns for RAG (Chapter "RAG patterns with LangChain").
-- LangGraph state machines: state, nodes, reducers, conditional edges (Chapter "LangGraph 1.0 fundamentals").
-- ReAct agents built on those primitives (Chapter "Building a ReAct agent with LangGraph + Ollama").
-- Durability via checkpointers (Chapter "Durable, restart-safe agents"), HITL via interrupts and state editing (Chapter "Human-in-the-loop patterns"), multi-agent supervisor patterns (Chapter "Multi-agent supervisor pattern").
-- Applied to a SQL database (Chapter "Natural-language SQLite"), knowledge graphs (Chapter "DBpedia and Wikidata as agent tools"), and web search (this chapter).
+- Chat models, `.invoke`/`.stream`/`.batch`, LCEL, prompts, structured output, tool binding (Chapter "LangChain 1.0 in One Hour").
+- Retrieval patterns for RAG (Chapter "RAG Patterns with LangChain").
+- LangGraph state machines: state, nodes, reducers, conditional edges (Chapter "LangGraph 1.0 Fundamentals").
+- ReAct agents built on those primitives (Chapter "Building a ReAct Agent with LangGraph + Ollama").
+- Durability via checkpointers (Chapter "Durable, Restart-Safe Agents"), HITL via interrupts and state editing (Chapter "Human-in-the-Loop Patterns"), multi-agent supervisor patterns (Chapter "Multi-Agent Supervisor Pattern").
+- Applied to a SQL database (Chapter "Natural-Language SQLite"), knowledge graphs (Chapter "DBpedia and Wikidata as Agent Tools"), and web search (this chapter).
 
 Everything above runs on your laptop with the packages listed in "The Stack We're Building On." No LangSmith, no LangGraph Cloud, no LangSmith Deployment, no LlamaCloud, no LlamaParse.
 

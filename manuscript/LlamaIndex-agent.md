@@ -1,8 +1,8 @@
-# Building an agent as a Workflow
+# Building an Agent as a Workflow
 
-Chapter "The Workflows API" introduced Workflows in the abstract. This chapter uses them to build the same thing Chapter "Building a ReAct agent with LangGraph + Ollama" built in LangGraph: a ReAct agent that alternates between "call the model" and "run the tools the model asked for" until the model returns a final answer.
+Chapter "The Workflows API" introduced Workflows in the abstract. This chapter uses them to build the same thing Chapter "Building a ReAct Agent with LangGraph + Ollama" built in LangGraph: a ReAct agent that alternates between "call the model" and "run the tools the model asked for" until the model returns a final answer.
 
-As with Chapter "Building a ReAct agent with LangGraph + Ollama", we build it twice. The first version uses `FunctionAgent`, the LlamaIndex prebuilt equivalent of `create_react_agent`. The second version constructs the same behavior explicitly as a `Workflow`. Seeing the two side by side clarifies what the prebuilt is doing on your behalf.
+As with Chapter "Building a ReAct Agent with LangGraph + Ollama", we build it twice. The first version uses `FunctionAgent`, the LlamaIndex prebuilt equivalent of `create_react_agent`. The second version constructs the same behavior explicitly as a `Workflow`. Seeing the two side by side clarifies what the prebuilt is doing on your behalf.
 
 Everything lives in `source-code/llama_index_agent/`. Setup:
 
@@ -14,7 +14,7 @@ $ ollama pull qwen3.5:4b
 
 ## The tools
 
-Same two-tool shape as Chapter "Building a ReAct agent with LangGraph + Ollama":
+Same two-tool shape as Chapter "Building a ReAct Agent with LangGraph + Ollama":
 
 ```python
 def multiply(a: int, b: int) -> int:
@@ -164,7 +164,7 @@ The workflow produces the same output as the `FunctionAgent` version. Which is e
 
 ## When to reach for which
 
-Same guidance as Chapter "Building a ReAct agent with LangGraph + Ollama":
+Same guidance as Chapter "Building a ReAct Agent with LangGraph + Ollama":
 
 - **Use `FunctionAgent`** if you have a flat list of tools and want the standard ReAct behavior.
 - **Drop down to `Workflow`** if you need extra steps (a planner before the model, a validator after the tools), custom state fields beyond the transcript, or unusual routing.
@@ -175,4 +175,4 @@ Same guidance as Chapter "Building a ReAct agent with LangGraph + Ollama":
 - The manual `Workflow` version is not much more code and unlocks all of the flexibility of Chapter "The Workflows API".
 - `Context` is Workflows' shared-state mechanism; use it whenever multiple steps need to see or update the same data.
 
-Chapter "Multi-index query pipelines" builds the LlamaIndex equivalent of the supervisor pattern from Chapter "Multi-agent supervisor pattern", but for retrieval instead of tool use.
+Chapter "Multi-Index Query Pipelines" builds the LlamaIndex equivalent of the supervisor pattern from Chapter "Multi-Agent Supervisor Pattern", but for retrieval instead of tool use.

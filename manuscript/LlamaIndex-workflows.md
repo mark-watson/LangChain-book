@@ -13,7 +13,7 @@ Everything in this chapter lives in `source-code/llama_index_workflows/`.
 - **`Workflow`**: a class you subclass. Its `@step` methods are the units of work.
 - **`Event`**: the messages that flow between steps. Every step takes exactly one event and returns one event.
 - **`StartEvent`** and **`StopEvent`**: special events. The step that accepts a `StartEvent` runs first when you call `.run()`; a step that returns a `StopEvent` ends the workflow.
-- **`Context`**: an optional shared state object available to every step (analogous to LangGraph's state). Not used in the first three examples in this chapter; we introduce it in Chapter "Building an agent as a Workflow" when we need it.
+- **`Context`**: an optional shared state object available to every step (analogous to LangGraph's state). Not used in the first three examples in this chapter; we introduce it in Chapter "Building an Agent as a Workflow" when we need it.
 
 That is the whole surface. Workflows are asynchronous by default, which is why every step method is `async` and every top-level call is wrapped in `asyncio.run()`.
 
@@ -180,4 +180,4 @@ If your app is already LlamaIndex-heavy (query engines, indices, LlamaHub reader
 - Every step is `async`; every top-level run is wrapped in `asyncio.run`.
 - Workflows and LangGraph solve the same problem with different styles. Pick based on the rest of your stack.
 
-Chapter "Building an agent as a Workflow" uses Workflows to build a proper ReAct agent, LlamaIndex's answer to the "Building a ReAct agent with LangGraph + Ollama" chapter's LangGraph ReAct agent.
+Chapter "Building an Agent as a Workflow" uses Workflows to build a proper ReAct agent, LlamaIndex's answer to the "Building a ReAct Agent with LangGraph + Ollama" chapter's LangGraph ReAct agent.

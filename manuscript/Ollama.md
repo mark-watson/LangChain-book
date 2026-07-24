@@ -183,7 +183,7 @@ while True:
     print(response)
 ```
 
-`load_text_documents` is a small stand-in for the old `DirectoryLoader` (removed along with the rest of `langchain.document_loaders` in 1.0): read every `.txt` file under a path into a `Document`, nothing more. Everything downstream of that is the same LCEL shape you have seen since Chapter "RAG patterns with LangChain": split, embed, store, retrieve, format, prompt, generate.
+`load_text_documents` is a small stand-in for the old `DirectoryLoader` (removed along with the rest of `langchain.document_loaders` in 1.0): read every `.txt` file under a path into a `Document`, nothing more. Everything downstream of that is the same LCEL shape you have seen since Chapter "RAG Patterns with LangChain": split, embed, store, retrieve, format, prompt, generate.
 
 Here is an example using this script, against the same **../data/** corpus used elsewhere in the book. The first question is answered from general document content; the second uses a detail (a fictional economist's name) that was deliberately added to **economics.txt** and exists nowhere in `qwen3.5:4b`'s training data, so a correct answer proves the response came from retrieval, not from the model's memory:
 

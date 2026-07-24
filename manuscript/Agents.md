@@ -1,10 +1,10 @@
-# Building a ReAct agent with LangGraph + Ollama
+# Building a ReAct Agent with LangGraph + Ollama
 
-Chapter "LangGraph 1.0 fundamentals" built graphs that did not do much. This chapter uses the same graph primitives to build the standard workhorse of applied LLM development: a **ReAct agent**, a program that alternates between "let the model think" and "run a tool the model asked for" until the model decides it has a final answer.
+Chapter "LangGraph 1.0 Fundamentals" built graphs that did not do much. This chapter uses the same graph primitives to build the standard workhorse of applied LLM development: a **ReAct agent**, a program that alternates between "let the model think" and "run a tool the model asked for" until the model decides it has a final answer.
 
 The name comes from the [2022 ReAct paper](https://react-lm.github.io/), short for *Reason and Act*, but at this point the pattern is more folklore than research. Ninety percent of the "AI agents" you read about are some variant of ReAct with two or three custom tools bolted on.
 
-We are going to build the same agent twice. The first version uses `langchain.agents.create_agent`, which is what I reach for in most real projects. The second version constructs the same graph explicitly using the primitives from Chapter "LangGraph 1.0 fundamentals". Seeing the two side by side is the fastest way I know to understand what the prebuilt factory is doing on your behalf and when it is worth dropping down to the manual version.
+We are going to build the same agent twice. The first version uses `langchain.agents.create_agent`, which is what I reach for in most real projects. The second version constructs the same graph explicitly using the primitives from Chapter "LangGraph 1.0 Fundamentals". Seeing the two side by side is the fastest way I know to understand what the prebuilt factory is doing on your behalf and when it is worth dropping down to the manual version.
 
 A naming note, since you will see both in the wild: `create_agent` is the current home for this factory, in the `langchain` package rather than `langgraph.prebuilt`. Older code and tutorials call the same kind of factory `create_react_agent`. That name still exists in `langgraph.prebuilt` for backward compatibility, but `langchain.agents.create_agent` is the one actively developed and the one this book uses.
 
@@ -18,7 +18,7 @@ Before any code, the pattern in five bullets:
 4. The updated transcript goes back to the model. Go to step 2.
 5. Eventually the model returns plain text with no tool calls. That is the final answer.
 
-The "LangGraph 1.0 fundamentals" chapter's conditional edges are exactly the mechanism for "step 2 asks a question, step 3 or 5 depending on the answer." A ReAct agent is a two-node graph:
+The "LangGraph 1.0 Fundamentals" chapter's conditional edges are exactly the mechanism for "step 2 asks a question, step 3 or 5 depending on the answer." A ReAct agent is a two-node graph:
 
 ```text
 START -> model
@@ -103,7 +103,7 @@ for m in result["messages"]:
         print(m.content)
 ```
 
-`create_agent(model, tools)` returns a compiled `StateGraph`, the same kind of object you get from `graph.compile()` in Chapter "LangGraph 1.0 fundamentals". It handles `bind_tools` on the model, wraps the tools in a `ToolNode`, and wires the two-node graph shown above. It also accepts, as optional keyword arguments, several things later chapters build by hand on top of the manual graph (`checkpointer`, `interrupt_before`/`interrupt_after`, `response_format`), all worth knowing about even though this chapter does not use any of them yet.
+`create_agent(model, tools)` returns a compiled `StateGraph`, the same kind of object you get from `graph.compile()` in Chapter "LangGraph 1.0 Fundamentals". It handles `bind_tools` on the model, wraps the tools in a `ToolNode`, and wires the two-node graph shown above. It also accepts, as optional keyword arguments, several things later chapters build by hand on top of the manual graph (`checkpointer`, `interrupt_before`/`interrupt_after`, `response_format`), all worth knowing about even though this chapter does not use any of them yet.
 
 A representative run:
 
@@ -188,7 +188,7 @@ if __name__ == "__main__":
 
 Let’s walk through the code:
 
-**The state.** A single `messages` field reduced by `add_messages`, exactly like the last example of Chapter "LangGraph 1.0 fundamentals". Every message the graph produces, the model's replies and the tool results, gets appended here.
+**The state.** A single `messages` field reduced by `add_messages`, exactly like the last example of Chapter "LangGraph 1.0 Fundamentals". Every message the graph produces, the model's replies and the tool results, gets appended here.
 
 **The model.** `ChatOllama(...).bind_tools(TOOLS)` gives the model the list of callable tools. When invoked, the model may respond with `.tool_calls` populated instead of `.content`.
 
@@ -280,9 +280,9 @@ Twenty-five is a reasonable number: enough for a real multi-step task, low enoug
 
 ## What we covered
 
-- The ReAct loop is a two-node graph with one conditional edge, precisely the pattern you would write with the primitives from Chapter "LangGraph 1.0 fundamentals".
+- The ReAct loop is a two-node graph with one conditional edge, precisely the pattern you would write with the primitives from Chapter "LangGraph 1.0 Fundamentals".
 - `create_agent` is a factory that builds and compiles that graph for you. Use it unless you need custom state, extra nodes, or unusual routing.
-- Building the graph explicitly is not much more code and unlocks all of the "LangGraph 1.0 fundamentals" chapter's flexibility.
+- Building the graph explicitly is not much more code and unlocks all of the "LangGraph 1.0 Fundamentals" chapter's flexibility.
 - `.stream()` on the compiled agent is essential for debugging and iteration.
 
-Chapter "Durable, restart-safe agents" keeps the same agent but adds a checkpointer, which is what turns it from a script that runs once into a service that can pause, resume, and survive a process restart without losing conversation state.
+Chapter "Durable, Restart-Safe Agents" keeps the same agent but adds a checkpointer, which is what turns it from a script that runs once into a service that can pause, resume, and survive a process restart without losing conversation state.
