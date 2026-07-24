@@ -6,25 +6,33 @@ About ten years ago I spent two months of my time writing a system in Clojure th
 
 In this chapter I walk through a small system for pulling text files out of Google Drive and making them queryable with a local LLM. It is deliberately minimal (a fetch script and an index-and-query script), but it is the same shape as anything larger you would build on top of your own Drive.
 
-With the Google setup directions listed below, you will get a pop-up web browsing window with a warning like (this shows my Gmail address, you should see your own Gmail address here assuming that you have recently logged into Gmail using your default web browser):
-
-![](gwarning.png)
-
-You will need to first click **Advanced** and then click link **Go to GoogleAPIExamples (unsafe)** link in the lower left corner and then temporarily authorize this example on your Gmail account.
 
 ## Setting Up Requirements
 
-You need to create a credential at [https://console.cloud.google.com/cloud-resource-manager](https://console.cloud.google.com/cloud-resource-manager) (changing application type to "Desktop"):
+To get setup directions run the first example program. When it detects that a setup is required it prints directions and exits:
 
-- Search for 'Google Drive API', select the entry, and click 'Enable'.
-- Select 'Credentials' from the left menu, click 'Create Credentials', select 'OAuth client ID'.
-- Now, the product name and consent screen need to be set -> click 'Configure consent screen' and follow the instructions. Once finished:
-- Select 'Application type' to be Desktop application.
-- Enter an appropriate name.
-- Input `http://localhost:8080` for 'Authorized JavaScript origins'.
-- Input `http://localhost:8080/` for 'Authorized redirect URIs'.
-- Click 'Save'.
-- Click 'Download JSON' on the right side of Client ID. Google names the download `client_secret_<really long ID>.json`; **rename it to exactly `client_secrets.json`** and copy it into the `source-code/google_drive_llm/` directory. The script below looks for that exact filename and prints setup instructions instead of a stack trace if it is missing.
+```
+$ uv run fetch_txt_files.py
+
+Google OAuth credentials not found (client_secrets.json is missing).
+
+To set up access to Google Drive:
+
+  1. Go to the Google Cloud Console and create a project:
+     https://console.cloud.google.com/
+
+  2. Enable the Google Drive API for your project:
+     https://console.cloud.google.com/apis/library/drive.googleapis.com
+
+  3. Create OAuth 2.0 credentials (Desktop app type) and download
+     the JSON file, saving it as 'client_secrets.json' in this directory.
+
+  4. Full quickstart guide:
+     https://developers.google.com/drive/api/quickstart/python
+
+Then re-run this script — a browser window will open to complete sign-in.
+```
+
 
 ## Write Utility To Fetch All Text Files From Top Level Google Drive Folder
 
