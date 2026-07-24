@@ -19,6 +19,8 @@ That is the whole surface. Workflows are asynchronous by default, which is why e
 
 ## Setup
 
+Here is our usual setup for running the examples:
+
 ```console
 $ cd source-code/llama_index_workflows
 $ uv sync
@@ -27,9 +29,7 @@ $ ollama pull qwen3.5:4b
 
 ## Hello workflow
 
-The smallest possible workflow: one step from `StartEvent` to `StopEvent`.
-
-`01_hello_workflow.py`:
+The smallest possible workflow: one step from `StartEvent` to `StopEvent` as demonstrated in the example script `01_hello_workflow.py`:
 
 ```python
 import asyncio
@@ -55,7 +55,7 @@ asyncio.run(main())
 
 Three things worth noticing.
 
-**`wf.run(name="Mark")` is how you start a workflow.** Whatever keyword arguments you pass end up on the `StartEvent`. The step that declares `StartEvent` as its input type is the entry point.
+**`wf.run(name="Mark")` is how you start a workflow.** Whatever keyword arguments you pass ends up on the `StartEvent`. The step that declares `StartEvent` as its input type is the entry point.
 
 **Step wiring happens through Python type annotations.** No `add_edge` calls, no `START` sentinel. The framework inspects each `@step` method's signature, sees which event type it consumes and which it produces, and wires the graph automatically.
 
@@ -63,7 +63,7 @@ Three things worth noticing.
 
 ## Chaining steps with a custom event
 
-To wire two steps together, define your own `Event` subclass. `02_two_steps.py`:
+To wire two steps together, define your own `Event` subclass as seen in the script `02_two_steps.py`:
 
 ```python
 import asyncio
@@ -98,9 +98,7 @@ The `uppercase` step returns an `UpperEvent`; the `reverse` step takes an `Upper
 
 ## Branching by event type
 
-Conditional routing works the same way. A step whose return type is `A | B` returns either an `A` or a `B` at runtime, and the framework routes to whichever downstream step consumes that type.
-
-`03_branching.py`:
+Conditional routing works the same way. A step whose return type is `A | B` returns either an `A` or a `B` at runtime, and the framework routes to whichever downstream step consumes that type as seen in `03_branching.py`:
 
 ```python
 class BranchingWorkflow(Workflow):
@@ -160,11 +158,11 @@ class TopicRoutingWorkflow(Workflow):
 
 The workflow instantiates its own LLM in `__init__`, which is one common pattern; another is to pass the LLM in as a constructor argument if you want to swap it. Every step is `async` and every LLM call uses the async variant (`.acomplete`, `.achat`); that is the idiomatic style and it lets the workflow parallelize steps automatically if the graph allows.
 
-`.run(question=q)` accepts a `timeout` in the workflow constructor (`TopicRoutingWorkflow(timeout=120.0)` above); LLM calls can be slow on cold Ollama, and the default 10-second timeout will trip on a first call.
+The method call `.run(question=q)` accepts a `timeout` in the workflow constructor (`TopicRoutingWorkflow(timeout=120.0)` above); LLM calls can be slow on Ollama if a model is not pre-loaded into memory, and the default 10-second timeout will trip on a first call to warm up Ollama.
 
 ## Workflows vs LangGraph
 
-I have not shipped enough production systems on Workflows to make strong claims yet. What I can say from prototyping both:
+I have not experimented with Workflows to make strong claims yet. What I can say from prototyping both:
 
 - **LangGraph's `StateGraph` is easier to explain in one sitting.** You have a state dict; nodes update it; edges route based on it. That maps directly onto the state-machine mental model that most programmers already have.
 - **LlamaIndex Workflows are easier to iterate on.** Adding a step means adding a class and a `@step` method, with no wiring changes. Reorganizing the flow is often a matter of renaming event types. This friction difference matters when you are still figuring out what the workflow should do.
@@ -180,4 +178,4 @@ If your app is already LlamaIndex-heavy (query engines, indices, LlamaHub reader
 - Every step is `async`; every top-level run is wrapped in `asyncio.run`.
 - Workflows and LangGraph solve the same problem with different styles. Pick based on the rest of your stack.
 
-Chapter "Building an Agent as a Workflow" uses Workflows to build a proper ReAct agent, LlamaIndex's answer to the "Building a ReAct Agent with LangGraph + Ollama" chapter's LangGraph ReAct agent.
+The next chapter "Building an Agent as a Workflow" uses Workflows to build a proper ReAct agent, LlamaIndex's answer to the "Building a ReAct Agent with LangGraph + Ollama" chapter's LangGraph ReAct agent.
