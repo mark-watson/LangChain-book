@@ -1,10 +1,16 @@
 # Structured Extraction
 
-Sometimes the LLM's job is not to answer a question or hold a conversation but to turn an unstructured input into a structured record. Extracting names, addresses, and emails from a customer message. Turning meeting notes into calendar events. Converting a paragraph of product description into fields for a database. This class of task is where a good structured-output primitive earns its weight.
+Sometimes the LLM's job is not to answer a question or hold a conversation but to turn an unstructured input into a structured record such as:
 
-LlamaIndex's primitive is **`llm.structured_predict(SchemaClass, prompt_template, **vars)`**. Hand it a Pydantic model and a prompt template; get back a validated instance of the model. The framework handles the JSON-schema plumbing, the "here is the schema, please output JSON" prompt engineering, and the retry loop when validation fails.
+- Extracting names, addresses, and emails from a customer message.
+- Turning meeting notes into calendar events.
+- Converting a paragraph of product description into fields for a database.
 
-Everything lives in `source-code/llama_index_extract/`. Setup:
+This class of task is covered in this chapter.
+
+We will use the LlamaIndex primitive **`llm.structured_predict(SchemaClass, prompt_template, **vars)`**. Supply a Pydantic model and a prompt template and then get back a validated instance of structured data. The framework handles the JSON-schema plumbing, the "here is the schema, please output JSON" prompt engineering, and the retry loop when validation fails.
+
+Everything lives in `source-code/llama_index_extract/` with the usual setup:
 
 ```console
 $ cd source-code/llama_index_extract
@@ -14,7 +20,7 @@ $ ollama pull qwen3.5:4b
 
 ## One-shot extraction
 
-`01_structured_predict.py`:
+We will start with a simple example in the script `01_structured_predict.py`:
 
 ```python
 from llama_index.core.prompts import PromptTemplate
@@ -30,7 +36,8 @@ class Person(BaseModel):
     email: str | None = Field(default=None, description="Email address if given.")
 
 
-llm = Ollama(model="qwen3.5:4b", temperature=0, request_timeout=120.0, thinking=False)
+llm = Ollama(model="qwen3.5:4b", temperature=0,
+             request_timeout=120.0, thinking=False)
 
 prompt = PromptTemplate(
     "Extract structured information about the person mentioned in the following text. "
@@ -56,7 +63,7 @@ Two design points worth being explicit about.
 
 **The `Optional` (`str | None`) with `default=None`** is how you tell the model a field may not be present. Without it, the model tends to hallucinate values for missing fields.
 
-Expected output:
+Here is the eoutput:
 
 ```console
 $ uv run 01_structured_predict.py
@@ -67,7 +74,7 @@ email   = mjess@foobar.com
 
 ## Batch extraction
 
-The same primitive in a loop. `02_batch_extract.py`:
+Now we use the same primitive in a loop over input data sources in the example script `02_batch_extract.py`:
 
 ```python
 class Event(BaseModel):
@@ -101,7 +108,7 @@ for e in events:
     print(f"{e.date}  {e.title!r}  location={e.location!r}")
 ```
 
-This is the shape of nearly every "migrate a folder of unstructured notes into a database" workflow. If throughput matters, replace the sequential loop with `llm.astructured_predict` and an `asyncio.gather`; for local models with limited concurrency, keeping it sequential is often faster than trying to parallelize.
+This is the shape of nearly every "migrate a folder of unstructured notes into a database" workflow. If throughput matters, replace the sequential loop with `llm.astructured_predict` and an `asyncio.gather`; for local models with limited concurrency, keeping it sequential when using local faster than trying to parallelize. When using commercial inference AIs then please do paralyze these operations to get faster throughput.
 
 ## When to reach for this vs a chat model with tools
 
@@ -119,4 +126,4 @@ There is overlap. A ReAct agent whose final answer is a Pydantic object is a val
 - Optional fields with `default=None` prevent the model from hallucinating missing values.
 - Batch extraction is just the same primitive in a loop; use `astructured_predict` for concurrency when needed.
 
-Chapter "Serving a Workflow with FastAPI" wraps up Part II by deploying a workflow as a service with plain FastAPI: one process, no cloud.
+The next chapter "Serving a Workflow with FastAPI" wraps up Part II by deploying a workflow as a service with plain FastAPI: one process, no cloud.
