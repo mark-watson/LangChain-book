@@ -6,7 +6,7 @@ There is nothing to unlearn from Part I. Prompts are still prompts, embeddings a
 
 ## What changed since the previous edition
 
-If you have used LlamaIndex before and stopped a year or two ago, be prepared for most of the class names you remember to have moved or disappeared. As of 2026:
+If you have used LlamaIndex before and stopped a year or two ago, be prepared for many of the class names you remember to have moved or disappeared. As of 2026:
 
 - **`GPTSimpleVectorIndex`, `GPTTreeIndex`, `GPTKeywordTableIndex`**: all removed. The generic `VectorStoreIndex` (and a handful of other index types) took their place. The `GPT` prefix is gone; embeddings are pluggable and no longer tied to OpenAI.
 - **`LLMPredictor`, `PromptHelper`, `ServiceContext`**: all removed. Configuration lives in a global `Settings` object, or is passed directly to the components that need it.
@@ -17,13 +17,10 @@ The mental model, though, is the same as it always was: **Documents** get chunke
 
 ## The four primitives
 
-**Document.** A chunk of text plus metadata. `Document(text="...", metadata={"source": "..."})`. In practice you rarely construct them by hand; a reader like `SimpleDirectoryReader` produces them from files.
-
-**Node.** A Document after chunking. The atomic unit the retriever returns. In vanilla setups, one Document becomes one Node; with a `SentenceSplitter` transformation in your ingestion pipeline, one Document becomes many Nodes.
-
-**Index.** A queryable data structure built over Nodes. `VectorStoreIndex` is the one you will use 90% of the time; it stores each Node's embedding and does cosine-similarity lookup at query time. Others include `SummaryIndex`, `KeywordTableIndex`, and `TreeIndex`; we will look at when to reach for each in Chapter "Choosing an index type".
-
-**QueryEngine / Retriever.** The two ways to *use* an Index. `.as_query_engine()` gives you `engine.query(text)` which returns a synthesized answer from an LLM after retrieval. `.as_retriever()` gives you `retriever.retrieve(text)` which returns the raw Nodes without the LLM step. Both are useful; you pick based on whether you want an answer or the ingredients for one.
+-**Document**: A chunk of text plus metadata. `Document(text="...", metadata={"source": "..."})`. In practice you rarely construct them by hand; a reader like `SimpleDirectoryReader` produces them from files.
+- **Node**: A Document after chunking. The atomic unit the retriever returns. In vanilla setups, one Document becomes one Node; with a `SentenceSplitter` transformation in your ingestion pipeline, one Document becomes many Nodes.
+- **Index**: A queryable data structure built over Nodes. `VectorStoreIndex` is the one you will use 90% of the time; it stores each Node's embedding and does cosine-similarity lookup at query time. Others include `SummaryIndex`, `KeywordTableIndex`, and `TreeIndex`; we will look at when to reach for each in Chapter "Choosing an index type".
+- **QueryEngine / Retriever**: The two ways to *use* an Index. `.as_query_engine()` gives you `engine.query(text)` which returns a synthesized answer from an LLM after retrieval. `.as_retriever()` gives you `retriever.retrieve(text)` which returns the raw Nodes without the LLM step. Both are useful; you pick based on whether you want an answer or the ingredients for one.
 
 ## Setup
 
