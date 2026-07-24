@@ -1,10 +1,10 @@
 # Building an Agent as a Workflow
 
-Chapter "The Workflows API" introduced Workflows in the abstract. This chapter uses them to build the same thing Chapter "Building a ReAct Agent with LangGraph + Ollama" built in LangGraph: a ReAct agent that alternates between "call the model" and "run the tools the model asked for" until the model returns a final answer.
+The previous chapter "The Workflows API" introduced Workflows in the abstract. This chapter uses them to build the same thing Chapter "Building a ReAct Agent with LangGraph + Ollama" built in LangGraph: a ReAct agent that alternates between "call the model" and "run the tools the model asked for" until the model returns a final answer.
 
 As with Chapter "Building a ReAct Agent with LangGraph + Ollama", we build it twice. The first version uses `FunctionAgent`, the LlamaIndex prebuilt equivalent of `create_react_agent`. The second version constructs the same behavior explicitly as a `Workflow`. Seeing the two side by side clarifies what the prebuilt is doing on your behalf.
 
-Everything lives in `source-code/llama_index_agent/`. Setup:
+Everything lives in `source-code/llama_index_agent/`. We use the usual setup:
 
 ```console
 $ cd source-code/llama_index_agent
@@ -12,9 +12,9 @@ $ uv sync
 $ ollama pull qwen3.5:4b
 ```
 
-## The tools
+## The Tools
 
-Same two-tool shape as Chapter "Building a ReAct Agent with LangGraph + Ollama":
+Here we use the same two-tool shape as Chapter "Building a ReAct Agent with LangGraph + Ollama":
 
 ```python
 def multiply(a: int, b: int) -> int:
@@ -40,7 +40,7 @@ Plain Python functions. LlamaIndex wraps them with `FunctionTool.from_defaults(f
 
 ## Version 1: `FunctionAgent`
 
-`01_function_agent.py`:
+We start by defining a reusable agent library in the file `01_function_agent.py`:
 
 ```python
 import asyncio
@@ -81,7 +81,7 @@ async def main():
 asyncio.run(main())
 ```
 
-`FunctionAgent(tools, llm, system_prompt=...)` returns a compiled Workflow. Under the hood it is exactly the shape you would build in version 2; LlamaIndex ships it as a factory because 90% of agents want this shape.
+`FunctionAgent(tools, llm, system_prompt=...)` returns a compiled Workflow. Under the hood it is exactly the shape you would build in the next version 2 example; LlamaIndex ships it as a factory because 90% of agents want this shape.
 
 Representative output:
 
@@ -97,7 +97,7 @@ The second question forces two tool calls in sequence: one to `web_search`, one 
 
 ## Version 2: same agent, built explicitly
 
-`02_agent_workflow.py` builds the same behavior with `Workflow`:
+Here we write the details in `02_agent_workflow.py` that builds the same behavior with `Workflow`:
 
 ```python
 class ToolCallEvent(Event):
@@ -162,7 +162,7 @@ Three things worth spelling out.
 
 The workflow produces the same output as the `FunctionAgent` version. Which is exactly the point: the prebuilt is just this workflow with the plumbing hidden.
 
-## When to reach for which
+## When to Reach for Which Framework
 
 Same guidance as Chapter "Building a ReAct Agent with LangGraph + Ollama":
 
@@ -175,4 +175,4 @@ Same guidance as Chapter "Building a ReAct Agent with LangGraph + Ollama":
 - The manual `Workflow` version is not much more code and unlocks all of the flexibility of Chapter "The Workflows API".
 - `Context` is Workflows' shared-state mechanism; use it whenever multiple steps need to see or update the same data.
 
-Chapter "Multi-Index Query Pipelines" builds the LlamaIndex equivalent of the supervisor pattern from Chapter "Multi-Agent Supervisor Pattern", but for retrieval instead of tool use.
+The next chapter "Multi-Index Query Pipelines" builds the LlamaIndex equivalent of the supervisor pattern from Chapter "Multi-Agent Supervisor Pattern", but for retrieval instead of tool use.

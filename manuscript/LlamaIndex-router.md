@@ -4,9 +4,9 @@ Every example so far in Part II has used a single index over a single corpus. Re
 
 LlamaIndex has two prebuilt patterns for querying across multiple indices: **`RouterQueryEngine`** and **`SubQuestionQueryEngine`**. Both wrap several per-corpus query engines and use an LLM to decide how to combine them.
 
-Everything lives in `source-code/llama_index_router/`. For teaching purposes each of the four `../data/*.txt` files becomes its own tiny index: chemistry, economics, health, sports. In a real project the same code would drive four indices over four folders of hundreds of documents each.
+Examples for this chapter live in `source-code/llama_index_router/`. For teaching purposes each of the four `../data/*.txt` files becomes its own tiny index: chemistry, economics, health, sports. In a real project the same code would drive four indices over four folders of hundreds of documents each.
 
-Setup:
+Use our usual setup for running the examples:
 
 ```console
 $ cd source-code/llama_index_router
@@ -14,9 +14,41 @@ $ uv sync
 $ ollama pull qwen3.5:4b
 ```
 
+We use the utility `build_per_topic_engines` defined in the file `_indices.py`:
+
+```python
+"""Build one VectorStoreIndex per topic file in ../data/.
+
+Returns a dict of {topic_name: query_engine} that both scripts share.
+"""
+
+from pathlib import Path
+
+from llama_index.core import Document, Settings, VectorStoreIndex
+from llama_index.embeddings.huggingface import HuggingFaceEmbedding
+from llama_index.llms.ollama import Ollama
+
+Settings.llm = Ollama(model="qwen3.5:4b", request_timeout=180.0)
+Settings.embed_model = HuggingFaceEmbedding(model_name="BAAI/bge-small-en-v1.5")
+
+DATA_DIR = Path(__file__).parent.parent / "data"
+
+
+def build_per_topic_engines() -> dict[str, object]:
+    engines = {}
+    for path in sorted(DATA_DIR.glob("*.txt")):
+        topic = path.stem
+        text = path.read_text(encoding="utf-8").strip()
+        doc = Document(text=text, metadata={"topic": topic})
+        index = VectorStoreIndex.from_documents([doc])
+        engines[topic] = index.as_query_engine()
+    return engines
+```
+
+
 ## `RouterQueryEngine`: pick one index
 
-For queries that clearly belong to one corpus, you want the router to send the whole query to that one index and get a synthesized answer back. `01_router_query_engine.py`:
+For queries that clearly belong to one corpus, you want the router to send the whole query to that one index and get a synthesized answer back and this idea is implemented in the script `01_router_query_engine.py` in both examples for this chapter. Line 7 uses the utility function defined in the last listing:
 
 ```python
 from llama_index.core.query_engine import RouterQueryEngine
@@ -68,9 +100,7 @@ The quality of routing depends entirely on the quality of the tool descriptions.
 
 ## `SubQuestionQueryEngine`: decompose and combine
 
-For compound questions that no single index can answer alone ("compare A and B," "how do X, Y, and Z relate?"), you want the engine to plan a series of subquestions, run each against the appropriate index, and synthesize a combined answer.
-
-`02_subquestion_query_engine.py`:
+For compound questions that no single index can answer alone ("compare A and B," "how do X, Y, and Z relate?"), you want the engine to plan a series of subquestions, run each against the appropriate index, and synthesize a combined answer and we implement these ideas in the script `02_subquestion_query_engine.py`:
 
 ```python
 from llama_index.core.query_engine import SubQuestionQueryEngine
@@ -122,9 +152,11 @@ print(engine.query(query))
 
 Behind the scenes: an LLM planner reads the compound query and the tool descriptions, produces a list of subquestions (typically one per relevant tool), each subquestion runs against its target index, and a final LLM call synthesizes the subquestion answers into a coherent response.
 
-Costs to be aware of. With four tools and a compound query, you may end up with three or four subquestion runs plus two synthesis calls: six or seven LLM calls per user query. On a local model this adds latency; on a hosted model it adds a real bill. `SubQuestionQueryEngine` is powerful but not the tool to reach for on every question.
+There are costs to be aware of. With four tools and a compound query, you may end up with three or four subquestion runs plus two synthesis calls: six or seven LLM calls per user query. On a local model this adds latency; on a hosted model it adds a real bill. `SubQuestionQueryEngine` is powerful but not the tool to reach for on every question.
 
 ## When to reach for which
+
+Dear reader, you can experiment on your own, but my takeaway is:
 
 - **`RouterQueryEngine` with `LLMSingleSelector`**: most queries clearly belong to one corpus. Cheap: one selector call plus one downstream query engine call.
 - **`RouterQueryEngine` with `LLMMultiSelector`**: most queries belong to one or two corpora. Slightly more expensive; useful when your corpora overlap.
@@ -138,4 +170,4 @@ You can also build routing yourself with the Workflows API from Chapters "The Wo
 - `SubQuestionQueryEngine` decomposes compound queries into per-corpus subquestions and synthesizes the results.
 - Both patterns depend heavily on the English descriptions attached to each `QueryEngineTool`. Treat descriptions like production API contracts.
 
-Chapter "Structured Extraction" uses `PydanticProgram` to force LLM output into a validated data schema.
+The next chapter "Structured Extraction" uses `PydanticProgram` to force LLM output into a validated data schema.
