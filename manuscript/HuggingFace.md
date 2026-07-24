@@ -2,7 +2,7 @@
 
 Both examples in this chapter run entirely on your laptop: no Hugging Face account, no API key, no `HUGGINGFACEHUB_API_TOKEN`. Earlier editions of this chapter used LangChain's `HuggingFaceHub` wrapper, which calls Hugging Face's *hosted* inference endpoints and does need an account and a token. That wrapper is gone from LangChain 1.0; the current integration, `langchain_huggingface.HuggingFacePipeline`, downloads a model once and runs it locally with `transformers`, the same as every other local-model chapter in this book.
 
-Setup:
+Set up tp run the two examples:
 
 ```console
 $ cd source-code/hugging_face
@@ -11,7 +11,7 @@ $ uv sync
 
 ## Using LangChain as a Wrapper for a Local Hugging Face Pipeline
 
-We will start with a simple example using the prompt text support in LangChain. The following example is in the script **simple_example.py**:
+We will start with a short example using the prompt text support in LangChain. The following example is in the script **simple_example.py**:
 
 ```python
 """Use a HuggingFace model via LangChain 1.0 with a local pipeline.
@@ -92,7 +92,8 @@ class CustomLLM(CustomLLM):
 
     @property
     def metadata(self) -> LLMMetadata:
-        return LLMMetadata(context_window=2048, num_output=NUM_OUTPUT, model_name=self.model_name)
+        return LLMMetadata(context_window=2048, num_output=NUM_OUTPUT,
+                           model_name=self.model_name)
 
     @llm_completion_callback()
     def complete(self, prompt: str, **kwargs) -> CompletionResponse:

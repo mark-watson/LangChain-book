@@ -28,10 +28,5 @@ LlamaIndex-extract.md
 LlamaIndex-deploy.md
 GoogleDrive.md
 HuggingFace.md
-OtherUsefulLibraries.md
-AppendixA-models.md
-AppendixB-eval.md
-AppendixC-observability.md
-AppendixD-vps.md
 WrapUp.md
 
