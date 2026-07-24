@@ -8,7 +8,7 @@ Everything here lives in `source-code/llama_index_ingest/` and shares the four-f
 
 Chapter "LlamaIndex" showed `SimpleDirectoryReader("../data").load_data()` and moved on. It is worth going a little deeper, because for 90% of "load some files from disk" use cases, this single class is the right answer.
 
-`01_directory_loading.py`:
+We start with the python script `01_directory_loading.py`:
 
 ```python
 from pathlib import Path
@@ -19,7 +19,7 @@ from llama_index.core import SimpleDirectoryReader
 def add_custom_metadata(file_path: str) -> dict:
     p = Path(file_path)
     return {
-        "topic": p.stem,          # "sports.txt" -> topic="sports"
+        "topic": p.stem,
         "collection": "book_data",
     }
 
@@ -43,15 +43,12 @@ for d in documents:
     print()
 ```
 
-Four options worth internalizing.
+Four options worth internalizing as good practices:
 
-**`input_dir`.** A directory path. `SimpleDirectoryReader` walks it and processes each file it recognizes. For a fixed list of files instead of a directory, use `input_files=[...]`.
-
-**`recursive=True`.** Include subdirectories. Off by default; you almost always want it on for real corpora.
-
-**`exclude=[...]`.** Glob patterns to skip. This is where you filter out `.DS_Store`, `.git`, images, source code, or anything else you don't want indexed.
-
-**`file_metadata=callable`.** A function that runs once per file and returns a dict. Whatever you return here gets merged into the Document's metadata alongside the fields the reader adds automatically (`file_name`, `file_path`, `file_type`, `file_size`, `creation_date`, `last_modified_date`). Use it for anything not derivable from the file path: a category, a project ID, an author.
+- **`input_dir`**: A directory path. `SimpleDirectoryReader` walks it and processes each file it recognizes. For a fixed list of files instead of a directory, use `input_files=[...]`.
+- **`recursive=True`**: Include subdirectories. Off by default; you almost always want it on for real corpora.
+- **`exclude=[...]`**: Glob patterns to skip. This is where you filter out `.DS_Store`, `.git`, images, source code, or anything else you don't want indexed.
+- **`file_metadata=callable`**: A function that runs once per file and returns a dict. Whatever you return here gets merged into the Document's metadata alongside the fields the reader adds automatically (`file_name`, `file_path`, `file_type`, `file_size`, `creation_date`, `last_modified_date`). Use it for anything not derivable from the file path: a category, a project ID, an author.
 
 The metadata a Document carries is not decorative. It flows through chunking so every resulting Node has the same metadata, and it survives all the way to retrieval time as `node.metadata`. That means you can use it for filtered queries ("only search in topic='sports' notes"), for citations ("this answer came from `sports.txt`"), or for post-retrieval routing in a supervisor graph.
 
@@ -61,7 +58,7 @@ Beyond `.txt`, `SimpleDirectoryReader` also handles Markdown, CSV, JSON, PDF, DO
 
 When your source is anything other than a filesystem (a REST API, a database query, a Kafka topic, a directory listing that lives inside a zip file), you construct `Document` objects yourself. There is no ceremony to this; the rest of LlamaIndex has no idea (and no need to know) where the Documents came from.
 
-`02_custom_documents.py`:
+We create synthetic data for our second example `02_custom_documents.py`:
 
 ```python
 from llama_index.core import Document, Settings, VectorStoreIndex
@@ -125,9 +122,8 @@ The retriever picked the Sedona hiking record first and the Prescott one second 
 
 ## Comparing embedding models
 
-The embedding model is arguably the most consequential choice in a RAG pipeline. It determines which Nodes come back for a given query and in what order. It is also the choice most people default on and never revisit. This script makes the difference visible.
+The embedding model is a consequential choice in a RAG pipeline. It determines which Nodes come back for a given query and in what order. It is also the choice most people default on and never revisit. The script `03_embedding_comparison.py` makes the difference visible:
 
-`03_embedding_comparison.py`:
 
 ```python
 MODELS = [
@@ -152,7 +148,7 @@ for label, model_name in MODELS:
     print()
 ```
 
-Both are small (under 150 MB), both are free, both run locally in tens of milliseconds. On the four-file corpus, on the query "How does the body process energy during exercise?", they usually pick the same top-1 (`health.txt`) but disagree on the ranking of the remaining files and on absolute score.
+Both are small (under 150 MB), both are free, both run locally in tens of milliseconds. On the four-file corpus, on the query "How does the body process energy during exercise?", they usually pick the same top-1 hit (`health.txt`) but disagree on the ranking of the remaining files and on absolute score.
 
 A rough taxonomy of the local embedding models worth knowing about in 2026:
 
@@ -166,9 +162,9 @@ I default to BGE-small for prototypes and move up to BGE-base when I see the sma
 
 ## Chunking with the ingestion pipeline
 
-The four text files in `../data/` are each small enough to fit in one Node. Real corpora rarely look like that. A 40-page PDF wants to be broken into ~50 smaller Nodes so retrieval returns tight, focused context instead of the whole document at once.
+The four text files in `../data/` are each small enough to fit in one Node. Real corpora rarely look like that. A 40-page PDF might, for example, be broken into ~50 smaller Nodes so retrieval returns small contexts instead of the whole document at once.
 
-The mechanism is `IngestionPipeline` with a `SentenceSplitter`. `04_ingestion_pipeline.py`:
+The mechanism is `IngestionPipeline` with a `SentenceSplitter` as seen in the Python script `04_ingestion_pipeline.py`:
 
 ```python
 from llama_index.core import Settings, SimpleDirectoryReader, VectorStoreIndex
@@ -217,4 +213,4 @@ Each of these costs one LLM call per chunk at ingestion time, so on a real corpu
 - Local embedding models are small, fast, and free. BGE-small is my default; BGE-base if I need more quality; MiniLM as a classic backup.
 - `IngestionPipeline` with `SentenceSplitter` is the standard way to chunk. Chunk sizes in the 200-1000 token range with 10-20% overlap cover most needs.
 
-Chapter "Choosing an Index Type" covers the other end of the ingestion story: given a corpus of Nodes, which index type should you actually build?
+The next chapter "Choosing an Index Type" covers the other end of the ingestion story: given a corpus of Nodes, which index type should you actually build?
