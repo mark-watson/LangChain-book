@@ -51,11 +51,11 @@ print(type(response).__name__)
 print(response.content)
 ```
 
-There are three things worth pointing out in fourteen lines of code.
+There are three things worth pointing out in fourteen lines of code:
 
--The import paths. In LangChain version 1.0, LangChain is broken up into a handful of small packages. `langchain_core` holds the primitives (messages, prompt templates, runnables, output parsers). Each LLM provider has its own package: `langchain_ollama`, `langchain_openai`, `langchain_google_genai`, and so on. The umbrella `langchain` package pulls in higher-level pieces built on top of the core. In practice you almost always import messages and prompts from `langchain_core` and models from the provider package that matches the LLM you are using.
-- Second, the message objects. `SystemMessage` sets up the assistant's persona and instructions; `HumanMessage` is the user's turn. There is also `AIMessage`, which is what `.invoke()` returns and what you would include in a `messages` list to represent prior assistant turns in a multi-turn conversation.
-- Third, `.invoke()`. Every LangChain component that can be called (models, prompt templates, chains, agents, output parsers) is a `Runnable`, and every `Runnable` has the same `.invoke()`, `.stream()`, and `.batch()` methods. That uniformity is the point of the 1.0 API refactor.
+- Import paths: In LangChain version 1.0, LangChain is broken up into a handful of small packages. `langchain_core` holds the primitives (messages, prompt templates, runnables, output parsers). Each LLM provider has its own package: `langchain_ollama`, `langchain_openai`, `langchain_google_genai`, and so on. The umbrella `langchain` package pulls in higher-level pieces built on top of the core. In practice you almost always import messages and prompts from `langchain_core` and models from the provider package that matches the LLM you are using.
+- Message objects: `SystemMessage` sets up the assistant's persona and instructions; `HumanMessage` is the user's turn. There is also `AIMessage`, which is what `.invoke()` returns and what you would include in a `messages` list to represent prior assistant turns in a multi-turn conversation.
+- `.invoke()`: Every LangChain component that can be called (models, prompt templates, chains, agents, output parsers) is a `Runnable`, and every `Runnable` has the same `.invoke()`, `.stream()`, and `.batch()` methods. That uniformity is the point of the 1.0 API refactor.
 
 Run this example:
 

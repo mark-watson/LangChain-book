@@ -13,7 +13,7 @@ You will get the most out of the book if:
 - You are happy to pay per token for LLM inference (Gemini, Fireworks.ai, OpenAI, or similar) or to run models locally via [Ollama](https://ollama.com). You are *not* happy to pay a per-seat or per-trace SaaS bill for observability, deployment, or "agent platforms."
 - You are skeptical of platform lock-in and want abstractions that let you swap the LLM, the vector store, or the framework itself.
 
-If you work at a large enterprise that has already committed to LangSmith, LangGraph Cloud, or LlamaCloud, this book will still be useful to you, but you are not the reader I wrote it for.
+You may find this book useful, even if you work at a large enterprise that has already committed to LangSmith, LangGraph Cloud, or LlamaCloud, but you are not the reader I wrote it for.
 
 ## What this book covers, and what it deliberately does not
 
@@ -43,7 +43,7 @@ For hardware: an Apple Silicon Mac (16 GB RAM or more), a mid-range Linux box wi
 
 ## Where the code lives
 
-For this edition, the example code lives in the same repository as the manuscript, in the `source-code/` directory, one subdirectory per chapter. The old external examples repo (`github.com/mark-watson/langchain-book-examples`) is being deprecated but this GitHub repository contains a PDF of this entire book that was saved before the recent rewrite of this book.
+For this edition, the example code lives in the same repository as the manuscript, in the `source-code/` directory, one subdirectory per chapter. The old external examples repo (`github.com/mark-watson/langchain-book-examples`) is being deprecated but this GitHub repository contains a PDF of this entire book that was saved before this rewrite.
 
 The source code and manuscript files for the July 2026 version of this book are both found in [https://github.com/mark-watson/LangChain-book](https://github.com/mark-watson/LangChain-book).
 
@@ -69,7 +69,7 @@ If you would like to support my work please consider purchasing my books on [Lea
 
 ## Book Cover
 
-I live in Sedona, Arizona. I took the book cover photo in January 2023 from the street that I live on.
+I used to live in Sedona, Arizona. I took the book cover photo in January 2023 from the street that I lived on.
 
 ## Acknowledgements
 

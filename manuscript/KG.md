@@ -4,7 +4,7 @@ Two of the largest and most useful public knowledge graphs on the internet are [
 
 The example source code for this chapter is found in **source-code/kg_agent**.
 
-When I worked on a knowledge graph project at Google in 2013 after writing two books on the semantic web, linked data, and knowledge graphs.
+I worked on a knowledge graph project at Google in 2013 after writing two books on the semantic web, linked data, and knowledge graphs.
 
 The previous edition of this chapter used the old `GPTSimpleVectorIndex` / `GPTTreeIndex` classes from LlamaIndex to wrap SPARQL results in an embedding index and query them as text. That was a workable pattern in 2023, but both classes have long since been removed from LlamaIndex, and the modern replacement, a ReAct agent that calls SPARQL directly, is simpler and answers a wider range of questions. It is also faster: no embedding step, no index build, no round trip through a vector store. So, dear reader, this example was a LlamaIndex example in the old edition of this book and is a LangChain example in this new 2026 edition.
 
@@ -119,7 +119,7 @@ def build_dbpedia_agent():
     return create_react_agent(model, [find_entity, run_sparql], prompt=SYSTEM_PROMPT)
 ```
 
-Three things to notice.
+Three things to notice:
 
 **`SPARQLWrapper` handles the transport.** It POSTs the query to the endpoint, requests JSON back, and parses the response. Setting the `agent` string is worth doing: the DBpedia endpoint occasionally rate-limits requests that use its default user-agent, and a custom one is polite besides.
 
@@ -349,7 +349,7 @@ Which one to reach for depends on the question.
 - **DBpedia** is easier to explore because URIs are readable (`dbr:Germany` instead of `wd:Q183`) and its property names are English words (`dbo:borders` instead of `wdt:P47`). Great for prototyping and for questions that mostly involve English-language Western topics.
 - **Wikidata** has broader coverage, more languages, and more reliable up-to-date data because its edits are curated. Its query patterns are more verbose but its data is generally cleaner.
 
-In practice I use DBpedia when I am writing a query interactively (its readable URIs are nicer to reason about) and Wikidata when I need coverage or freshness. An agent can be given tools for both, if a query needs it; you would just add both tool sets to a single `create_react_agent` call.
+In practice I use DBpedia when I am writing a query interactively (its readable URIs are nicer to reason about) and Wikidata when I need coverage or freshness. An agent can be given tools for both; if a query needs it; you would just add both tool sets to a single `create_react_agent` call.
 
 ## Where to take this next
 

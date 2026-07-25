@@ -35,7 +35,7 @@ qwen3.6:35b-a3b-nvfp4-48k    8c4e86c1307e    21 GB     3 weeks ago
 qwen3.5:9b                   6488c96fa5fa    6.6 GB    4 months ago  
 ```
 
-The good news is that techniques you learn now for incorporating LLMs into your own applications and you increased knowledge of and ease of writing effective prompts for LLMs will be even more useful as models become more powerful. Dear readers, my personal view is that we want the flexibility of running local models and models from multiple inference providers. We lean into running local models on llama fairly heavily in this book but in practice it is not difficult switching between local and cloud providers.
+The good news is that techniques you learn now for incorporating LLMs into your own applications and your increased knowledge of and ease of writing effective prompts for LLMs will be even more useful as models become more powerful. Dear readers, my personal view is that we want the flexibility of running local models and models from multiple inference providers. We lean into running local models on llama fairly heavily in this book but in practice it is not difficult switching between local and cloud providers.
 
 ## What LLMs Are and What They Are Not
 
@@ -47,14 +47,15 @@ LLMs compress knowledge of language and some knowledge of the world into a compa
 
 ## Big Tech Businesses vs. Small Startups Using Large Language Models
 
-Both Microsoft and Google play both sides of this business game: they want to sell cloud LLM services to developers and small startup companies and they would also like to achieve lock-in for their consumer services like Office 365, Google Docs and Sheets, etc.
+Both Microsoft and Google play both sides of this business game. They want to sell cloud LLM services to developers and small startup companies and they would also like to achieve lock-in for their consumer services like Office 365, Google Docs and Sheets, etc.
 
 Microsoft has been integrating AI technology into workplace emails, slideshows, and spreadsheets as part of its ongoing partnership with OpenAI, the company behind ChatGPT. Microsoft's Azure OpenAI service offers a powerful tool to enable these outcomes when leveraged with their data lake of more than two billion metadata and transactional elements.
 
 Google has opened access to their Gemini Model based AI/chat search service. I have used various Google APIs for years in code I write. I have no favorites in the battle between tech giants, rather I am mostly interested in what they build that I can use in my own projects.
 
-As I write this updated book in July or 2026 I question the long term business viability of AI companies like OpenAI and Anthropic. Both companies have very good technology but it appears that they may not be commercially viable in the long run. Dear reader, I suggest that you be flexible and write your software to easily switch models and providers. Fortunately LangChain and Lamma-Index make this flexibility easier.
+As I write this updated book in July of 2026 I question the long term business viability of AI companies like OpenAI and Anthropic. Both companies have very good technology but it appears that they may not be commercially viable in the long run. Dear reader, I suggest that you be flexible and write your software to easily switch models and providers. Fortunately LangChain and Lamma-Index make this flexibility easier.
 
-Hugging Face, creates LLMs and also hosts those developed by other companies, is working on open-source rivals to ChatGPT and will [use AWS](https://iblnews.org/aws-partners-with-hugging-face-an-ai-startup-rival-to-chatgpt-working-on-open-source-models/) for that as well. Cohere AI, Anthropic, Hugging Face, FireWorks.ai, and Stability AI are some of the startups that are competing with OpenAI and Hugging Face APIs. Hugging Face is a great source of specialized models, that is, standard models that have been fine tuned for specific applications. I love that Hugging Face models can be run via their APIs and also self-hosted on our own servers and sometimes even on our laptops. Hugging Face is a fantastic resource, and you should embrace the hosting and open source flexibility it offers; this book uses Hugging Face models directly in a couple of chapters, and Ollama (itself built on top of the same open model ecosystem) in most other examples.
+The company Hugging Face creates LLMs and also hosts those developed by other companies. They work on open-source software ad we will use their work later.
+Hugging Face models can be run via their APIs and also self-hosted on our own servers and sometimes even on our laptops. Hugging Face is a fantastic resource, and you should embrace the hosting and open source flexibility it offers; this book uses Hugging Face models directly in a couple of chapters, and Ollama (itself built on top of the same open model ecosystem) in most other examples.
 
 Dear reader, I didn't write this book for developers working at established AI companies (although I hope such people find the material here useful). I wrote this book for small developers who want to scratch their own itch by writing tools that save them time. I also wrote this book hoping that it would help developers build capabilities into the programs they design and write that rival what the big tech companies are doing.
