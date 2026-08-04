@@ -1,6 +1,6 @@
 # Multi-Index Query Pipelines
 
-Every example so far in Part II has used a single index over a single corpus. Real projects rarely look like that. A support-desk assistant has a docs index, a runbooks index, and a changelog index. A research assistant has one index per paper set. A personal knowledge base has one index per notebook, project, or year.
+Every example in Part II so far has used a single index over a single corpus. Real projects rarely look like that. A support-desk assistant has a docs index, a runbooks index, and a changelog index. A research assistant has one index per paper set. A personal knowledge base has one index per notebook, project, or year.
 
 LlamaIndex has two prebuilt patterns for querying across multiple indices: **`RouterQueryEngine`** and **`SubQuestionQueryEngine`**. Both wrap several per-corpus query engines and use an LLM to decide how to combine them.
 
@@ -48,7 +48,7 @@ def build_per_topic_engines() -> dict[str, object]:
 
 ## `RouterQueryEngine`: pick one index
 
-For queries that clearly belong to one corpus, you want the router to send the whole query to that one index and get a synthesized answer back and this idea is implemented in the script `01_router_query_engine.py` in both examples for this chapter. Line 7 uses the utility function defined in the last listing:
+For queries that clearly belong to one corpus, you want the router to send the whole query to that one index and get a synthesized answer back. This idea is implemented in the script `01_router_query_engine.py` in both examples for this chapter. Line 7 uses the utility function defined in the last listing:
 
 ```python
 from llama_index.core.query_engine import RouterQueryEngine
@@ -100,7 +100,7 @@ The quality of routing depends entirely on the quality of the tool descriptions.
 
 ## `SubQuestionQueryEngine`: decompose and combine
 
-For compound questions that no single index can answer alone ("compare A and B," "how do X, Y, and Z relate?"), you want the engine to plan a series of subquestions, run each against the appropriate index, and synthesize a combined answer and we implement these ideas in the script `02_subquestion_query_engine.py`:
+For compound questions that no single index can answer alone ("compare A and B," "how do X, Y, and Z relate?"), you want the engine to plan a series of subquestions, run each against the appropriate index, and synthesize a combined answer. We implement these ideas in the script `02_subquestion_query_engine.py`:
 
 ```python
 from llama_index.core.query_engine import SubQuestionQueryEngine
@@ -158,9 +158,9 @@ There are costs to be aware of. With four tools and a compound query, you may en
 
 Dear reader, you can experiment on your own, but my takeaway is:
 
-- **`RouterQueryEngine` with `LLMSingleSelector`**: most queries clearly belong to one corpus. Cheap: one selector call plus one downstream query engine call.
-- **`RouterQueryEngine` with `LLMMultiSelector`**: most queries belong to one or two corpora. Slightly more expensive; useful when your corpora overlap.
-- **`SubQuestionQueryEngine`**: compound "compare / relate / synthesize" queries that no single index can answer. Most expensive; reach for it when you have evidence users actually ask these questions.
+- **`RouterQueryEngine` with `LLMSingleSelector`**: Most queries clearly belong to one corpus. Cheap: one selector call plus one downstream query engine call.
+- **`RouterQueryEngine` with `LLMMultiSelector`**: Most queries belong to one or two corpora. Slightly more expensive; useful when your corpora overlap.
+- **`SubQuestionQueryEngine`**: Are compound "compare / relate / synthesize" queries that no single index can answer. Most expensive; reach for it when you have evidence users actually ask these questions.
 
 You can also build routing yourself with the Workflows API from Chapters "The Workflows API" and "Building an Agent as a Workflow": a classify step, a routing step, per-corpus engines behind separate steps. That is what you would do when your routing logic is deterministic (based on user role, request metadata, or a fixed classification) rather than LLM-driven.
 

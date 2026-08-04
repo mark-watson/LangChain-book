@@ -1,8 +1,6 @@
 # LlamaIndex
 
-Dear reader, welcome to Part II of this book. Everything so far has been about LangChain and LangGraph. The rest of the book covers LlamaIndex, which occupies overlapping-but-distinct territory. LlamaIndex has always been strongest at retrieval, indexing, and document-centric applications. LangChain has always been strongest at orchestration, chains, and general-purpose agent plumbing. In 2026 both frameworks have widened their scope enough to cover most of the same problems, but the shapes of their APIs, and the shapes of the applications that fall out most naturally from those APIs, remain different.
-
-There is nothing to unlearn from Part I. Prompts are still prompts, embeddings are still embeddings, RAG is still RAG. What changes is the vocabulary and the choreography.
+Dear reader, welcome to Part II. Everything so far has been about LangChain and LangGraph. The rest of the book covers LlamaIndex, which occupies overlapping-but-distinct territory. LlamaIndex has always been strongest at retrieval, indexing, and document-centric applications. LangChain has always been strongest at orchestration, chains, and general-purpose agent plumbing. In 2026 both frameworks have widened their scope enough to cover most of the same problems, but the shapes of their APIs, and the shapes of the applications that fall out most naturally from those APIs, remain different.
 
 ## What changed since the previous edition
 
@@ -11,7 +9,7 @@ If you have used LlamaIndex before and stopped a year or two ago, be prepared fo
 - **`GPTSimpleVectorIndex`, `GPTTreeIndex`, `GPTKeywordTableIndex`**: all removed. The generic `VectorStoreIndex` (and a handful of other index types) took their place. The `GPT` prefix is gone; embeddings are pluggable and no longer tied to OpenAI.
 - **`LLMPredictor`, `PromptHelper`, `ServiceContext`**: all removed. Configuration lives in a global `Settings` object, or is passed directly to the components that need it.
 - **`download_loader`**: removed. Loaders are now regular pip-installable packages under `llama-index-readers-*`.
-- **The one-package install** has become a monorepo of ~300 packages. `pip install llama-index` still works but pulls in everything; the recommended pattern is to install just `llama-index-core` plus the specific integration packages you need.
+- **The one-package install**: Has become a monorepo of ~300 packages. `pip install llama-index` still works but pulls in everything; the recommended pattern is to install just `llama-index-core` plus the specific integration packages you need.
 
 The mental model, though, is the same as it always was: **Documents** get chunked into **Nodes**, Nodes get organized into an **Index**, and an Index exposes a **QueryEngine** (or a lower-level **Retriever**) for answering questions. Get comfortable with those four concepts and everything else in Part II is a variation on the theme.
 
@@ -20,7 +18,7 @@ The mental model, though, is the same as it always was: **Documents** get chunke
 -**Document**: A chunk of text plus metadata. `Document(text="...", metadata={"source": "..."})`. In practice you rarely construct them by hand; a reader like `SimpleDirectoryReader` produces them from files.
 - **Node**: A Document after chunking. The atomic unit the retriever returns. In vanilla setups, one Document becomes one Node; with a `SentenceSplitter` transformation in your ingestion pipeline, one Document becomes many Nodes.
 - **Index**: A queryable data structure built over Nodes. `VectorStoreIndex` is the one you will use 90% of the time; it stores each Node's embedding and does cosine-similarity lookup at query time. Others include `SummaryIndex`, `KeywordTableIndex`, and `TreeIndex`; we will look at when to reach for each in Chapter "Choosing an Index Type".
-- **QueryEngine / Retriever**: The two ways to *use* an Index. `.as_query_engine()` gives you `engine.query(text)` which returns a synthesized answer from an LLM after retrieval. `.as_retriever()` gives you `retriever.retrieve(text)` which returns the raw Nodes without the LLM step. Both are useful; you pick based on whether you want an answer or the ingredients for one.
+- **QueryEngine / Retriever**: The two ways to *use* an Index. `.as_query_engine()` gives you `engine.query(text)` which returns a synthesized answer from an LLM after retrieval. `.as_retriever()` gives you `retriever.retrieve(text)` which returns the raw Nodes without the LLM step. Both are useful; you choose based on whether you want an answer or the ingredients for one.
 
 ## Setup
 

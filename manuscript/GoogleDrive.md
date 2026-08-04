@@ -125,7 +125,7 @@ title: sports.txt, id: 18RN4ojvURWt5yoKNtDdAJbh4fvmRpzwb
 ['sports.txt', '18RN4ojvURWt5yoKNtDdAJbh4fvmRpzwb', 'Sport is generally recognised as activities based in physical athleticism or physical dexterity...']
 ```
 
-That is a representative run against my own Drive, file IDs abbreviated; yours will list whatever `.txt` files sit at your Drive's top level. I have not re-run the OAuth flow itself for this edition, since it needs a real Google account and browser-based consent (exactly the kind of per-reader setup this book otherwise avoids), but `LocalWebserverAuth()`'s console output is standard PyDrive2 behavior and has been stable across versions.
+That is a representative run against my own Drive, file IDs abbreviated; yours will list whatever `.txt` files sit at your Drive's top level. I have not re-run the OAuth flow itself for this edition, as it needs a real Google account and browser-based consent (exactly the kind of per-reader setup this book otherwise avoids), but `LocalWebserverAuth()`'s console output is standard PyDrive2 behavior and has been stable across versions.
 
 ## Generate Vector Indices for Files in Specific Google Drive Directories
 
@@ -166,7 +166,7 @@ query_engine = index.as_query_engine()
 print(query_engine.query("What is the definition of sport?"))
 ```
 
-Two LlamaIndex-era details worth calling out, both covered in more depth in Part II of this book: `GPTSimpleVectorIndex` and `save_to_disk`/`load_from_disk` (the API this chapter used in earlier editions) no longer exist. `VectorStoreIndex.from_documents(...)` is the current equivalent, and `Settings.llm` / `Settings.embed_model` configure the LLM and embedding model globally instead of threading a `ServiceContext` through every call. And there is no `OPENAI_API_KEY` anywhere: the embedding model is a small local `HuggingFaceEmbedding`, and the LLM is a local Ollama model, so this whole example runs offline once the files are on disk.
+Two LlamaIndex-era details worth calling out, both covered in more depth in Part II of this book: `GPTSimpleVectorIndex` and `save_to_disk`/`load_from_disk` (the API this chapter used in earlier editions) no longer exist. `VectorStoreIndex.from_documents(...)` is the current equivalent, and `Settings.llm` / `Settings.embed_model` configure the LLM and embedding model globally instead of threading a `ServiceContext` through every call. And there is no `OPENAI_API_KEY` anywhere: The embedding model is a small local `HuggingFaceEmbedding`, and the LLM is a local Ollama model, so this whole example runs offline once the files are on disk.
 
 To try this without setting up Google OAuth at all, this repository ships a `data/sports.txt` sample file (the same file used as the worked example below), so you can run `index_and_QA.py` immediately and only deal with `fetch_txt_files.py` once you actually want to pull your own Drive contents.
 

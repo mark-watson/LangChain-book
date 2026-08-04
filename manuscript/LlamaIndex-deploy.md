@@ -2,7 +2,7 @@
 
 You have built a working Workflow. You want it to serve traffic (accept requests, run the workflow, return the answer) without a lot of ceremony. This chapter walks through a small useful setup: one HTTP server process, one client. The workflow itself is a two-step Q&A workflow (deliberately trivial so the deployment plumbing is the interesting part).
 
-A quick note on `llama-deploy`: if you have read about LlamaIndex deployment before, you may expect this chapter to be built on it using such things as a control plane, one or more workflow services, a Redis-backed message queue between them. That was the plan, and for most of this book's life it was the code sitting in this directory. It broke: the current `llama-deploy` release (0.9.x) is incompatible with `llama-index-core` 0.14, the version this book uses everywhere else. Rather than pin an old `llama-index-core` just to keep a deployment framework working, this chapter serves the workflow directly with FastAPI. It is simpler, it has no other external dependencies (no Redis, nothing to install with Homebrew or Docker), and it is the same OSS-first, run-it-on-your-laptop approach as every other chapter in the book. If `llama-deploy` catches back up, the swap is confined to this one file; the workflow itself does not change at all.
+A quick note on `llama-deploy`: If you have read about LlamaIndex deployment before, you may expect this chapter to be built on it using such things as a control plane, one or more workflow services, a Redis-backed message queue between them. That was the plan, and for most of this book's life it was the code sitting in this directory. It broke: The current `llama-deploy` release (0.9.x) is incompatible with `llama-index-core` 0.14, the version this book uses everywhere else. Rather than pin an old `llama-index-core` just to keep a deployment framework working, this chapter serves the workflow directly with FastAPI. It is simpler, it has no other external dependencies (no Redis, nothing to install with Homebrew or Docker), and it is the same OSS-first, run-it-on-your-laptop approach as every other chapter in the book. If `llama-deploy` catches back up, the swap is confined to this one file; the workflow itself does not change at all.
 
 Everything lives in `source-code/llama_index_deploy/` with our usual setup:
 
@@ -18,8 +18,8 @@ No Redis, no other services: that is the whole setup.
 
 Two things run:
 
-- **The server**: a FastAPI app wrapping the Workflow, served by `uvicorn`. It exposes `POST /ask` (run the workflow and return the answer) and `GET /health` (liveness check). One process, one port.
-- **The client**: anything that can send an HTTP request. This chapter uses a small `httpx` script, but a `curl` command or a client in any other language works identically, since the server speaks plain JSON over HTTP.
+- **The server**: Is a FastAPI app wrapping the Workflow, served by `uvicorn`. It exposes `POST /ask` (run the workflow and return the answer) and `GET /health` (liveness check). One process, one port.
+- **The client**: Is anything that can send an HTTP request. This chapter uses a small `httpx` script, but a `curl` command or a client in any other language works identically, since the server speaks plain JSON over HTTP.
 
 You run the server in one terminal and the client in another.
 
@@ -161,4 +161,4 @@ If a workflow's steps genuinely need a shared task queue (long-running jobs, ret
 - The client side is unremarkable: any HTTP client, in any language, talking JSON.
 - The scaling path is `uvicorn --workers`, more routes, and a VPS behind a reverse proxy: infrastructure you add when you need it, not infrastructure the framework requires up front.
 
-That closes Part II. The four appendices that follow cover cross-cutting topics that apply to both LangChain and LlamaIndex projects: choosing a model, doing evaluation without LangSmith, doing observability without LangSmith, and putting a small LLM app on a $5/month VPS.
+This closes Part II. The four appendices that follow cover cross-cutting topics that apply to both LangChain and LlamaIndex projects: choosing a model, doing evaluation without LangSmith, doing observability without LangSmith, and putting a small LLM app on a $5/month VPS.

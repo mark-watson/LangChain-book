@@ -148,7 +148,7 @@ for label, model_name in MODELS:
     print()
 ```
 
-Both are small (under 150 MB), both are free, both run locally in tens of milliseconds. On the four-file corpus, on the query "How does the body process energy during exercise?", they usually pick the same top-1 hit (`health.txt`) but disagree on the ranking of the remaining files and on absolute score.
+Both are small (under 150 MB), both are free, both run locally in tens of milliseconds. On the four-file corpus, on the query "How does the body process energy during exercise?,” they usually pick the same top-1 hit (`health.txt`) but disagree on the ranking of the remaining files and on absolute score.
 
 A rough taxonomy of the local embedding models worth knowing about in 2026:
 

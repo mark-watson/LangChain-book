@@ -120,7 +120,7 @@ This is LlamaIndex's equivalent of LangGraph's `add_conditional_edges`. Same exp
 
 ## A three-step LLM workflow
 
-Putting it together with a real model. `04_llm_workflow.py` is a classify-then-answer-or-decline pattern, one of the most common shapes for content-moderation or routing workflows.
+Putting it together with a real model. `04_llm_workflow.py` is a classify-then-answer-or-decline pattern, one of the most common shapes for content moderation or routing workflows.
 
 ```python
 class TopicRoutingWorkflow(Workflow):

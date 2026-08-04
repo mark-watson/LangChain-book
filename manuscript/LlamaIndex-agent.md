@@ -2,7 +2,7 @@
 
 The previous chapter "The Workflows API" introduced Workflows in the abstract. This chapter uses them to build the same thing Chapter "Building a ReAct Agent with LangGraph + Ollama" built in LangGraph: a ReAct agent that alternates between "call the model" and "run the tools the model asked for" until the model returns a final answer.
 
-As with Chapter "Building a ReAct Agent with LangGraph + Ollama", we build it twice. The first version uses `FunctionAgent`, the LlamaIndex prebuilt equivalent of `create_react_agent`. The second version constructs the same behavior explicitly as a `Workflow`. Seeing the two side by side clarifies what the prebuilt is doing on your behalf.
+As with Chapter "Building a ReAct Agent with LangGraph + Ollama", we build it twice. The first version uses `FunctionAgent`, the LlamaIndex prebuilt equivalent of `create_react_agent`. The second version constructs the same behavior explicitly as a `Workflow`. Seeing the two side-by-side clarifies what the prebuilt is doing on your behalf.
 
 Everything lives in `source-code/llama_index_agent/`. We use the usual setup:
 

@@ -2,7 +2,7 @@
 
 This book has been fun to write. I remain as excited about LLMs and the applied libraries around them as I was when I started the first edition in early 2023, and more excited about running the whole stack on my own hardware than I was three editions ago. In 2023 running a useful LLM on a laptop was a research project. In 2026 it is a `brew install ollama` away.
 
-What I hope you take away from the book, in one paragraph: two of the most-used LLM application frameworks are both fully usable as open source libraries without touching any of the commercial platforms grown up around them. LangChain 1.0 + LangGraph 1.0 give you every primitive you need to build stateful, durable, human-in-the-loop, multi-agent systems. LlamaIndex 0.14 + Workflows give you the same coverage from a slightly different design center. Both run on your laptop, connect to any LLM (local via Ollama, hosted via any provider), and cost exactly zero in library fees.
+What I hope you take away from the book, in one paragraph: Two of the most used LLM application frameworks are both fully usable as open source libraries without touching any of the commercial platforms grown up around them. LangChain 1.0 + LangGraph 1.0 give you every primitive you need to build stateful, durable, human-in-the-loop, multi-agent systems. LlamaIndex 0.14 + Workflows give you the same coverage from a slightly different design center. Both run on your laptop, connect to any LLM (local via Ollama, hosted via any provider), and cost exactly zero in library fees.
 
 The only cost that scales with your project is inference: the LLM calls themselves. And in 2026 even that cost is optional; a Mac mini with 32 GB of RAM can run models good enough for real work, at a fixed hardware cost, forever.
 
@@ -15,13 +15,13 @@ I want to be honest about the things I skipped.
 - **Multi-modal work.** Vision, audio, and video are increasingly first-class in both frameworks. The book stayed text-only to keep the scope tractable.
 - **A serious eval / observability chapter.** The best observability tools are commercial products and outside the scope of this book.
 
-If any of these matter enough to you that you would buy a follow-up book, let me know via the contact info on [markwatson.com](https://markwatson.com). I write my books based on what readers ask for.
+If any of these matter enough to you that you would be interested in a follow-up book, let me know via the contact info on [markwatson.com](https://markwatson.com). I write my books based on what readers ask for.
 
 ## Thank you
 
 To the readers who have followed this book across four editions and who send corrections and suggestions: thank you. Every edition has been better because of you.
 
-To my wife Carol who handles the editing, formatting, and cover work: thank you. The book exists because you make the parts I am bad at get done.
+To my wife Carol who handles the editing, formatting, and cover work: thank you!
 
 To Harrison Chase, Jerry Liu, and the two teams building LangChain, LangGraph, and LlamaIndex: thank you for keeping the core libraries free and open source even as the commercial pressures around them grow. It is not lost on me that this book is entirely possible only because you have made that choice, and I hope enough of your users continue to reward the OSS-first stance that it stays viable.
 

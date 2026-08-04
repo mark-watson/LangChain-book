@@ -46,7 +46,7 @@ $ uv run simple_example.py
 1980
 ```
 
-Wrong, for what it's worth (George W. Bush was elected in 2000), which is a fair reminder that a 250M-parameter model is not going to be a reliable source of facts. It is a demonstration of the plumbing, not a research assistant. By changing just the `model_id`, you can run this same pattern against any other local Hugging Face model that supports `text2text-generation` or `text-generation`.
+Wrong! For what it's worth George W. Bush was elected in 2000, which is a fair reminder that a 250M-parameter model is not going to be a reliable source of facts. It is a demonstration of the plumbing, not a research assistant. By changing just the `model_id`, you can run this same pattern against any other local Hugging Face model that supports `text2text-generation` or `text-generation`.
 
 ## Creating a Custom LlamaIndex Hugging Face LLM Wrapper Class That Runs on Your Laptop
 
