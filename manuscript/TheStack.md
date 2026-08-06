@@ -38,6 +38,14 @@ Notice `langchain-community` is not on this list. Earlier editions leaned on it 
 - `sqlalchemy`: direct database access for the SQL agent chapter, which hand-rolls its tools on top of it instead of a toolkit.
 - `langchain-text-splitters`: chunking text before embedding.
 
+**Make Sure You Override the Small Default Ollama Context Size**
+
+You must for many of the examples using Ollama override the small 4K context size:
+
+```
+OLLAMA_CONTEXT_LENGTH=32768 ollama serve
+```
+
 **Local Hugging Face models and deployment**
 
 - `transformers` and `torch`: running a Hugging Face model directly through a local `transformers` pipeline, both standalone and wrapped as a custom LlamaIndex LLM.
