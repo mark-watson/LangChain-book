@@ -78,4 +78,4 @@ This picture shows me and my wife Carol who helps me with book production and ed
 {width: "50%"}
 ![Mark and Carol Watson](markcarol.jpg)
 
-I would also like to thank the following readers who reported errors or typos in earlier editions of this book: Armando Flores, Peter Solimine, and David Rupp.
+I would also like to thank the following readers who reported errors or typos in earlier editions of this book: Armando Flores, Peter Solimine, David Rupp, and Roberto Alessi.
