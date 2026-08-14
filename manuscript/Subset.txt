@@ -1,3 +1,21 @@
+Preface.md
+TheStack.md
+LLM-overview.md
+Part_1.md
+LangChain-overview.md
+Swap_LLM_Models.md
+RAG.md
+Ollama.md
+Extraction.md
+Sumarization.md
+LangGraph-fundamentals.md
+Agents.md
+LangGraph-durable.md
+LangGraph-hitl.md
+LangGraph-supervisor.md
+SqLite.md
+KG.md
+llm_search.md
 Part_2.md
 LlamaIndex_case_study.md
 LlamaIndex-ingest.md
@@ -8,7 +26,5 @@ LlamaIndex-agent.md
 LlamaIndex-router.md
 LlamaIndex-extract.md
 LlamaIndex-deploy.md
-GoogleDrive.md
-HuggingFace.md
 WrapUp.md
 

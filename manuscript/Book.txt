@@ -26,7 +26,5 @@ LlamaIndex-agent.md
 LlamaIndex-router.md
 LlamaIndex-extract.md
 LlamaIndex-deploy.md
-GoogleDrive.md
-HuggingFace.md
 WrapUp.md
 
