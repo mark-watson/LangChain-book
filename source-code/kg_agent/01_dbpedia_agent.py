@@ -1,4 +1,6 @@
 """Ask the DBpedia agent one demo question."""
+# Make sure to run with a large context:
+#  OLLAMA_CONTEXT_LENGTH=32768 ollama serve
 
 from langchain_core.messages import HumanMessage
 
